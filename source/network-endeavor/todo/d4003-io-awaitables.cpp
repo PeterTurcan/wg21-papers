@@ -1,4 +1,4 @@
-// IoAwaitable Protocol — Self-Contained Compiler Explorer Demo
+// IoAwaitable Protocol - Self-Contained Compiler Explorer Demo
 //
 // Inlined from Capy (https://github.com/cppalliance/capy)
 // Copyright (c) 2025 Vinnie Falco (vinnie.falco@gmail.com)
@@ -48,7 +48,7 @@ public:
 };
 
 // ============================================================
-// continuation — schedulable unit for executor dispatch/post
+// continuation - schedulable unit for executor dispatch/post
 // ============================================================
 
 struct continuation
@@ -233,7 +233,7 @@ set_cached_frame_allocator(std::pmr::memory_resource* mr) noexcept
 }
 
 // ============================================================
-// safe_resume — save/restore TLS frame allocator around resume
+// safe_resume - save/restore TLS frame allocator around resume
 // ============================================================
 
 inline void
@@ -405,7 +405,7 @@ public:
 };
 
 // ============================================================
-// task<T> — lazy coroutine task satisfying IoRunnable
+// task<T> - lazy coroutine task satisfying IoRunnable
 // ============================================================
 
 namespace detail {
@@ -590,7 +590,7 @@ static_assert(IoAwaitable<task<>>);
 static_assert(IoRunnable<task<>>);
 
 // ============================================================
-// inline_executor — trivial synchronous executor for demo
+// inline_executor - trivial synchronous executor for demo
 // ============================================================
 
 struct inline_context : execution_context {};
@@ -622,7 +622,7 @@ struct inline_executor
 static_assert(Executor<inline_executor>);
 
 // ============================================================
-// Minimal run_sync — synchronous launcher for demonstration
+// Minimal run_sync - synchronous launcher for demonstration
 // ============================================================
 
 template<IoRunnable Task>
@@ -681,7 +681,7 @@ task<int> compute(int x)
         env->executor ? "yes" : "no",
         env->stop_token.stop_possible() ? "yes" : "no");
 
-    // Await an IoAwaitable — context propagates automatically
+    // Await an IoAwaitable - context propagates automatically
     int v = co_await immediate_value{x * 10};
     co_return v + 1;
 }
