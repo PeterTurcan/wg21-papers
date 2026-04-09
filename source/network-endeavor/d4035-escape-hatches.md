@@ -1,9 +1,10 @@
 ---
-title: "Support: The Need for Escape Hatches"
+title: "Info: The Need for Escape Hatches"
 document: P4035R0
 date: 2026-03-20
 reply-to:
   - "Vinnie Falco <vinnie.falco@gmail.com>"
+  - "C++ Alliance Proposal Team"
 audience: LEWG
 ---
 
@@ -27,7 +28,7 @@ C++ should make the safe thing easy, and the unsafe thing possible.
 
 The author provides information and serves at the pleasure of the committee.
 
-The author maintains [Capy](https://github.com/cppalliance/capy).
+The author maintains [Capy](https://github.com/cppalliance/capy)<sup>[9]</sup>.
 
 This paper asks for nothing.
 
@@ -39,14 +40,14 @@ Safe interfaces should be the default. They should validate input, maintain inva
 
 The two paths differ in their contracts:
 
-| | Safe path | Escape hatch |
-|---|---|---|
-| **Contract** | Wide | Narrow |
-| **Naming** | Default | Explicit, marked |
+|              | Safe path | Escape hatch     |
+|--------------|-----------|------------------|
+| **Contract** | Wide      | Narrow           |
+| **Naming**   | Default   | Explicit, marked |
 
 Functions on the safe path should have wide contracts. Functions on the escape hatch carry narrow contracts.
 
-This pattern appears in the standard library, in production Boost libraries, in the current `cstring_view` proposal, and in coroutine-based concurrency libraries. Four independent examples follow. A fifth section applies the pattern to `cstring_view` constructor design. A sixth examines what happens when the pattern is applied to the implicit `char const*` constructor.
+The naming convention appears in the standard library, and the full pattern - naming and contract - appears in production Boost libraries, in the current `cstring_view` proposal, and in coroutine-based concurrency libraries. Four independent examples follow. A fifth section applies the pattern to `cstring_view` constructor design. A sixth examines what happens when the pattern is applied to the implicit `char const*` constructor.
 
 ---
 
@@ -69,11 +70,11 @@ std::shared_lock<std::shared_mutex> slk(smtx);
 cv_any.wait(slk);
 ```
 
-`condition_variable_any` is the broader, more general facility - the safe path that works with any lock type. `condition_variable` is the optimized path - a thin wrapper over `pthread_cond_t` that only works with one lock type. Under the escape-hatch principle, the broad facility should carry the default name and the optimized facility should carry the marked name.
+`condition_variable_any` is the broader, more general facility - the safe path that works with any lock type. `condition_variable` is the optimized path - a thin wrapper over `pthread_cond_t` that works with only one lock type. Under the escape-hatch principle, the broad facility should carry the default name and the optimized facility should carry the marked name.
 
-The naming went the other way. N2406<sup>[13]</sup> documents the rationale: `condition_variable` was designed as a "razor thin layer over OS supplied condition variables," and `condition_variable_any` was the generalization built on top. The primary name followed the POSIX lineage, not the safety principle. The optimized primitive got the short name; the broader facility got the suffix.
+The naming went the other way. N2406<sup>[13]</sup> ("Mutex, Lock, Condition Variable Rationale") documents the design: `condition_variable` was intended as "as thin a wrapper as possible around that OS functionality," and `condition_variable_any` was the generalization built on top. The primary name followed the POSIX lineage, not the safety principle. The optimized primitive got the short name; the broader facility got the suffix.
 
-The standard library already has the pattern. It got the naming backwards because the principle was not articulated at the time.
+The standard library already has the naming convention. It got it backwards because the principle was not articulated at the time.
 
 ---
 

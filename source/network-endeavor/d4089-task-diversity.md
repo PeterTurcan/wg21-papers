@@ -12,7 +12,7 @@ audience: LEWG
 
 The Environment parameter in `std::execution::task` makes cross-library coroutine interoperability structurally impossible without knowing every query by name.
 
-`std::execution::task<T, Environment>` ([P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup>, "Add a Coroutine Task Type") is proposed as a lingua franca for coroutine-based asynchronous code. The `Environment` parameter is an open query-response protocol whose interoperability surface is defined by a single concept: `queryable`, which is `destructible`. This paper asks a simple question: when two libraries define different environments, how does one task `co_await` the other? The answer, traced step by step through the specification, is that no general conversion exists. The query set is open by design, and the only adaptation mechanism - `write_env` - requires the caller to know every missing query by name. The risk to the ecosystem is structural, documented by the specification itself, by NVIDIA's reference implementation, by the only production precedent (Boost.Asio), and by `task`'s own author.
+`std::execution::task<T, Environment>` ([P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup>, "Add a Coroutine Task Type") was approved as the lingua franca for coroutine-based asynchronous code. The `Environment` parameter is an open query-response protocol whose interoperability surface is defined by a single concept: `queryable`, which is `destructible`. This paper asks a simple question: when two libraries define different environments, how does one task `co_await` the other? The answer, traced step by step through the specification, is that no general conversion exists. The query set is open by design, and the only adaptation mechanism - `write_env` - requires the caller to know every missing query by name. The risk to the ecosystem is structural, documented by the specification itself, by NVIDIA's reference implementation, by the only production precedent (Boost.Asio), and by `task`'s own author.
 
 ---
 
@@ -28,11 +28,13 @@ The Environment parameter in `std::execution::task` makes cross-library coroutin
 
 The author provides information and serves at the pleasure of the committee.
 
-This paper is part of the Network Endeavor, a project to bring coroutine-native byte-oriented I/O to C++.
+This paper is part of the [Network Endeavor](https://wg21.link/p4100r0) ([P4100R0](https://wg21.link/p4100r0)), a project to bring coroutine-native I/O to C++.
 
 The author developed and maintains [Capy](https://github.com/cppalliance/capy)<sup>[32]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[33]</sup> and believes coroutine-native I/O is the correct foundation for networking in C++.
 
 Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
+
+The author has published Boost libraries and has a stake in the project's success.
 
 The cross-library bridges (Section 8) were authored by Klemens Morgenstern. The frame allocator gap was identified by Peter Dimov. Neither is a co-author.
 
@@ -40,29 +42,23 @@ This paper asks for nothing.
 
 ---
 
-## 2. Dietmar K&uuml;hl
+## 2. P3552R3
 
-The findings documented in this paper and in [P3801R0](https://wg21.link/p3801r0)<sup>[6]</sup>, "Concerns about the design of `std::execution::task`," are not engineering failures. They are structural consequences of making `task` serve two masters. Dietmar K&uuml;hl responded to every concern with professionalism and technical precision, and wrote [P3796R1](https://wg21.link/p3796r1)<sup>[7]</sup>, "Coroutine Task Issues," to collect the issues himself.
+The findings documented in this paper and in [P3801R0](https://wg21.link/p3801r0)<sup>[6]</sup>, "Concerns about the design of `std::execution::task`," are structural consequences of making `task` do more than one thing. Dietmar K&uuml;hl responded to every concern with professionalism and technical precision, and wrote [P3796R1](https://wg21.link/p3796r1)<sup>[7]</sup>, "Coroutine Task Issues," to collect the issues himself.
 
-**The Environment parameter is not K&uuml;hl's design choice. It is a structural requirement imposed by P2300.**
+**The Environment parameter is a structural requirement imposed by P2300.**
 
-### 2.1 The Best Possible P3552R3
+### 2.1 Scope
 
-Out of respect for K&uuml;hl's work, this paper evaluates only the strongest possible version of his design.
+[P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> was plenary-approved for C++26 at Sofia. Six Croydon motions modified `task` after plenary approval - restructuring the allocator model ([P3980R1](https://wg21.link/p3980r1)<sup>[8]</sup>), rewriting scheduler affinity with a new `get_start_scheduler` query and renaming `affine_on` to `affine` ([P3941R4](https://wg21.link/p3941r4)<sup>[37]</sup>), overhauling sender algorithm customization, and adding parallel bulk execution to `task_scheduler`. None of these changes address the `Environment` template parameter, the open query protocol, or the structural interoperability risk documented here.
 
-[P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> was plenary-approved for C++26 at Sofia. This paper documents a structural property of the approved design.
-
-[P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> is underspecified in several areas. The `Environment` parameter lacks a default. The allocator delivery timing is being addressed in [P3980R0](https://wg21.link/p3980r0)<sup>[8]</sup>, "Task's Allocator Use." The symmetric transfer gap is acknowledged in [P3796R1](https://wg21.link/p3796r1)<sup>[7]</sup> and [P3801R0](https://wg21.link/p3801r0)<sup>[6]</sup>. The author has contributed fixes to some of these gaps directly.
-
-This paper grants [P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> every benefit of the doubt. We assume a default `Environment` will be provided. We assume the engineering gaps will be closed. We do not argue from underspecification. We evaluate the design on its strongest possible terms.
-
-Three topics are off-limits. Allocator timing - how and when the frame allocator reaches `operator new` - is being addressed in [P3980R0](https://wg21.link/p3980r0)<sup>[8]</sup> and by the author's own contributions. Allocator propagation - how the allocator flows to child operations through the environment - is an engineering problem with known solutions. Categorization of compound I/O results into the three channels (`set_value`, `set_error`, `set_stopped`) is the subject of [P4091R0](https://isocpp.org/files/papers/P4091R0.pdf)<sup>[10]</sup> and [P4090R0](https://isocpp.org/files/papers/P4090R0.pdf)<sup>[9]</sup>, not this paper.
+Three topics are outside scope. Allocator timing - how and when the frame allocator reaches `operator new` - was addressed at Croydon in [P3980R1](https://wg21.link/p3980r1)<sup>[8]</sup>. Allocator propagation - how the allocator flows to child operations through the environment - is an engineering problem with known solutions. Categorization of compound I/O results into the three channels (`set_value`, `set_error`, `set_stopped`) is the subject of [P4091R0](https://isocpp.org/files/papers/P4091R0.pdf)<sup>[10]</sup> and [P4090R0](https://isocpp.org/files/papers/P4090R0.pdf)<sup>[9]</sup>, not this paper.
 
 ---
 
 ## 3. The Claim
 
-A standard task type provides a lingua franca. It eliminates pairwise bridges. It gives the ecosystem a common type that every library can accept and return. [P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> Section 3 states: "The `task` coroutine provided by the standard library may not always fit user's needs." SG1 discussion notes on [P1056R1](https://wg21.link/p1056r1)<sup>[34]</sup>, "Add lazy coroutine (coroutine task) type," record (reproduced in [P3552R0](https://wg21.link/p3552r0)<sup>[1]</sup>): "There can be more than one `task` type for different needs."
+A standard task type provides a lingua franca. It eliminates pairwise bridges. It gives the ecosystem a common type that every library can accept and return. [P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> Section 3 states: "The `task` coroutine provided by the standard library may not always fit user's needs." SG1 discussion notes on [P1056R1](https://wg21.link/p1056r1)<sup>[34]</sup>, "Add lazy coroutine (coroutine task) type," record (reproduced in [P3552R0](https://wg21.link/p3552r0)): "There can be more than one `task` type for different needs."
 
 The claim is that `std::execution::task` serves as that lingua franca. This paper stress-tests that claim.
 
@@ -204,9 +200,9 @@ Neither environment can construct itself from the other. The caller would need t
 
 ### 5.4 What about the standard queries?
 
-[P2300R10](https://wg21.link/p2300r10)<sup>[3]</sup> defines seven forwarding queries: `get_scheduler`, `get_allocator`, `get_stop_token`, `get_domain`, `get_delegation_scheduler`, `get_forward_progress_guarantee`, and `get_completion_scheduler<Tag>`. [P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> adds an eighth: `get_await_completion_adaptor`.
+[P2300R10](https://wg21.link/p2300r10)<sup>[3]</sup> defines seven forwarding queries: `get_scheduler`, `get_allocator`, `get_stop_token`, `get_domain`, `get_delegation_scheduler`, `get_forward_progress_guarantee`, and `get_completion_scheduler<Tag>`. [P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> adds an eighth: `get_await_completion_adaptor`. Croydon added a ninth: `get_start_scheduler` ([P3941R4](https://wg21.link/p3941r4)<sup>[37]</sup>), distinct from `get_scheduler`. The standard set continues to grow.
 
-A conversion layer could forward these. But NVIDIA already defines custom queries (`get_stream_provider`, `get_stream`) that are not in this list. Any domain that needs custom queries - GPU, networking, database, audio - is outside the standard set. The standard queries are the *minimum*. The `Environment` parameter exists precisely so domains can add *more*. [P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> itself demonstrates a custom `get_value_t` query in its own Section 4.7.
+A conversion layer could forward these. But NVIDIA already defines custom queries (`get_stream_provider`, `get_stream`) that are not in this list. Any domain that needs custom queries - GPU, networking, database, audio - is outside the standard set. The standard queries are the *minimum*. The `Environment` parameter exists precisely so domains can add *more*. [P3552R3](https://wg21.link/p3552r3)<sup>[1]</sup> itself defines a custom `get_value_t` query in its own Section 4.7.
 
 The design *encourages* custom queries. A conversion that handles only standard queries defeats the purpose of the open protocol.
 
@@ -334,7 +330,7 @@ The interface converged. The machinery diverged:
 | Google `Co`    | Immovable prvalue-only `co_await` - prevents dangling references  |
 | Capy           | `io_env` propagation: executor, stop token, frame allocator       |
 | cppcoro        | Symmetric transfer, lazy start                                    |
-| P3552R3 `task` | `affine_on` scheduler, sender environment, stop token via connect |
+| C++26 `task`   | `affine` scheduler (via `get_start_scheduler`), sender environment, stop token via connect |
 
 Jonathan M&uuml;ller describes Google's approach in [P3801R0](https://wg21.link/p3801r0)<sup>[6]</sup>:
 
@@ -362,11 +358,11 @@ concept IoAwaitable =
     };
 ```
 
-Any type satisfying the concept works. The task type remains `task<T>` - one parameter. The promise delivers the domain environment through `await_transform`. New domains create new promises, not new template parameters.
+Any type satisfying the concept works. The task type remains `task<T>` - one parameter. The promise delivers the domain environment through `await_transform`.
 
-The concept constrains the awaitable, not the task type. Any task type whose promise propagates `io_env` can `co_await` any `IoAwaitable` - N task types plus M awaitables equals N+M implementations. The N+M property holds because the concept does not name the task type.
+The concept constrains the awaitable, not the task type. Any task type whose promise propagates `io_env` can `co_await` any `IoAwaitable` - N task types plus M awaitables equals N+M implementations.
 
-The standard queries that P2300R10 propagates through environments have natural homes in this model. The scheduler and stop token reach the awaitable through `await_transform`, which passes the promise's state into the awaitable's `await_suspend` - exactly what `IoAwaitable`'s signature demonstrates. The allocator reaches the coroutine frame through `promise_type::operator new`, which the compiler already calls with the coroutine's parameters. No Environment template parameter is needed for any of them. The detailed mapping is in [P4003R0](https://wg21.link/p4003r0)<sup>[2]</sup>.
+The standard queries that P2300R10 propagates through environments have natural homes in this model. The scheduler and stop token reach the awaitable through `await_transform`, which passes the promise's state into the awaitable's `await_suspend` - exactly what `IoAwaitable`'s signature captures. The allocator reaches the coroutine frame through `promise_type::operator new`, which the compiler already calls with the coroutine's parameters. The detailed mapping is in [P4003R0](https://wg21.link/p4003r0)<sup>[2]</sup>.
 
 Bolas explained the role of `await_transform`<sup>[15]</sup>:
 
@@ -374,25 +370,25 @@ Bolas explained the role of `await_transform`<sup>[15]</sup>:
 
 A concept with a domain-specific `await_suspend` signature gets compile-time rejection of foreign awaitables for free. `IoAwaitable` is one such concept. It is not the only one. The pattern generalizes to any domain.
 
-`IoAwaitable` is a concept, not a type. It constrains what a promise can `co_await`, not what a coroutine returns. A promise that does not define `await_transform` for `IoAwaitable` gets a compile-time error - not a silent type mismatch. The return type stays `task<T>` regardless. This is the difference between concept-level and type-level fragmentation: `task<T, Environment>` changes the return type when the Environment changes, breaking every caller. A concept leaves the return type alone and lets the promise declare which domains it supports.
+`IoAwaitable` is a concept, not a type. It constrains what a promise can `co_await`, not what a coroutine returns. A promise that does not define `await_transform` for `IoAwaitable` gets a compile-time error - not a silent type mismatch. This is the difference between concept-level and type-level fragmentation: `task<T, Environment>` changes the return type when the Environment changes, breaking every caller. A concept lets the promise declare which domains it supports.
 
-Concept-level incompatibility still exists. A promise that does not provide `await_transform` for a given domain's awaitables cannot `co_await` them. The difference is where the incompatibility surfaces: at the `co_await` site, as a compile-time error, without changing the function's return type. Every caller's signature remains `task<T>`. The incompatibility is local and diagnosable, not viral.
+Concept-level incompatibility still exists. A promise that does not provide `await_transform` for a given domain's awaitables cannot `co_await` them. The incompatibility surfaces at the `co_await` site as a compile-time error - local and diagnosable, not viral.
 
 ---
 
 ## 10. Frequently Raised Concerns
 
-**Q1: Nicol Bolas is not normative.** Bolas is explaining the rationale, not writing the standard. The normative backing is Nishanov's [P0975R0](https://wg21.link/p0975r0)<sup>[5]</sup> ("open and not tied to any particular runtime") and [P1362R0](https://wg21.link/p1362r0)<sup>[4]</sup> (layered complexity model), both published WG21 papers. Even setting aside design-intent sources, the empirical evidence in Section 8 - seven independent libraries converging on one-parameter designs - demonstrates that the ecosystem treats the principle as operative.
+**Q1: Nicol Bolas is not normative.** Bolas is explaining the rationale, not writing the standard. The normative backing is Nishanov's [P0975R0](https://wg21.link/p0975r0)<sup>[5]</sup> ("open and not tied to any particular runtime") and [P1362R0](https://wg21.link/p1362r0)<sup>[4]</sup> (layered complexity model), both published WG21 papers. Even setting aside design-intent sources, the empirical evidence in Section 8 - seven independent libraries converging on one-parameter designs - shows that the ecosystem treats the principle as operative.
 
-**Q2: `IoAwaitable` is the author's own design.** `IoAwaitable` is one realization of the principle. The cross_await bridges (Section 8, Klemens Morgenstern, independent author) demonstrate the same principle without `IoAwaitable`. Google's `Co<T>` demonstrates it without `IoAwaitable`. The principle is: domain-specific invariants belong in the promise, not in the return type.
+**Q2: `IoAwaitable` is the author's own design.** `IoAwaitable` is one realization of the principle. The cross_await bridges (Section 8, Klemens Morgenstern, independent author) and Google's `Co<T>` both use the same principle without `IoAwaitable`. The principle is: domain-specific invariants belong in the promise, not in the return type.
 
-**Q3: The Environment parameter serves a real need.** Section 2.1 grants this. The paper does not argue that the Environment is useless. It argues that the Environment creates a structural risk to task type diversity. The question is whether the risk is worth accepting for domains outside the sender model.
+**Q3: The Environment parameter serves a real need.** Agreed. The Environment creates a structural risk to task type diversity. The question is whether the risk is worth accepting for domains outside the sender model.
 
 **Q4: Production libraries do not interoperate anyway.** The cross_await bridges in Section 8 refute this. Four working examples, 51-105 lines each. The C++20 awaitable protocol is the interop surface. Diversity with interoperability is the design intent (Nishanov [P1362R0](https://wg21.link/p1362r0)<sup>[4]</sup>: "mix and match").
 
-**Q5: A default Environment will fix the fragmentation.** Section 2.1 already grants the default. Even with a default, the parameter exists so users provide non-default environments. The moment they do, fragmentation begins. Adding a default delays the risk; it does not prevent it. Section 5 traces the progression from empty environments through NVIDIA's deployed queries - the default does not change the outcome.
+**Q5: A default Environment will fix the fragmentation.** Even with a default, the parameter exists so users provide non-default environments. The moment they do, fragmentation begins. Adding a default delays the risk; it does not prevent it. Section 5 traces the progression from empty environments through NVIDIA's deployed queries - the default does not change the outcome.
 
-**Q6: These issues will be fixed in a future revision.** Section 2.1 already separates engineering gaps (off-limits) from structural findings. The open query set and the absence of a general conversion mechanism are consequences of the design decision to make the Environment an open protocol. They cannot be fixed without closing the protocol - which would break every custom query, including NVIDIA's (Section 5.3).
+**Q6: These issues will be fixed in a future revision.** Section 2.1 separates engineering topics from structural findings. The open query set and the absence of a general conversion mechanism are consequences of the design decision to make the Environment an open protocol. They cannot be fixed without closing the protocol - which would break every custom query, including NVIDIA's (Section 5.3).
 
 **Q7: A standard task type provides a lingua franca.** The benefit is real. The question is whether `task<T, Environment>` delivers it. Section 5 shows that the lingua franca holds only when every library uses the same Environment. The moment two libraries use different environments, the types are incompatible (Section 5.1) - and the parameter exists precisely so that users provide non-default environments. Nishanov's layering model (Section 7) assigns environment customization to the awaitable tier, not the coroutine type. A concept is a stronger lingua franca than a concrete type with a second template parameter that fragments on contact with itself.
 
@@ -421,7 +417,7 @@ The author thanks Gor Nishanov for the coroutine model's explicit support for ta
 5. [P0975R0](https://wg21.link/p0975r0) - "Impact of coroutines on current and upcoming library facilities" (Gor Nishanov, 2018). https://wg21.link/p0975r0
 6. [P3801R0](https://wg21.link/p3801r0) - "Concerns about the design of `std::execution::task`" (Jonathan M&uuml;ller, 2025). https://wg21.link/p3801r0
 7. [P3796R1](https://wg21.link/p3796r1) - "Coroutine Task Issues" (Dietmar K&uuml;hl, 2025). https://wg21.link/p3796r1
-8. [P3980R0](https://wg21.link/p3980r0) - "Task's Allocator Use" (Dietmar K&uuml;hl, 2026). https://wg21.link/p3980r0
+8. [P3980R1](https://wg21.link/p3980r1) - "Task's Allocator Use" (Dietmar K&uuml;hl, 2026). https://wg21.link/p3980r1
 9. [P4090R0](https://isocpp.org/files/papers/P4090R0.pdf) - "Sender I/O: A Constructed Comparison" (Vinnie Falco, Steve Gerbino, 2026). https://isocpp.org/files/papers/P4090R0.pdf
 10. [P4091R0](https://isocpp.org/files/papers/P4091R0.pdf) - "Two Error Models" (Vinnie Falco, 2026). https://isocpp.org/files/papers/P4091R0.pdf
 11. [P4092R0](https://isocpp.org/files/papers/P4092R0.pdf) - "Consuming Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026). https://isocpp.org/files/papers/P4092R0.pdf
@@ -459,3 +455,4 @@ The author thanks Gor Nishanov for the coroutine model's explicit support for ta
 34. [P1056R1](https://wg21.link/p1056r1) - "Add lazy coroutine (coroutine task) type" (Lewis Baker, Gor Nishanov, 2019). https://wg21.link/p1056r1
 35. NVIDIA, [nvexec/stream/common.cuh](https://github.com/NVIDIA/stdexec/blob/main/include/nvexec/stream/common.cuh) - GPU stream environment queries. https://github.com/NVIDIA/stdexec/blob/main/include/nvexec/stream/common.cuh
 36. Gor Nishanov, [N4287](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4287.pdf) - "Threads, Fibers and Coroutines" (slides, 2014). https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4287.pdf
+37. [P3941R4](https://wg21.link/p3941r4) - "Scheduler Affinity" (Dietmar K&uuml;hl, 2026). https://wg21.link/p3941r4
