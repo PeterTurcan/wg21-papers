@@ -37,7 +37,7 @@ audience: LEWG
 
 The author provides information and serves at the pleasure of the committee.
 
-This paper is part of the Network Endeavor, a project to bring coroutine-native byte-oriented I/O to C++.
+Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
 
 The authors developed [P4007R0](https://wg21.link/p4007r0)<sup>[2]</sup> ("Senders and Coroutines"). The classification below holds regardless of whether any alternative design exists.
 

@@ -28,7 +28,9 @@ C++ should make the safe thing easy, and the unsafe thing possible.
 
 The author provides information and serves at the pleasure of the committee.
 
-The author maintains [Capy](https://github.com/cppalliance/capy)<sup>[9]</sup>.
+The author developed and maintains [Capy](https://github.com/cppalliance/capy)<sup>[9]</sup> and [Corosio](https://github.com/cppalliance/corosio) and believes coroutine-native I/O is a practical foundation for networking in C++.
+
+The author has published Boost libraries and has a stake in the project's success.
 
 This paper asks for nothing.
 

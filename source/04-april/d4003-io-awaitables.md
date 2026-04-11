@@ -50,9 +50,11 @@ Everything in this paper comes from a complete implementation on three platforms
 
 The author provides information and serves at the pleasure of the committee.
 
-This paper is part of the [Network Endeavor (P4100R0)](https://wg21.link/p4100r0)<sup>[12]</sup>.
+This paper is part of the [Network Endeavor](https://wg21.link/p4100) ([P4100](https://wg21.link/p4100))<sup>[12]</sup>, a project to bring coroutine-native I/O to C++.
 
-The author developed and maintains [Capy](https://github.com/cppalliance/capy)<sup>[2]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[3]</sup> and believes a coroutine execution model belongs in the standard alongside `std::execution`.
+Falco and Gerbino developed and maintain [Capy](https://github.com/cppalliance/capy)<sup>[2]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[3]</sup> and believe coroutine-native I/O is a practical foundation for networking in C++.
+
+Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
 
 ---
 

@@ -29,6 +29,8 @@ The author provides information and serves at the pleasure of the committee.
 
 The author believes profiles is a reasonable direction for C++ safety and deserves real-world use before the committee judges the design.
 
+This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
+
 This paper asks for nothing.
 
 ---

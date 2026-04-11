@@ -31,11 +31,13 @@ Read [P4003R1](https://wg21.link/p4003r1)<sup>[41]</sup> first for specification
 
 The author provides information and serves at the pleasure of the committee.
 
-This paper is part of the [Network Endeavor](https://wg21.link/p4100r0) ([P4100R0](https://wg21.link/p4100r0)<sup>[14]</sup>), a project to bring coroutine-native byte-oriented I/O to C++.
+This paper is part of the [Network Endeavor](https://wg21.link/p4100) ([P4100](https://wg21.link/p4100)<sup>[14]</sup>), a project to bring coroutine-native I/O to C++.
 
-Falco and Gerbino developed and maintain [Capy](https://github.com/cppalliance/capy)<sup>[5]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[6]</sup> and believe coroutine-native I/O is the correct foundation for networking in C++.
+Falco and Gerbino developed and maintain [Capy](https://github.com/cppalliance/capy)<sup>[5]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[6]</sup> and believe coroutine-native I/O is a practical foundation for networking in C++.
 
 Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
+
+This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
 
 This paper asks for nothing.
 

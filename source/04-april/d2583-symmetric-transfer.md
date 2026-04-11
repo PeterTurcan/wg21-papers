@@ -44,11 +44,11 @@ C++20 provides symmetric transfer ([P0913R1](https://wg21.link/p0913r1)<sup>[1]<
 
 The author provides information and serves at the pleasure of the committee.
 
-This paper is part of the Network Endeavor, a project to bring coroutine-native byte-oriented I/O to C++.
+The author developed and maintains [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) and believes coroutine-native I/O is a practical foundation for networking in C++.
 
-The author developed and maintains [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) and believes coroutine-native I/O is the correct foundation for networking in C++.
+Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
 
-Coroutine-native I/O and `std::execution` address different domains and should coexist in the C++ standard.
+This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
 
 This paper uses AI. The proposed wording in Section 15 was generated with AI assistance and has not been verified against the full specification by the authors.
 

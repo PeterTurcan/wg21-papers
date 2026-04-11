@@ -24,15 +24,15 @@ Who the author is, what they maintain, what they have built.
 
 ### B1. Network Endeavor Membership
 
-**Text:** This paper is part of the [Network Endeavor](https://wg21.link/p4100r0) ([P4100R0](https://wg21.link/p4100r0)), a project to bring coroutine-native I/O to C++.
+**Text:** This paper is part of the [Network Endeavor](https://wg21.link/p4100) ([P4100](https://wg21.link/p4100)), a project to bring coroutine-native I/O to C++.
 
-**When:** The paper is in `source/network-endeavor/`.
+**When:** The paper number is one of: P4003, P4088, P4089, P4090, P4091, P4092, P4093, P4094, P4095, P4096, P4097, P4098, P4099, P4100, P4125, P4126, P4172.
 
 **Specialize:** Only if the paper's existing disclosure already lists companion papers, preserve that listing after the canonical text. Do not import companion paper references from the body of the paper into the disclosure.
 
 ### B2. Capy/Corosio Maintainership
 
-**Text:** The author developed and maintains [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) and believes coroutine-native I/O is the correct foundation for networking in C++.
+**Text:** The author developed and maintains [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) and believes coroutine-native I/O is a practical foundation for networking in C++.
 
 **When:** The paper references, depends on, or analyzes Capy or Corosio.
 
