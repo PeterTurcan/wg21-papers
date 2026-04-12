@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""scrivener - Markdown to PDF converter.
+"""scrivener - Markdown to PDF converter and live rendering server.
 
 Uses ReportLab, mistune v3, and variable fonts to produce
 beautifully formatted PDFs from Markdown files with YAML front
@@ -38,8 +38,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog="scrivener",
         description="Convert Markdown files to beautifully formatted PDFs.",
-        epilog="Styles live in styles/. Run --list-styles to see available "
-               "styles and their options.")
+        epilog="For the web UI, run 'python paperworks.py serve' from the paperworks directory.")
 
     parser.add_argument(
         "input", nargs="*",
@@ -77,7 +76,8 @@ def main():
         sys.exit(0)
 
     if not args.input:
-        parser.error("input files required (unless using --list-styles)")
+        parser.print_help()
+        sys.exit(0)
 
     style_path = resolve_style_path(args.style)
     style = load_style(style_path)

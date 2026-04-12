@@ -15,7 +15,7 @@ class AccentBox(Flowable):
     """
     def __init__(self, content, bg, accent, bar_w,
                  left_pad, right_pad, v_pad, width=None, radius=0,
-                 cap_shift=0, top_rule=None, top_rule_thickness=3):
+                 cap_shift=0, top_rule=None, top_rule_thickness=None):
         super().__init__()
         self._content = content
         self.bg = bg
@@ -28,7 +28,7 @@ class AccentBox(Flowable):
         self.radius = radius
         self.cap_shift = cap_shift
         self.top_rule = top_rule
-        self.top_rule_thickness = top_rule_thickness
+        self.top_rule_thickness = top_rule_thickness if top_rule_thickness is not None else 1.5
 
     def wrap(self, availWidth, availHeight):
         w = self.box_width if self.box_width is not None else availWidth
@@ -69,11 +69,9 @@ class AccentBox(Flowable):
             c.rect(0, 0, self.width, self.height, fill=1, stroke=0)
         if self.top_rule:
             c.saveState()
-            c.setStrokeColor(self.top_rule)
-            c.setLineWidth(self.top_rule_thickness)
-            c.setLineCap(0)
-            ry = self.height - self.top_rule_thickness / 2
-            c.line(0, ry, self.width, ry)
+            c.setFillColor(self.top_rule)
+            c.rect(0, self.height - self.top_rule_thickness, self.width,
+                self.top_rule_thickness, fill=1, stroke=0)
             c.restoreState()
         c.setFillColor(self.accent)
         c.rect(0, 0, self.bar_w, self.height, fill=1, stroke=0)
@@ -96,6 +94,7 @@ class AccentRule(Flowable):
     def draw(self):
         self.canv.setStrokeColor(self.color)
         self.canv.setLineWidth(self.thickness)
+        self.canv.setLineCap(0)
         self.canv.line(0, 1, self.rule_width, 1)
 
 

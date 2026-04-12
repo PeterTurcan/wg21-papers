@@ -33,8 +33,16 @@ def _patched(tx):
         from reportlab.lib.colors import HexColor
         stroke_color = HexColor("#e0ddd8")
 
-        c = tx._canvas
+        # Merge consecutive spans with the same color into one rectangle.
+        merged = []
         for x1, x2, color in xs.backColors:
+            if merged and str(merged[-1][2]) == str(color) and x1 <= merged[-1][1] + pad_x * 3:
+                merged[-1] = (merged[-1][0], x2, color)
+            else:
+                merged.append([x1, x2, color])
+
+        c = tx._canvas
+        for x1, x2, color in merged:
             c.saveState()
             c.setFillColor(color)
             c.setStrokeColor(stroke_color)

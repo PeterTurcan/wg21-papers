@@ -5,3 +5,5 @@ Pillow
 fonttools
 svglib
 pygments
+flask
+watchdog

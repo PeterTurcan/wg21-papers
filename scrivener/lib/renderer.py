@@ -123,13 +123,36 @@ class ASTRenderer:
     def _inject_cjk_fallback(self, text):
         if not self.body_cmap:
             return text
+        # Decode numeric character references (&#NNNNN; and &#xHHHH;)
+        # so CJK characters become actual Unicode for glyph checking.
+        # Named entities (&amp; &lt; etc.) stay intact for ReportLab.
+        decoded = re.sub(
+            r'&#(\d+);', lambda m: chr(int(m.group(1))), text)
+        decoded = re.sub(
+            r'&#x([0-9a-fA-F]+);', lambda m: chr(int(m.group(1), 16)), decoded)
         result = []
         cjk_run = []
-        for ch in text:
+        cjk_available = None
+        for ch in decoded:
             cp = ord(ch)
             if cp > 127 and cp not in self.body_cmap:
-                ensure_lazy("CJK")
-                cjk_run.append(ch)
+                if cjk_available is None:
+                    ensure_lazy("CJK")
+                    from reportlab.pdfbase.pdfmetrics import getFont
+                    try:
+                        getFont("CJK")
+                        cjk_available = True
+                    except KeyError:
+                        cjk_available = False
+                if cjk_available:
+                    cjk_run.append(ch)
+                else:
+                    if cjk_run:
+                        result.append('<font name="CJK">')
+                        result.append("".join(cjk_run))
+                        result.append("</font>")
+                        cjk_run = []
+                    result.append("?")
             else:
                 if cjk_run:
                     result.append('<font name="CJK">')
@@ -269,7 +292,8 @@ class ASTRenderer:
                 width="100%", thickness=1,
                 color=parse_color(self.heading_rule_color),
                 spaceBefore=self.gap_sm,
-                spaceAfter=self.gap)
+                spaceAfter=self.gap,
+                lineCap='butt')
             rule.keepWithNext = True
             flows.append(rule)
         return flows
@@ -328,7 +352,15 @@ class ASTRenderer:
         else:
             flows.append(title_para)
 
-        flows.append(Spacer(1, space_after))
+        if thickness:
+            flows.append(HRFlowable(
+                width="100%", thickness=thickness,
+                color=rule_color,
+                spaceBefore=0,
+                spaceAfter=space_after,
+                lineCap='butt'))
+        else:
+            flows.append(Spacer(1, space_after))
         return flows
 
     def build_front_matter_flowables(self, fm):
@@ -339,7 +371,7 @@ class ASTRenderer:
             return flows
 
         label_style = ParagraphStyle(
-            "fm_label", fontName="Body-Bold",
+            "fm_label", fontName="Body",
             fontSize=self.ps["front_value"].fontSize,
             leading=self.ps["front_value"].leading)
         val_style = self.ps["front_value"]
@@ -418,7 +450,8 @@ class ASTRenderer:
             width="100%", thickness=2,
             color=parse_color(self.heading_rule_color),
             spaceBefore=self.gap_sm,
-            spaceAfter=self.gap * 2)
+            spaceAfter=self.gap * 2,
+            lineCap='butt')
         inner_flows = [
             Paragraph("Table of Contents", toc_title_style),
             toc_rule,
@@ -816,7 +849,8 @@ class ASTRenderer:
             width="100%", thickness=1,
             color=parse_color(self.style["heading_rule_color"]),
             spaceBefore=self.gap,
-            spaceAfter=self.gap)]
+            spaceAfter=self.gap,
+            lineCap='butt')]
 
     def _render_blank_line(self, tok):
         return []

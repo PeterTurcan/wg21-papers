@@ -131,7 +131,7 @@ table:
   smart_columns: true
   cell_padding: { top: 5, bottom: 5, left: 10, right: 10 }
   header_rule_width: 0
-  body_rule_width: 1
+  body_rule_width: 0.5
 
 # --- Title block ---
 title:
@@ -178,7 +178,7 @@ wording:
 # --- Front matter visual settings ---
 front_matter:
   font_scale: 0.9
-  leading_scale: 1.65
+  leading_scale: 1.2
   bg: "@bg-subtle"
   bar_width: 3
   inner_pad: 12

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import mistune
 from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate
+from reportlab.platypus.flowables import HRFlowable
 
 from . import escape_xml
 from .colors import resolve_colors
@@ -69,6 +70,8 @@ def build_pdf(md_path, output_path, cli_cfg, style):
     if has_fm_title:
         title_text = escape_xml(unescape(str(fm["title"])))
         title_flows = renderer._title_block(title_text)
+        if fm_flows:
+            title_flows = [f for f in title_flows if not isinstance(f, HRFlowable)]
     else:
         in_title = True
         title_flows = []
