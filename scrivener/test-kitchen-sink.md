@@ -4,7 +4,9 @@ document: D9999R0
 date: 2026-04-11
 reply-to:
   - "Test Author <test@example.com>"
+  - "Second Author <second@example.com>"
 audience: SG1, LEWG
+toc: true
 ---
 
 ## Abstract
@@ -24,6 +26,12 @@ This document exercises every markdown construct that scrivener must handle. It 
 This paragraph has *italic text* and **bold text** and ***bold italic text*** all in one line. It also has `inline code` and ~~strikethrough~~ if supported.
 
 Here is a [hyperlink to cppreference](https://en.cppreference.com/) and an auto-link: <https://wg21.link/p2300>.
+
+Superscript: E = mc<sup>2</sup> and footnote references<sup>[1]</sup>.
+
+Subscript: H<sub>2</sub>O is water and CO<sub>2</sub> is carbon dioxide.
+
+Hard line break: This line ends with a break.<br>This continues on a new line.
 
 ---
 
@@ -179,7 +187,7 @@ A table with alignment:
 
 ## 8. Images
 
-![Placeholder image](https://via.placeholder.com/400x200.png "A placeholder image")
+![C++ Alliance Logo](images/C++ Alliance - Logo.svg)
 
 ---
 
@@ -189,7 +197,11 @@ German: Die Gr&ouml;&szlig;e des &Uuml;bersetzers ist beeindruckend.
 
 French: Les caract&egrave;res sp&eacute;ciaux sont n&eacute;cessaires.
 
-Chinese: This section tests CJK fallback.
+Chinese: 这是中文测试文本。
+
+Japanese: これはテストです。
+
+Korean: 이것은 테스트입니다.
 
 ---
 
@@ -274,11 +286,21 @@ This is existing spec text rendered in a neutral wording block. It represents un
 
 This is new text being proposed for addition to the standard. The green accent bar indicates additive content.
 
+The function `connect` shall establish a connection to the endpoint. If the connection succeeds, the implementation returns `true`.
+
 :::
 
 :::wording-remove
 
 This is text being proposed for removal from the standard. The red accent bar indicates content to be deleted.
+
+The function `disconnect` shall close the connection. The implementation calls `cleanup()` before returning.
+
+:::
+
+:::wording
+
+<ins>*Mandates:* The expression has type `std::coroutine_handle<>`.</ins>
 
 :::
 
@@ -312,6 +334,67 @@ gantt
     Committee      :a4, after a3, 30d
 ```
 
-## 20. Final Section
+## 21. Page Break
+
+The next line forces a page break.
+
+\newpage
+
+This text appears on a new page after the forced break.
+
+## 22. Code Blocks Inside Wording
+
+:::wording
+
+Existing code in the standard:
+
+```cpp
+void start(operation_state auto& op) noexcept;
+```
+
+:::
+
+:::wording-add
+
+New code being added:
+
+```cpp
+coroutine_handle<> start(operation_state auto& op) noexcept;
+```
+
+:::
+
+:::wording-remove
+
+Code being removed:
+
+```cpp
+void notify_complete(receiver auto& rcvr) noexcept;
+```
+
+:::
+
+## 23. Pre/Code HTML Blocks
+
+A `<pre><code>` block outside wording:
+
+<pre><code>auto result = compute(x, y);
+return result;</code></pre>
+
+A `<pre><code>` block inside wording with insertions and deletions:
+
+:::wording
+
+<pre><code><del>void</del><ins>coroutine_handle&lt;&gt;</ins> await_suspend(
+    coroutine_handle&lt;Promise&gt;) noexcept
+{
+    <del>start(state);</del>
+    <ins>auto h = start(state);</ins>
+    <ins>return h ? h : noop_coroutine();</ins>
+}</code></pre>
+
+:::
+
+## 24. Final Section
 
 This is the last section. It verifies that the document ends cleanly without trailing artifacts.
