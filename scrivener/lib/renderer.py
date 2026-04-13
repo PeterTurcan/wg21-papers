@@ -41,6 +41,9 @@ class ASTRenderer:
         self.headings = []
         self.seen_h1 = False
         self._in_heading = False
+        self._wording_context = None
+        self._in_ins = False
+        self._in_del = False
         self.has_fm_title = has_fm_title
         self._build_styles()
 
@@ -191,9 +194,12 @@ class ASTRenderer:
 
         flowables = []
         for div_class, toks in segments:
+            if div_class and div_class.startswith("wording"):
+                self._wording_context = div_class
             flows = []
             for tok in toks:
                 flows.extend(self._render_token(tok))
+            self._wording_context = None
             if div_class and div_class.startswith("wording"):
                 flowables.extend(self._wrap_wording(div_class, flows))
             else:
@@ -483,11 +489,33 @@ class ASTRenderer:
         h1_h = self.ps["h1"].fontSize
         return [Spacer(1, h1_h), box, Spacer(1, self.gap * 2)]
 
+    def _wording_text_color(self):
+        """Return the text color for the current wording context, or None."""
+        ctx = self._wording_context
+        if ctx == "wording-add":
+            return self.ins_color
+        if ctx == "wording-remove":
+            return self.del_color
+        return None
+
+    def _wording_wrap(self, text):
+        """Apply wording-context color and strikethrough to inline markup."""
+        color = self._wording_text_color()
+        if color:
+            text = f'<font color="{color}">{text}</font>'
+        wcfg = self.style.get("wording", {})
+        variant = wcfg.get(self._wording_context, {})
+        if variant.get("strikethrough"):
+            text = f"<strike>{text}</strike>"
+        return text
+
     def _render_paragraph(self, tok):
         text = self._inline_children(tok.get("children", []))
         if text.strip() == "\\newpage":
             return [PageBreak()]
         text = self._inject_cjk_fallback(text)
+        if self._wording_context:
+            text = self._wording_wrap(text)
         return [Paragraph(text, self.ps["body"])]
 
     def _render_mermaid(self, code):
@@ -544,6 +572,21 @@ class ASTRenderer:
             result = self._render_mermaid(raw)
             if result:
                 return result
+
+        if self._wording_context:
+            ctx = self._wording_context
+            if ctx in ("wording-add", "wording-remove"):
+                markup = escape_xml(raw)
+            else:
+                syntax = self.style.get("syntax", {})
+                markup = highlight(raw, lang, syntax)
+            color = self._wording_text_color()
+            style = ParagraphStyle(
+                "code_block_wording", parent=self.ps["code_block"],
+                textColor=parse_color(color) if color else self.ps["code_block"].textColor)
+            pre = XPreformatted(markup, style)
+            return [Spacer(1, self.gap_sm), pre, Spacer(1, self.gap_sm)]
+
         syntax = self.style.get("syntax", {})
         markup = highlight(raw, lang, syntax)
         cb = self.style["code_block"]
@@ -857,7 +900,51 @@ class ASTRenderer:
 
     def _render_block_html(self, tok):
         raw = tok.get("raw", "")
-        return [Paragraph(escape_xml(raw), self.ps["body"])]
+        pre_m = re.match(
+            r'<pre><code>(.*?)</code></pre>\s*$', raw, re.DOTALL)
+        if pre_m:
+            return self._render_pre_code_block(pre_m.group(1))
+        text = escape_xml(raw)
+        if self._wording_context:
+            text = self._wording_wrap(text)
+        return [Paragraph(text, self.ps["body"])]
+
+    def _render_pre_code_block(self, inner):
+        """Render a <pre><code>...</code></pre> HTML block as monospace,
+        with <ins>/<del> converted to ReportLab color markup. HTML entities
+        like &lt; &gt; &amp; pass through as valid XML."""
+        ensure_code_family()
+        markup = inner
+        markup = re.sub(
+            r'<ins>(.*?)</ins>',
+            lambda m: f'<u><font color="{self.ins_color}">{m.group(1)}</font></u>',
+            markup, flags=re.DOTALL)
+        markup = re.sub(
+            r'<del>(.*?)</del>',
+            lambda m: f'<strike><font color="{self.del_color}">{m.group(1)}</font></strike>',
+            markup, flags=re.DOTALL)
+
+        if self._wording_context:
+            color = self._wording_text_color()
+            style = ParagraphStyle(
+                "pre_code_wording", parent=self.ps["code_block"],
+                textColor=parse_color(color) if color else self.ps["code_block"].textColor)
+        else:
+            style = self.ps["code_block"]
+
+        pre = XPreformatted(markup, style)
+        if self._wording_context:
+            return [Spacer(1, self.gap_sm), pre, Spacer(1, self.gap_sm)]
+
+        cb = self.style["code_block"]
+        bg = parse_color(self.style["code_bg"])
+        accent = parse_color(self.style["accent_saturated"])
+        box = AccentBox(
+            pre, bg, accent, cb["bar_width"],
+            cb["left_padding"], cb["right_padding"],
+            cb["vertical_padding"], radius=0,
+            cap_shift=self.cap_shift)
+        return [Spacer(1, self.gap_sm), box, Spacer(1, self.ps["h1"].fontSize)]
 
     def _inline_children(self, children):
         if not children:
@@ -900,6 +987,8 @@ class ASTRenderer:
             sz = self.ps[f"h{self._heading_level}"].fontSize * 0.85
             return f'<font name="Code-Bold" size="{sz}">{raw}</font>'
         sz = self.ps["code_block"].fontSize
+        if self._wording_context or self._in_ins or self._in_del:
+            return f'<font name="Code" size="{sz}">{raw}</font>'
         return (f'<font name="Code" size="{sz}" color="{self.code_inline_fg}">'
                 f'<span backColor="{self.code_inline_bg}">{raw}</span></font>')
 
@@ -937,12 +1026,16 @@ class ASTRenderer:
             inner = escape_xml(unescape(del_m.group(1)))
             return f'<strike><font color="{self.del_color}">{inner}</font></strike>'
         if raw.startswith("<ins>"):
+            self._in_ins = True
             return f'<u><font color="{self.ins_color}">'
         if raw.startswith("</ins>"):
+            self._in_ins = False
             return '</font></u>'
         if raw.startswith("<del>"):
+            self._in_del = True
             return f'<strike><font color="{self.del_color}">'
         if raw.startswith("</del>"):
+            self._in_del = False
             return '</font></strike>'
         if raw.startswith("<sup>"):
             return "<super>"
