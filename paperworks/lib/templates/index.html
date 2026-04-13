@@ -635,7 +635,8 @@ function connectSSE(){
   es.addEventListener('render_done',e=>{
     const d=JSON.parse(e.data);
     endWork('btn-render', null);
-    setStatus('ready',`Rendered ${d.done||0} file${(d.done||0)!==1?'s':''}`);
+    if(d.errors&&!d.done){setStatus('error','Render failed: check log for details');}
+    else{setStatus('ready',`Rendered ${d.done||0} file${(d.done||0)!==1?'s':''}`);}
     setTimeout(()=>setStatus('ready','Ready'),4000);
     loadInventory();
   });

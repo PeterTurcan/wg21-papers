@@ -136,9 +136,13 @@ def _render_worker():
         batch = _render_queue.get()
         cfg = load_config()
         style_name = cfg.get("style", "wg21")
-        out_dir = Path(cfg.get("output_dir", ""))
+        out_dir_str = cfg.get("output_dir", "")
+        if not out_dir_str:
+            _add_log("render", "Output directory not configured", status="error")
+            continue
+        out_dir = Path(out_dir_str)
         if not out_dir.is_dir():
-            _add_log("render", f"Output directory not set or missing", status="error")
+            _add_log("render", f"Output directory not found: {out_dir_str}", status="error")
             continue
 
         try:
@@ -206,11 +210,14 @@ def _flush_md_pending():
         return
     cfg = load_config()
     out_dir = cfg.get("output_dir", "")
-    out_path = Path(out_dir) if out_dir else None
+    if not out_dir:
+        _add_log("render", "Output directory not configured; skipping auto-render", status="error")
+        return
+    out_path = Path(out_dir)
     batch = []
     for md_path in candidates:
         md = Path(md_path)
-        if out_path and out_path.is_dir():
+        if out_path.is_dir():
             pdf = out_path / md.with_suffix(".pdf").name
             if pdf.is_file() and pdf.stat().st_mtime >= md.stat().st_mtime:
                 continue
@@ -564,6 +571,17 @@ def render_paper():
     md_path = data.get("md_path", "")
     if not md_path or not Path(md_path).is_file():
         return jsonify({"error": "Markdown file not found"}), 400
+    cfg = load_config()
+    out_dir = cfg.get("output_dir", "")
+    if not out_dir or not Path(out_dir).is_dir():
+        _add_log("render", "Output directory not configured or missing", status="error")
+        _broadcast("rendered", {
+            "file": md_path, "status": "error",
+            "error": "Output directory not configured or missing",
+            "done": 1, "total": 1,
+        })
+        _broadcast("render_done", {"total": 1, "done": 0, "errors": 1})
+        return jsonify({"error": "Output directory not configured or missing"}), 400
     _render_queue.put([md_path])
     _add_log("render", f"Queued: {Path(md_path).name}")
     return jsonify({"ok": True})
@@ -625,7 +643,10 @@ def render_all():
     """Queue only markdown files whose PDF is missing or stale."""
     cfg = load_config()
     output_dir = cfg.get("output_dir", "")
-    out_path = Path(output_dir) if output_dir else None
+    if not output_dir or not Path(output_dir).is_dir():
+        _add_log("render", "Output directory not configured or missing", status="error")
+        return jsonify({"error": "Output directory not configured or missing"}), 400
+    out_path = Path(output_dir)
 
     batch = []
     for entry in cfg.get("watch_dirs", []):
@@ -638,10 +659,9 @@ def render_all():
         for md in mds:
             if not md.is_file():
                 continue
-            if out_path and out_path.is_dir():
-                pdf = out_path / md.with_suffix(".pdf").name
-                if pdf.is_file() and pdf.stat().st_mtime >= md.stat().st_mtime:
-                    continue
+            pdf = out_path / md.with_suffix(".pdf").name
+            if pdf.is_file() and pdf.stat().st_mtime >= md.stat().st_mtime:
+                continue
             batch.append(str(md))
 
     if not batch:
