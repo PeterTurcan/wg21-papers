@@ -3,7 +3,9 @@
 Source priority (highest to lowest):
   1. Markdown front matter + body - authoritative for all metadata
   2. Rendered PDF - fallback when markdown is absent
-  3. isocpp.org - remote status only, never a metadata source
+  3. isocpp.org - remote status and form URLs only. Title and author
+     from isocpp.org are used as last-resort fallback when neither
+     markdown nor PDF exists for a paper.
 
 D/P prefixes are interchangeable for matching: D4007R0 and P4007R0
 refer to the same paper.

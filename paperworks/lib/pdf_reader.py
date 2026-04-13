@@ -5,14 +5,14 @@ from pathlib import Path
 
 
 _DOC_NUM_RE = re.compile(
-    r"\b([DPN]\d{4,5}R\d+)\b"
-    r"|\b([DPN]\d{4,5})\b"
-    r"|\b(N\d{4,5})\b",
+    r"\b([DPN]\d{3,5}R\d+)\b"
+    r"|\b([DPN]\d{3,5})\b"
+    r"|\b(N\d{3,5})\b",
     re.IGNORECASE,
 )
 
 _DOC_FIELD_RE = re.compile(
-    r"Document\s+Number[:\s]+([DPN]\d{4,5}(?:R\d+)?|N\d{4,5})",
+    r"Document\s+Number[:\s]+([DPN]\d{3,5}(?:R\d+)?|N\d{3,5})",
     re.IGNORECASE,
 )
 
@@ -44,13 +44,13 @@ def _extract_doc_number(text):
 
 def _doc_number_from_filename(path):
     stem = Path(path).stem.lower()
-    m = re.match(r"([dpn]\d{4,5}(?:r\d+)?)", stem)
+    m = re.match(r"([dpn]\d{3,5}(?:r\d+)?)", stem)
     if m:
         return m.group(1).upper()
     return None
 
 
-def _extract_title(text, lines):
+def _extract_title(lines):
     for line in lines[:20]:
         stripped = line.strip()
         if len(stripped) > 10 and not _DOC_NUM_RE.match(stripped):
@@ -73,11 +73,15 @@ def _extract_authors(text):
 
 
 def _extract_abstract_from_doc(doc):
-    """Scan pages 1-4 for the abstract body (page 0 has the TOC entry).
+    """Scan pages for the abstract body.
+
+    For multi-page documents, starts at page 1 (page 0 typically has
+    the TOC entry). For single-page documents, scans page 0.
 
     Returns (brutal_summary, full_abstract) or (None, None).
     """
-    for pg_num in range(1, min(5, doc.page_count)):
+    start = 0 if doc.page_count == 1 else 1
+    for pg_num in range(start, min(5, doc.page_count)):
         text = doc[pg_num].get_text()
         lines = text.split("\n")
         for i, line in enumerate(lines):
@@ -127,15 +131,15 @@ def read_pdf(path):
     try:
         import fitz
         doc = fitz.open(str(path))
-        if doc.page_count == 0:
+        try:
+            if doc.page_count == 0:
+                result["doc_number"] = _doc_number_from_filename(path)
+                return result
+
+            first_page = doc[0].get_text()
+            brutal, abstract = _extract_abstract_from_doc(doc)
+        finally:
             doc.close()
-            result["doc_number"] = _doc_number_from_filename(path)
-            return result
-
-        first_page = doc[0].get_text()
-
-        brutal, abstract = _extract_abstract_from_doc(doc)
-        doc.close()
     except Exception:
         result["doc_number"] = _doc_number_from_filename(path)
         return result
@@ -144,7 +148,7 @@ def read_pdf(path):
     text = first_page[:3000]
 
     result["doc_number"] = _extract_doc_number(text) or _doc_number_from_filename(path)
-    result["title"] = _extract_title(text, lines)
+    result["title"] = _extract_title(lines)
     result["authors"] = _extract_authors(text)
     result["abstract"] = abstract
     result["brutal_summary"] = brutal

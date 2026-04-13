@@ -125,9 +125,7 @@ class IsoCppSession:
             if "invalid" in r.text.lower() or "incorrect" in r.text.lower():
                 return False, "Invalid username or password"
 
-            self._authenticated = True
-            self._username = username
-            return True, "Logged in"
+            return False, "Unexpected response - login may have failed"
 
     def logout(self):
         with self._lock:
@@ -240,6 +238,7 @@ class IsoCppSession:
 
             with self._pending_lock:
                 self._pending.pop(job_id, None)
+                drained = len(self._pending) == 0
 
             self._active_job = None
 
@@ -256,7 +255,7 @@ class IsoCppSession:
                 payload["error"] = message
             self._emit(payload)
 
-            if self._queue.empty():
+            if drained:
                 self._emit({"event": "queue_drained"})
 
     def _emit(self, event):

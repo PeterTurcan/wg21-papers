@@ -115,6 +115,27 @@
     .dv a:hover { text-decoration: underline; }
     .detail-actions { display: flex; gap: 6px; margin-top: 6px; }
 
+    /* Toggle switch */
+    .toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: var(--text-muted); user-select: none; }
+    .toggle-track { width: 34px; height: 18px; border-radius: 9px; background: var(--surface2); border: 1px solid var(--border); position: relative; transition: background 0.25s, border-color 0.25s; }
+    .toggle-track:hover { border-color: var(--text-muted); }
+    .toggle-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--text-muted); position: absolute; top: 1px; left: 1px; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), background 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    .toggle.on .toggle-track { background: var(--green-dim); border-color: var(--green-border); }
+    .toggle.on .toggle-thumb { transform: translateX(16px); background: var(--green); box-shadow: 0 0 4px var(--green-glow); }
+
+    /* Render cards */
+    .render-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .render-card { width: calc(33.333% - 7px); aspect-ratio: 5/3; border-radius: 10px; border: 2px dashed var(--border); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: border-color 0.15s, background 0.15s; cursor: default; overflow: hidden; }
+    .render-card.empty { cursor: pointer; color: var(--text-muted); font-size: 12px; }
+    .render-card.empty:hover { border-color: var(--blue); background: rgba(88,166,255,0.05); }
+    .render-card.drop-over { border-color: var(--blue); background: rgba(88,166,255,0.12); }
+    .render-card.filled { border-style: solid; border-color: var(--border); }
+    .render-card.filled.rendering { border-color: rgba(88,166,255,0.4); animation: bpulse 1.2s ease-in-out infinite; }
+    .render-card .card-name { font-family: var(--mono); font-size: 11px; color: var(--text); padding: 0 12px; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: center; }
+    .render-card .card-x { position: absolute; top: 4px; right: 8px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 0 3px; line-height: 1; }
+    .render-card .card-x:hover { color: #f85149; }
+    .render-card .card-render { margin-top: 6px; }
+
     /* Log */
     #log-box { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--text-muted); }
     #log-box:empty::after { content: 'No activity yet.'; }
@@ -217,23 +238,21 @@
 
   <!-- Render tab -->
   <div class="tab-panel" id="tab-render">
-    <div class="section-header"><h2>Render Preview</h2></div>
-    <div class="card">
-      <span class="label">Markdown file</span>
-      <div class="row">
-        <input type="text" id="render-path" placeholder="Drop a .md file here, browse, or type a path..." />
-        <button class="btn" onclick="browseFile('render-path')">Browse</button>
+    <div class="section-header">
+      <div style="display:flex;gap:8px;align-items:center">
+        <h2>Render</h2>
+        <span class="label" style="margin:0">Style</span>
+        <select id="render-style-select" onchange="saveRenderStyle()" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11px;padding:4px 8px;outline:none;cursor:pointer;"></select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label class="toggle on" id="preview-toggle" onclick="togglePreview()">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          <span>Preview</span>
+        </label>
+        <button class="btn" onclick="clearRenderCards()">Clear</button>
       </div>
     </div>
-    <div class="table-wrap" style="margin-top:8px">
-      <table>
-        <thead><tr>
-          <th>Style</th>
-          <th style="width:70px;text-align:center"></th>
-        </tr></thead>
-        <tbody id="render-styles"></tbody>
-      </table>
-    </div>
+    <div class="render-grid" id="render-grid"></div>
   </div>
 
   <!-- Log tab -->
@@ -247,14 +266,28 @@
 
   <!-- Settings tab -->
   <div class="tab-panel" id="tab-settings">
-    <div class="section-header"><h2>Output Directory</h2></div>
+    <div class="section-header"><h2>Output Directories</h2></div>
     <div class="card">
-      <span class="label">Rendered PDF output</span>
-      <div class="row">
-        <input type="text" id="output-dir" placeholder="Path to PDF output directory..." />
-        <button class="btn" onclick="browseDir('output-dir')">Browse</button>
-        <button class="btn" onclick="saveOutput()">Save</button>
-        <button class="btn" onclick="openDir(document.getElementById('output-dir').value)">Open</button>
+      <table style="width:100%;border-collapse:collapse">
+        <tr>
+          <td style="width:50%;padding-right:8px;vertical-align:top">
+            <span class="label">Folio</span>
+            <div class="row">
+              <input type="text" id="output-dir" placeholder="Folio PDF output..." />
+              <button class="btn" onclick="browseDir('output-dir')">Browse</button>
+            </div>
+          </td>
+          <td style="width:50%;padding-left:8px;vertical-align:top">
+            <span class="label">Render</span>
+            <div class="row">
+              <input type="text" id="render-output-dir" placeholder="Render preview output..." />
+              <button class="btn" onclick="browseDir('render-output-dir')">Browse</button>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <div style="margin-top:6px;text-align:right">
+        <button class="btn" onclick="saveOutputDirs()">Save</button>
       </div>
     </div>
 
@@ -307,7 +340,7 @@
 <div id="toast"></div>
 
 <script>
-let _papers=[], _filter='', _workingSet=new Set(), _dirtySet=new Set(), _queueDepth=0, _expandedIdx=null, _droppedFile=null;
+let _papers=[], _filter='', _workingSet=new Set(), _dirtySet=new Set(), _queueDepth=0, _expandedIdx=null;
 
 // -- Tabs --
 function showTab(name) {
@@ -319,7 +352,8 @@ function showTab(name) {
 
 // -- Utility --
 function showToast(m,ok) { const t=document.getElementById('toast'); t.textContent=m; t.className=ok?'ok':''; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
-function setStatus(s,t) { document.getElementById('status-dot').className=s; document.getElementById('status-text').textContent=t; }
+let _statusTimer=null;
+function setStatus(s,t) { if(_statusTimer){clearTimeout(_statusTimer);_statusTimer=null;} document.getElementById('status-dot').className=s; document.getElementById('status-text').textContent=t; }
 function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 
 // -- Log --
@@ -363,11 +397,10 @@ function badgeHtml(status,idx) {
 function renderPapers() {
   const tbody=document.getElementById('tbody'), empty=document.getElementById('empty'), tw=document.getElementById('table-wrap');
   const ft=_filter.toLowerCase();
-  const filtered=_papers.filter(p=>!ft||[p.doc_number,p.title,p.audience].filter(Boolean).join(' ').toLowerCase().includes(ft));
-  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';tw.style.display='none';return;}
+  const indexed=_papers.map((p,i)=>({p,i})).filter(({p})=>!ft||[p.doc_number,p.title,p.audience].filter(Boolean).join(' ').toLowerCase().includes(ft));
+  if(!indexed.length){tbody.innerHTML='';empty.style.display='block';tw.style.display='none';return;}
   empty.style.display='none';tw.style.display='block';
-  tbody.innerHTML=filtered.map(p=>{
-    const idx=_papers.indexOf(p);
+  tbody.innerHTML=indexed.map(({p,i:idx})=>{
     const dirty=p.doc_number&&p.pdf_path&&_dirtySet.has(p.doc_number)?'<span class="dirty-dot"></span>':'';
     return `<tr onclick="toggleDetail(${idx})" data-idx="${idx}">
       <td class="mono" style="padding-right:2px">${esc(p.doc_number)||'-'}${dirty}</td>
@@ -455,10 +488,15 @@ async function submitJob(idx, endpoint, body) {
   if (!p || !p.doc_number || _workingSet.has(p.doc_number)) return;
   startWork(null, p.doc_number);
   try {
-    await fetch(endpoint, {
+    const r = await fetch(endpoint, {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body)
     });
+    if (!r.ok) {
+      const d = await r.json().catch(()=>({}));
+      showToast(p.doc_number + ': ' + (d.error||'failed'));
+      endWork(null, p.doc_number);
+    }
   } catch (e) {
     showToast(p.doc_number + ': error');
     endWork(null, p.doc_number);
@@ -480,7 +518,9 @@ function renderSingle(idx) {
   _workingSet.add(p.doc_number);
   renderPapers();
   setStatus('working', `Rendering ${p.doc_number}...`);
-  fetch('/api/render', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({md_path: p.md_path})});
+  fetch('/api/render', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({md_path: p.md_path})})
+    .then(r=>{if(!r.ok){_workingSet.delete(p.doc_number);renderPapers();showToast(p.doc_number+': render failed');}})
+    .catch(()=>{_workingSet.delete(p.doc_number);renderPapers();showToast(p.doc_number+': render failed');});
 }
 async function renderAll() {
   const btn = document.getElementById('btn-render');
@@ -503,10 +543,13 @@ async function doLogin(){
   if(!cfg.isocpp_username||!cfg.has_password){showToast('Set credentials in Settings first');return;}
   startWork('tb-login', null);
   setStatus('working','Logging in...');
-  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
-  const d=await r.json();endWork('tb-login', null);updateAuth(d);
-  if(d.success){setStatus('working','Fetching papers...');await loadInventory();setStatus('ready','Ready');}
-  else{setStatus('error',d.message||'Login failed');showToast(d.message||'Login failed');}
+  try{
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    const d=await r.json();updateAuth(d);
+    if(d.success){setStatus('working','Fetching papers...');await loadInventory();setStatus('ready','Ready');}
+    else{setStatus('error',d.message||'Login failed');showToast(d.message||'Login failed');}
+  }catch(e){setStatus('error','Login failed');showToast('Login failed');}
+  finally{endWork('tb-login', null);}
 }
 async function doLogout(){await fetch('/api/logout',{method:'POST'});updateAuth({authenticated:false});setStatus('ready','Logged out');loadInventory();}
 function updateAuth(d){
@@ -533,14 +576,15 @@ function renderDirs(dirs){
   }).join('');
   el.innerHTML=`<table class="dir-table">${rows}</table>`;
 }
-async function saveOutput(){await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({output_dir:document.getElementById('output-dir').value.trim()})});showToast('Saved',true);}
-async function saveStyle(){await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({style:document.getElementById('style-select').value})});showToast('Saved',true);}
+function populateStyleSelect(selId,styles){const sel=document.getElementById(selId);const cur=sel.value||sel.dataset.cur||'wg21';sel.innerHTML=styles.map(s=>`<option value="${s.id}" ${s.id===cur?'selected':''}>${s.name||s.id}</option>`).join('');}
+async function postConfig(fields){await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});showToast('Saved',true);}
+async function saveOutputDirs(){postConfig({output_dir:document.getElementById('output-dir').value.trim(),render_output_dir:document.getElementById('render-output-dir').value.trim()});}
+async function saveStyle(){postConfig({style:document.getElementById('style-select').value});}
 async function loadCatalog(){
   try{
     const r=await fetch('/api/catalog');const c=await r.json();
-    const sel=document.getElementById('style-select');
-    const cur=sel.value||document.getElementById('style-select').dataset.cur||'wg21';
-    sel.innerHTML=(c.styles||[]).map(s=>`<option value="${s.id}" ${s.id===cur?'selected':''}>${s.name||s.id}</option>`).join('');
+    const styles=c.styles||[];
+    populateStyleSelect('style-select',styles);
     const faces=(c.fonts||[]).filter(f=>f.cached).map(f=>`@font-face{font-family:'pv-${f.id}';src:url('/api/font?f=${encodeURIComponent(f.file)}') format('truetype');}`).join('\n');
     let faceEl=document.getElementById('font-faces');
     if(!faceEl){faceEl=document.createElement('style');faceEl.id='font-faces';document.head.appendChild(faceEl);}
@@ -554,54 +598,108 @@ async function loadCatalog(){
     const ig=document.getElementById('images-grid');
     if(!(c.images||[]).length){ig.innerHTML='<span class="muted" style="font-size:11px">No images</span>';}
     else{ig.innerHTML=c.images.map(i=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 10px;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--text-muted)"><img src="/api/image/${encodeURIComponent(i)}" style="width:24px;height:24px;object-fit:contain" />${i}</div>`).join('');}
-    const rtb=document.getElementById('render-styles');
-    rtb.innerHTML=(c.styles||[]).map(s=>{
-      const sid=esc(s.id);
-      return `<tr class="render-style-row" data-style="${sid}"
-        ondragover="event.preventDefault();this.classList.add('drop-over')"
-        ondragleave="this.classList.remove('drop-over')"
-        ondrop="event.preventDefault();this.classList.remove('drop-over');handleStyleDrop(event,'${sid}')">
-        <td>${esc(s.name||s.id)}</td>
-        <td style="width:70px;text-align:center"><button class="btn btn-blue" onclick="renderPreview('${sid}')" style="font-size:10px;padding:2px 8px">RENDER</button></td>
-      </tr>`;
-    }).join('');
-  }catch(e){}
+    populateStyleSelect('render-style-select',styles);
+  }catch(e){showToast('Failed to load catalog');}
 }
-async function saveCreds(){const body={isocpp_username:document.getElementById('cred-user').value.trim()};const pass=document.getElementById('cred-pass').value;if(pass)body.isocpp_password=pass;await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});showToast('Credentials saved',true);}
+async function saveCreds(){const body={isocpp_username:document.getElementById('cred-user').value.trim()};const pass=document.getElementById('cred-pass').value;if(pass)body.isocpp_password=pass;postConfig(body);}
 async function addDir(){const inp=document.getElementById('add-dir-input');const val=inp.value.trim();if(!val)return;const r=await fetch('/api/dirs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:val})});if(!r.ok){const d=await r.json();showToast(d.error||'Failed');return;}const d=await r.json();renderDirs(d.watch_dirs);inp.value='';}
 async function removeDir(path){const r=await fetch('/api/dirs',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:path})});if(r.ok){const d=await r.json();renderDirs(d.watch_dirs);}}
 async function toggleDir(path,field,value){const r=await fetch('/api/dirs/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:path,field,value})});if(r.ok){const d=await r.json();renderDirs(d.watch_dirs);}}
-async function openDir(path){if(!path)return;await fetch('/api/open-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:path.trim()})});}
 async function browseDir(inputId){try{const r=await fetch('/api/pick-dir');const d=await r.json();if(d.path)document.getElementById(inputId).value=d.path;}catch(e){showToast('Browse failed');}}
-async function browseFile(inputId){try{const r=await fetch('/api/pick-file');const d=await r.json();if(d.path){document.getElementById(inputId).value=d.path;_droppedFile=null;}}catch(e){showToast('Browse failed');}}
-async function handleStyleDrop(e,styleId){
-  const files=e.dataTransfer.files;
-  if(!files||!files.length) return;
-  const f=files[0];
-  if(!f.name.endsWith('.md')){showToast('Drop a .md file');return;}
-  _droppedFile=f;
-  document.getElementById('render-path').value=f.name;
-  renderPreview(styleId);
+// -- Render cards --
+let _previewOn=true;
+let _catalogTimer=null;
+function debouncedCatalog(){if(_catalogTimer)clearTimeout(_catalogTimer);_catalogTimer=setTimeout(()=>{_catalogTimer=null;loadCatalog();},1000);}
+function togglePreview(){
+  _previewOn=!_previewOn;
+  document.getElementById('preview-toggle').classList.toggle('on',_previewOn);
 }
-async function renderPreview(styleId){
-  const path=document.getElementById('render-path').value.trim();
-  if(!path){showToast('Enter a markdown file path first');return;}
-  setStatus('working',`Rendering preview (${styleId})...`);
-  try{
-    let r;
-    if(_droppedFile&&_droppedFile.name===path){
-      const fd=new FormData();
-      fd.append('file',_droppedFile);
-      fd.append('style',styleId);
-      r=await fetch('/api/render-preview',{method:'POST',body:fd});
+function ensureEmptyCard(){
+  const grid=document.getElementById('render-grid');
+  if(grid.querySelector('.render-card.empty')) return;
+  const card=document.createElement('div');
+  card.className='render-card empty';
+  card.textContent='Drop .md';
+  card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('drop-over');});
+  card.addEventListener('dragleave',()=>card.classList.remove('drop-over'));
+  card.addEventListener('drop',e=>{e.preventDefault();card.classList.remove('drop-over');handleCardDrop(card,e.dataTransfer.files);});
+  card.addEventListener('click',()=>{
+    const inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.accept='.md';
+    inp.addEventListener('change',()=>{if(inp.files.length)handleCardDrop(card,inp.files);});
+    inp.click();
+  });
+  grid.appendChild(card);
+}
+function handleCardDrop(card,fileList){
+  const files=Array.from(fileList).filter(f=>f.name.endsWith('.md'));
+  if(!files.length){showToast('Only .md files accepted');return;}
+  const single=files.length===1;
+  let previewTab=null;
+  if(single&&_previewOn) previewTab=window.open('about:blank','_blank');
+  fillCard(card,files[0],previewTab);
+  for(let i=1;i<files.length;i++){
+    const next=document.createElement('div');
+    document.getElementById('render-grid').insertBefore(next,document.querySelector('.render-card.empty'));
+    next.className='render-card';
+    fillCard(next,files[i],null);
+  }
+  ensureEmptyCard();
+}
+function fillCard(card,file,previewTab){
+  card.className='render-card filled';
+  card.textContent='';
+  card._file=file;
+  card._pdfPath=null;
+  card._previewTab=previewTab;
+  const x=document.createElement('button');x.className='card-x';x.innerHTML='&times;';
+  x.onclick=e=>{e.stopPropagation();card.remove();ensureEmptyCard();};
+  card.appendChild(x);
+  const name=document.createElement('div');name.className='card-name';name.textContent=file.name;name.title=file.name;
+  card.appendChild(name);
+  const btn=document.createElement('button');btn.className='btn btn-blue';btn.textContent='RENDER';btn.style.cssText='font-size:10px;padding:2px 8px;margin-top:6px';
+  btn.onclick=e=>{
+    e.stopPropagation();
+    if(card._pdfPath){
+      window.open('/api/file?path='+encodeURIComponent(card._pdfPath),'_blank');
     }else{
-      r=await fetch('/api/render-preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({md_path:path,style:styleId})});
+      if(_previewOn) card._previewTab=window.open('about:blank','_blank');
+      renderCard(card);
     }
-    const d=await r.json();
-    if(r.ok&&d.pdf_path){setStatus('ready','Preview ready');window.open('/api/file?path='+encodeURIComponent(d.pdf_path),'_blank');}
-    else{setStatus('error',d.error||'Render failed');showToast(d.error||'Render failed');}
-  }catch(e){setStatus('error','Render failed');showToast('Render failed');}
+  };
+  card.appendChild(btn);
+  card._actionBtn=btn;
+  renderCard(card);
 }
+async function renderCard(card){
+  const file=card._file;if(!file||card._rendering)return;
+  card._rendering=true;
+  const style=document.getElementById('render-style-select').value||'wg21';
+  card.classList.add('rendering');
+  card._pdfPath=null;
+  const btn=card._actionBtn;
+  if(btn){btn.disabled=true;btn.classList.add('working');btn.textContent='RENDER';btn.className='btn btn-blue';btn.style.cssText='font-size:10px;padding:2px 8px;margin-top:6px';}
+  setStatus('working',`Rendering ${file.name}...`);
+  const fd=new FormData();fd.append('file',file);fd.append('style',style);
+  try{
+    const r=await fetch('/api/render-preview',{method:'POST',body:fd});
+    const d=await r.json();
+    card.classList.remove('rendering');card._rendering=false;
+    if(btn){btn.disabled=false;btn.classList.remove('working');}
+    if(r.ok&&d.pdf_path){
+      card._pdfPath=d.pdf_path;
+      const url='/api/file?path='+encodeURIComponent(d.pdf_path);
+      setStatus('ready','Preview ready');
+      if(btn){btn.textContent='OPEN';btn.className='btn btn-primary';btn.style.cssText='font-size:10px;padding:2px 8px;margin-top:6px;text-decoration:none';}
+      if(card._previewTab){card._previewTab.location=url;card._previewTab=null;}
+      debouncedCatalog();
+    }else{setStatus('error',d.error||'Render failed');showToast(d.error||'Render failed');if(card._previewTab){card._previewTab.close();card._previewTab=null;}}
+  }catch(e){card.classList.remove('rendering');card._rendering=false;if(btn){btn.disabled=false;btn.classList.remove('working');}setStatus('error','Render failed');showToast('Render failed');if(card._previewTab){card._previewTab.close();card._previewTab=null;}}
+}
+function clearRenderCards(){
+  document.getElementById('render-grid').innerHTML='';
+  ensureEmptyCard();
+}
+async function saveRenderStyle(){postConfig({render_style:document.getElementById('render-style-select').value});}
 async function clearLog(){await fetch('/api/log',{method:'DELETE'});document.getElementById('log-box').innerHTML='';}
 async function shutDown(){await fetch('/api/shutdown',{method:'POST'});document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#8b949e;font-size:13px;">Server shut down.</div>';}
 
@@ -612,11 +710,11 @@ function connectSSE(){
   es.addEventListener('log',e=>addLog(JSON.parse(e.data)));
   es.addEventListener('job',e=>{
     const d=JSON.parse(e.data),doc=d.doc_number;
-    if(d.event==='job_queued'){_queueDepth=d.queue_depth||_queueDepth+1;updateQueue();}
+    if(d.event==='job_queued'){_queueDepth=d.queue_depth!=null?d.queue_depth:_queueDepth+1;updateQueue();}
     else if(d.event==='job_started') setStatus('working',`${doc} ${d.type}...`);
-    else if(d.event==='job_completed'){if(d.type==='upload')_dirtySet.delete(doc);}
-    else if(d.event==='job_failed'){showToast(`${doc}: ${d.error||'failed'}`);}
-    else if(d.event==='queue_drained'){_queueDepth=0;updateQueue();setStatus('ready','Ready');loadInventory().then(()=>{_workingSet.clear();renderPapers();});}
+    else if(d.event==='job_completed'){if(d.type==='upload')_dirtySet.delete(doc);_workingSet.delete(doc);renderPapers();}
+    else if(d.event==='job_failed'){showToast(`${doc}: ${d.error||'failed'}`);_workingSet.delete(doc);renderPapers();}
+    else if(d.event==='queue_drained'){_queueDepth=0;updateQueue();setStatus('ready','Ready');loadInventory();}
   });
   es.addEventListener('file_changed',e=>{const d=JSON.parse(e.data);setStatus('working',`File changed: ${d.filename}`);const m=_papers.find(p=>p.pdf_path&&p.pdf_path.replace(/\\/g,'/').endsWith('/'+d.filename));if(m&&m.doc_number)_dirtySet.add(m.doc_number);loadInventory().then(()=>setStatus('ready','Ready'));});
   es.addEventListener('render_start',e=>{
@@ -637,8 +735,9 @@ function connectSSE(){
     endWork('btn-render', null);
     if(d.errors&&!d.done){setStatus('error','Render failed: check log for details');}
     else{setStatus('ready',`Rendered ${d.done||0} file${(d.done||0)!==1?'s':''}`);}
-    setTimeout(()=>setStatus('ready','Ready'),4000);
+    _statusTimer=setTimeout(()=>setStatus('ready','Ready'),4000);
     loadInventory();
+    debouncedCatalog();
   });
   es.onerror=()=>{setStatus('','Reconnecting...');es.close();setTimeout(connectSSE,3000);};
 }
@@ -646,7 +745,8 @@ function connectSSE(){
 // -- Key handlers --
 document.getElementById('filter-input').addEventListener('keydown',e=>{if(e.key==='Escape'){e.target.value='';_filter='';renderPapers();}});
 document.getElementById('add-dir-input').addEventListener('keydown',e=>{if(e.key==='Enter')addDir();});
-document.getElementById('output-dir').addEventListener('keydown',e=>{if(e.key==='Enter')saveOutput();});
+document.getElementById('output-dir').addEventListener('keydown',e=>{if(e.key==='Enter')saveOutputDirs();});
+document.getElementById('render-output-dir').addEventListener('keydown',e=>{if(e.key==='Enter')saveOutputDirs();});
 document.addEventListener('dragover',e=>e.preventDefault());
 document.addEventListener('drop',e=>e.preventDefault());
 
@@ -655,11 +755,14 @@ connectSSE();
 (async()=>{
   const cfg=await(await fetch('/api/config')).json();
   document.getElementById('output-dir').value=cfg.output_dir||'';
+  document.getElementById('render-output-dir').value=cfg.render_output_dir||'';
   document.getElementById('style-select').dataset.cur=cfg.style||'wg21';
+  document.getElementById('render-style-select').dataset.cur=cfg.render_style||'wg21';
   document.getElementById('cred-user').value=cfg.isocpp_username||'';
   if(cfg.has_password) document.getElementById('cred-pass').placeholder='(saved)';
   renderDirs(cfg.watch_dirs||[]);
   await loadCatalog();
+  ensureEmptyCard();
   const entries=await(await fetch('/api/log')).json();
   entries.forEach(e=>addLog(e));
   const auth=await(await fetch('/api/auth-status')).json();

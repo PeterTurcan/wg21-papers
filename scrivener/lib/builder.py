@@ -25,6 +25,26 @@ from .renderer import ASTRenderer
 
 
 def build_pdf(md_path, output_path, cli_cfg, style):
+    """Render a markdown file to PDF.
+
+    Handles font manifest loading, font downloading, font registration,
+    color resolution, and ReportLab document construction. Callers do
+    not need to manage fonts - this function is self-contained.
+
+    Args:
+        md_path: path to the markdown source file
+        output_path: path for the output PDF (parent dirs created)
+        cli_cfg: dict of CLI overrides (logo, toc, no_toc)
+        style: style dict from load_style (may be mutated)
+
+    Returns:
+        Path to the output PDF.
+
+    Side effects:
+        - Downloads missing fonts to the shared .fonts/ cache
+        - Registers fonts globally in ReportLab
+        - Creates output parent directories
+    """
     md_path = Path(md_path)
     md_text = md_path.read_text(encoding="utf-8")
     md_dir = md_path.parent

@@ -11,7 +11,7 @@ import threading
 from pathlib import Path
 
 import yaml
-from flask import Flask, Response, jsonify, make_response, render_template, request, send_file
+from flask import Flask, Response, jsonify, render_template, request, send_file
 
 from .server_config import load_config, save_config
 from .inventory import build_inventory, compute_summary
@@ -29,7 +29,6 @@ def _ensure_scrivener():
     scr_parent = str(SCRIVENER_ROOT.parent)
     if scr_parent not in sys.path:
         sys.path.insert(0, scr_parent)
-    import importlib
     if "scrivener_lib" not in sys.modules:
         spec = importlib.util.spec_from_file_location(
             "scrivener_lib",
@@ -64,6 +63,7 @@ MAX_LOG = 200
 
 # -- Render state --
 _render_queue: queue.Queue = queue.Queue()
+_preview_lock = threading.Lock()
 _md_pending: set[str] = set()
 _md_pending_lock = threading.Lock()
 _md_debounce_timer: threading.Timer | None = None
@@ -129,6 +129,13 @@ def _on_isocpp_event(event):
 _isocpp = IsoCppSession(on_event=_on_isocpp_event)
 
 
+def _load_style(style_id):
+    """Load a scrivener style by ID. Ensures scrivener is importable."""
+    _ensure_scrivener()
+    from scrivener_lib.config import load_style, resolve_style_path
+    return load_style(resolve_style_path(style_id))
+
+
 # -- Render worker (from scrivener) --
 
 def _render_worker():
@@ -147,10 +154,8 @@ def _render_worker():
 
         try:
             _ensure_scrivener()
-            from scrivener_lib.config import load_style, resolve_style_path
             from scrivener_lib.builder import build_pdf
-
-            style = load_style(resolve_style_path(style_name))
+            style = _load_style(style_name)
         except Exception as e:
             _add_log("render", f"Scrivener init failed: {e}", status="error")
             _broadcast("render_done", {"total": len(batch), "done": 0, "errors": len(batch)})
@@ -172,7 +177,8 @@ def _render_worker():
             })
             t0 = time.time()
             try:
-                build_pdf(md_path, out_file, {}, style)
+                with _preview_lock:
+                    build_pdf(md_path, out_file, {}, style)
                 duration = round(time.time() - t0, 2)
                 done += 1
                 fname = Path(md_path).name
@@ -384,7 +390,9 @@ def get_config():
     return jsonify({
         "watch_dirs": [_dir_info(d) for d in cfg.get("watch_dirs", [])],
         "output_dir": cfg.get("output_dir", ""),
+        "render_output_dir": cfg.get("render_output_dir", ""),
         "style": cfg.get("style", "wg21"),
+        "render_style": cfg.get("render_style", "wg21"),
         "port": cfg.get("port", 7780),
         "isocpp_username": cfg.get("isocpp_username", ""),
         "has_password": bool(cfg.get("isocpp_password", "")),
@@ -395,7 +403,7 @@ def update_config():
     data = request.get_json(force=True) or {}
     cfg = load_config()
     changed = []
-    for key in ("output_dir", "style", "isocpp_username", "isocpp_password"):
+    for key in ("output_dir", "render_output_dir", "style", "render_style", "isocpp_username", "isocpp_password"):
         if key in data:
             cfg[key] = data[key]
             changed.append(key.replace("isocpp_", ""))
@@ -469,15 +477,20 @@ def get_inventory():
         cfg.get("output_dir", ""),
         remote_papers,
     )
+    new_warnings = []
+    current_keys = set()
     for p in papers:
         for w in p.get("warnings", []):
             key = f"{p['doc_number']}:{w}"
+            current_keys.add(key)
             if key not in _logged_warnings:
-                _logged_warnings.add(key)
-                _add_log("inventory", f"{p['doc_number']}: {w}", status="error")
-    _logged_warnings.intersection_update(
-        f"{p['doc_number']}:{w}" for p in papers for w in p.get("warnings", [])
-    )
+                new_warnings.append((key, p['doc_number'], w))
+    with _log_lock:
+        for key, doc, w in new_warnings:
+            _logged_warnings.add(key)
+        _logged_warnings.intersection_update(current_keys)
+    for key, doc, w in new_warnings:
+        _add_log("inventory", f"{doc}: {w}", status="error")
     summary = compute_summary(papers)
 
     return jsonify({
@@ -594,10 +607,18 @@ def render_preview():
       - multipart/form-data with a "file" part and optional "style" field
       - JSON body with {"md_path": "...", "style": "..."}
     """
+    import shutil
     import tempfile
 
+    cfg = load_config()
+    render_dir = cfg.get("render_output_dir", "")
+    if render_dir and Path(render_dir).is_dir():
+        out_dir = Path(render_dir)
+    else:
+        out_dir = Path(tempfile.mkdtemp(prefix="paperworks-preview-"))
+
     style_id = "wg21"
-    tmp_dir = Path(tempfile.mkdtemp(prefix="paperworks-preview-"))
+    tmp_dir = None
 
     if request.content_type and "multipart" in request.content_type:
         f = request.files.get("file")
@@ -605,6 +626,7 @@ def render_preview():
             return jsonify({"error": "No file uploaded"}), 400
         style_id = request.form.get("style", "wg21")
         fname = Path(f.filename).name
+        tmp_dir = Path(tempfile.mkdtemp(prefix="paperworks-upload-"))
         md_path = str(tmp_dir / fname)
         f.save(md_path)
     else:
@@ -616,27 +638,30 @@ def render_preview():
         fname = Path(md_path).name
 
     try:
-        _ensure_scrivener()
-        from scrivener_lib.config import load_style, resolve_style_path
-        from scrivener_lib.builder import build_pdf
+      with _preview_lock:
+        try:
+            _ensure_scrivener()
+            from scrivener_lib.builder import build_pdf
+            style = _load_style(style_id)
+        except Exception as e:
+            _add_log("preview", f"Scrivener init failed: {e}", status="error")
+            return jsonify({"error": f"Scrivener init failed: {e}"}), 500
 
-        style = load_style(resolve_style_path(style_id))
-    except Exception as e:
-        _add_log("preview", f"Scrivener init failed: {e}", status="error")
-        return jsonify({"error": f"Scrivener init failed: {e}"}), 500
+        out_file = out_dir / Path(fname).with_suffix(".pdf").name
+        _add_log("preview", f"Rendering {fname} ({style_id})...", status="working")
 
-    out_file = tmp_dir / Path(fname).with_suffix(".pdf").name
-    _add_log("preview", f"Rendering {fname} ({style_id})...", status="working")
-
-    try:
-        t0 = time.time()
-        build_pdf(md_path, str(out_file), {}, style)
-        duration = round(time.time() - t0, 2)
-        _add_log("preview", f"{fname} -> {out_file.name} ({duration}s)", status="done")
-        return jsonify({"ok": True, "pdf_path": str(out_file)})
-    except Exception as e:
-        _add_log("preview", f"{fname} FAILED: {e}", status="error")
-        return jsonify({"error": str(e)}), 500
+        try:
+            t0 = time.time()
+            build_pdf(md_path, str(out_file), {}, style)
+            duration = round(time.time() - t0, 2)
+            _add_log("preview", f"{fname} -> {out_file.name} ({duration}s)", status="done")
+            return jsonify({"ok": True, "pdf_path": str(out_file)})
+        except Exception as e:
+            _add_log("preview", f"{fname} FAILED: {e}", status="error")
+            return jsonify({"error": str(e)}), 500
+    finally:
+        if tmp_dir and tmp_dir.exists():
+            shutil.rmtree(tmp_dir, ignore_errors=True)
 
 @app.route("/api/render-all", methods=["POST"])
 def render_all():
@@ -725,67 +750,59 @@ def catalog():
         return jsonify({"styles": [], "images": [], "fonts": [], "error": str(e)})
 
 
+def _serve_scrivener_file(dir_key, filename, mimetype=None):
+    """Serve a file from a scrivener directory (fonts or images)."""
+    try:
+        sc = _scrivener_config()
+        path = sc[dir_key] / filename
+    except Exception:
+        return jsonify({"error": "scrivener not found"}), 500
+    if not path.exists() or not path.is_file():
+        return jsonify({"error": "not found"}), 404
+    return send_file(str(path), mimetype=mimetype) if mimetype else send_file(str(path))
+
 @app.route("/api/font")
 def serve_font():
     filename = request.args.get("f", "")
     if not filename:
         return jsonify({"error": "f param required"}), 400
-    try:
-        sc = _scrivener_config()
-        path = sc["FONTS_DIR"] / filename
-    except Exception:
-        return jsonify({"error": "scrivener not found"}), 500
-    if not path.exists() or not path.is_file():
-        return jsonify({"error": "not found"}), 404
-    return send_file(str(path), mimetype="font/ttf")
-
+    return _serve_scrivener_file("FONTS_DIR", filename, mimetype="font/ttf")
 
 @app.route("/api/image/<path:filename>")
 def serve_image(filename):
-    try:
-        sc = _scrivener_config()
-        path = sc["IMAGES_DIR"] / filename
-    except Exception:
-        return jsonify({"error": "scrivener not found"}), 500
-    if not path.exists() or not path.is_file():
-        return jsonify({"error": "not found"}), 404
-    return send_file(str(path))
+    return _serve_scrivener_file("IMAGES_DIR", filename)
 
 
 # -- Routes: Utility --
 
+def _pick_path(dialog_fn, **kwargs):
+    """Show a tkinter file/directory picker and return the resolved path."""
+    import tkinter as tk
+    from tkinter import filedialog
+    root = tk.Tk()
+    root.withdraw()
+    root.wm_attributes("-topmost", True)
+    path = dialog_fn(**kwargs)
+    root.destroy()
+    return str(Path(path).resolve()) if path else None
+
 @app.route("/api/pick-dir")
 def pick_dir():
     try:
-        import tkinter as tk
         from tkinter import filedialog
-        root = tk.Tk()
-        root.withdraw()
-        root.wm_attributes("-topmost", True)
-        path = filedialog.askdirectory(title="Choose a directory")
-        root.destroy()
-        if path:
-            return jsonify({"path": str(Path(path).resolve())})
-        return jsonify({"path": None})
+        path = _pick_path(filedialog.askdirectory, title="Choose a directory")
+        return jsonify({"path": path})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/pick-file")
 def pick_file():
     try:
-        import tkinter as tk
         from tkinter import filedialog
-        root = tk.Tk()
-        root.withdraw()
-        root.wm_attributes("-topmost", True)
-        path = filedialog.askopenfilename(
+        path = _pick_path(filedialog.askopenfilename,
             title="Choose a markdown file",
-            filetypes=[("Markdown", "*.md"), ("All files", "*.*")],
-        )
-        root.destroy()
-        if path:
-            return jsonify({"path": str(Path(path).resolve())})
-        return jsonify({"path": None})
+            filetypes=[("Markdown", "*.md"), ("All files", "*.*")])
+        return jsonify({"path": path})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

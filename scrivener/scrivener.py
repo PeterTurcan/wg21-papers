@@ -24,14 +24,10 @@ from lib.builder import build_pdf
 from lib.config import (
     PROJECT_ROOT,
     apply_options,
-    ensure_fonts_downloaded,
     list_styles,
-    load_font_manifest,
     load_style,
-    resolve_font_files,
     resolve_style_path,
 )
-from lib.fonts import set_fonts_dir
 
 
 def main():
@@ -81,7 +77,6 @@ def main():
 
     style_path = resolve_style_path(args.style)
     style = load_style(style_path)
-    manifest = load_font_manifest()
 
     if args.options:
         opt_path = Path(args.options)
@@ -91,10 +86,6 @@ def main():
         else:
             options_dict = json.loads(args.options)
         apply_options(style, options_dict)
-
-    resolve_font_files(style, manifest)
-    fonts_dir = ensure_fonts_downloaded(style, manifest)
-    set_fonts_dir(fonts_dir)
 
     md_files = []
     for pattern in args.input:

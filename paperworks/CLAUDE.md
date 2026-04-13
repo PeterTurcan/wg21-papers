@@ -88,10 +88,12 @@ The paper inventory correlates three sources:
 - Events: job_queued, job_started, job_completed, job_failed, queue_drained
 - NEVER bypass the queue. NEVER call the session directly.
 
-## Two Pages
+## Tabs
 
-- `/` - Dashboard: top bar (auth + summary pills), paper table, log, bottom status bar
-- `/settings` - Settings: output dir, watch dirs, credentials, style
+- **Folio** - paper inventory table with status badges, detail rows, upload
+- **Render** - card-based drop targets for one-off preview rendering
+- **Settings** - output dirs (folio + render), watch dirs, style, fonts, credentials
+- **Log** - activity log with dimming
 
 Both pages use SSE (`/api/events`) for live updates. The SSE
 connection is per-page - it reconnects on navigation. State is
@@ -103,10 +105,9 @@ markdown changed -> watchdog -> render worker -> PDF created ->
 PDF watchdog -> dirty flag -> user clicks Upload -> IsoCppSession
 queue -> isocpp.org
 
-## Button UX Rules (TODO - not yet fully implemented)
+## Button UX Rules
 
-Buttons that submit work to the IsoCppSession queue (docketeer)
-or to the render worker follow this pattern:
+Buttons that submit work follow this pattern:
 
 1. **Press** -> button enters working state immediately:
    - Disabled (no re-click)
@@ -114,22 +115,40 @@ or to the render worker follow this pattern:
    - 70% opacity
 2. **Log** -> IsoCppSession's on_event fires job_queued, which
    the server logs automatically. Render worker logs "Starting..."
-3. **Event** -> button stays working until an SSE event confirms
-   completion (job_completed, job_failed, rendered, render_done)
-4. **Done** -> log entry for completion, button re-enables
-5. **Log styling** -> completion entries at 50% opacity to
+3. **Event** -> button stays working until completion is
+   confirmed (SSE event or HTTP response)
+4. **Done** -> log entry for completion, button re-enables,
+   `_workingSet` cleared for the doc number
+5. **Failure** -> toast shown, button re-enables, working
+   state cleared. Both HTTP errors and SSE failures clear state.
+6. **Log styling** -> completion entries at 50% opacity to
    distinguish from active/error entries
 
-Buttons that go through the queue:
-- Upload (IsoCppSession.submit upload - syncs title, author, abstract + PDF)
+Queue-based buttons (SSE confirms completion):
+- Upload (IsoCppSession.submit upload - syncs title, author,
+  abstract + PDF)
 - Draft/Review transition (IsoCppSession.submit transition)
-- Render per-paper (render worker)
-- Render All (render worker)
-- Log In (blocks on login request, not queued but same UX)
+- Render per-paper (render worker via batch queue)
+- Render All (render worker via batch queue)
 
-Buttons that do NOT go through the queue (instant, no working
-state needed): Log Out, Clear Log, Open Folder, Shut Down,
-Save (settings), tab switches.
+Synchronous buttons (HTTP response confirms completion):
+- Render tab preview cards (render-preview endpoint with
+  `_preview_lock` serialization)
+- Log In (blocks on login request)
+
+Instant buttons (no working state needed): Log Out, Clear Log,
+Shut Down, Save (settings), tab switches.
+
+## Render Serialization
+
+All `build_pdf` calls are serialized through `_preview_lock`.
+The batch render worker acquires it per file. The preview
+endpoint acquires it for the full render. This prevents
+concurrent ReportLab font registration corruption.
+
+`build_pdf` is self-contained: it loads the font manifest,
+downloads missing fonts, registers them, and builds the PDF.
+Callers only need to provide a style dict.
 
 ## No Public Scraping
 

@@ -9,7 +9,9 @@ CONFIG_PATH = CONFIG_DIR / "config.json"
 DEFAULTS = {
     "watch_dirs": [],
     "output_dir": "",
+    "render_output_dir": "",
     "style": "wg21",
+    "render_style": "wg21",
     "port": 7780,
     "isocpp_username": "",
     "isocpp_password": "",

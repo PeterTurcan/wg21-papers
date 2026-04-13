@@ -689,3 +689,16 @@ Values resolve in this order (last wins):
 - **PDF bookmarks**: not generated from headings
 
 See `gap-report.md` for the full comparison with paperkiller.
+
+## Future: Event Bus
+
+Scrivener has no global state or event system. Callers like
+Paperworks currently poll or reload after renders to detect
+side effects (e.g. fonts downloaded on first use).
+
+The planned fix: a module-level event bus (`lib/events.py`)
+with `on(callback)`, `emit(event, **data)`, and `clear()`.
+Any Scrivener function can emit events (fonts_downloaded,
+render_start, render_complete) without knowing who is
+listening. Callers register a handler once at startup.
+No function signature changes needed.
