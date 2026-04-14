@@ -41,6 +41,7 @@ class ASTRenderer:
         self.headings = []
         self.seen_h1 = False
         self._in_heading = False
+        self._in_table_header = False
         self._wording_context = None
         self._in_ins = False
         self._in_del = False
@@ -123,6 +124,12 @@ class ASTRenderer:
         self.code_inline_fg = s.get("code_inline_fg", s["code_fg"])
         self.code_inline_bg = s.get("code_inline_bg", s["code_bg"])
 
+        fonts_cfg = s.get("fonts", {})
+        italic_adj = fonts_cfg.get("body_italic", {}).get("size_adjust")
+        bold_italic_adj = fonts_cfg.get("body_bold_italic", {}).get("size_adjust")
+        self._italic_size = round(bs * italic_adj, 2) if italic_adj and italic_adj != 1.0 else None
+        self._bold_italic_size = round(bs * bold_italic_adj, 2) if bold_italic_adj and bold_italic_adj != 1.0 else None
+
     def _inject_cjk_fallback(self, text):
         if not self.body_cmap:
             return text
@@ -168,6 +175,15 @@ class ASTRenderer:
             result.append("".join(cjk_run))
             result.append("</font>")
         return "".join(result)
+
+    @staticmethod
+    def _nobr_numbers(text):
+        """Wrap standalone numbers in <nobr> so they never split across lines in table cells."""
+        parts = re.split(r'(<[^>]+>)', text)
+        for i, part in enumerate(parts):
+            if not part.startswith('<'):
+                parts[i] = re.sub(r'(\d[\d,.\-+:/]*)', r'<nobr>\1</nobr>', part)
+        return ''.join(parts)
 
     def render(self, tokens):
         segments = []
@@ -311,13 +327,13 @@ class ASTRenderer:
         logo_path = self.style.get("logo")
         title_cfg = self.style.get("title", {})
         thickness = title_cfg.get("rule_thickness", 3)
-        space_after = title_cfg.get("space_after_rule", 6)
         logo_h = title_cfg.get("logo_height", 55)
         logo_col_w = title_cfg.get("logo_column_width", 75)
 
         bs = self.style["body_size"]
         h1_cfg = self.style.get("headings", {}).get("h1", {})
         font_size = bs * h1_cfg.get("scale", 2.2)
+        space_after = h1_cfg.get("space_after", 1.0) * font_size
 
         logo_img = None
         if logo_path:
@@ -755,12 +771,21 @@ class ASTRenderer:
                 w = stringWidth(txt, fn, fs)
                 tbl_cfg = self.style.get("table", {})
                 pad = tbl_cfg.get("cell_padding", {})
-                w += pad.get("left", 10) + pad.get("right", 10)
+                w += pad.get("left", 10) + pad.get("right", 10) + 2
                 if w > natural[i]:
                     natural[i] = w
 
         total_natural = sum(natural)
         if total_natural <= self.content_width:
+            surplus = self.content_width - total_natural
+            flex_nat = [w for w in natural if w > self.content_width / ncols]
+            if flex_nat:
+                flex_total = sum(flex_nat)
+                result = list(natural)
+                for i in range(ncols):
+                    if natural[i] > self.content_width / ncols:
+                        result[i] += surplus * (natural[i] / flex_total)
+                return result
             scale = self.content_width / total_natural
             return [w * scale for w in natural]
 
@@ -795,6 +820,7 @@ class ASTRenderer:
                         spaceBefore=0, spaceAfter=0)
                 hdr_style = self.ps.get("table_header", self.ps["body"])
                 head_children = child.get("children", [])
+                self._in_table_header = True
                 if head_children and head_children[0].get("type") == "table_cell":
                     # mistune v3: table_head > table_cell (flat)
                     cells = []
@@ -802,6 +828,7 @@ class ASTRenderer:
                         text = self._inline_children(cell.get("children", []))
                         if not hdr_fg:
                             text = f"<b>{text}</b>"
+                        text = self._nobr_numbers(text)
                         cells.append(Paragraph(text, hdr_style))
                     headers.append(cells)
                 else:
@@ -813,14 +840,17 @@ class ASTRenderer:
                                 cell.get("children", []))
                             if not hdr_fg:
                                 text = f"<b>{text}</b>"
+                            text = self._nobr_numbers(text)
                             cells.append(Paragraph(text, hdr_style))
                         headers.append(cells)
+                self._in_table_header = False
             elif child.get("type") == "table_body":
                 for row in child.get("children", []):
                     cells = []
                     for cell in row.get("children", []):
                         text = self._inline_children(cell.get("children", []))
                         text = self._inject_cjk_fallback(text)
+                        text = self._nobr_numbers(text)
                         cells.append(Paragraph(text, self.ps["body"]))
                     rows.append(cells)
 
@@ -973,6 +1003,8 @@ class ASTRenderer:
 
     def _inline_emphasis(self, tok):
         inner = self._inline_children(tok.get("children", []))
+        if self._italic_size and not self._in_heading:
+            return f'<i><font size="{self._italic_size}">{inner}</font></i>'
         return f"<i>{inner}</i>"
 
     def _inline_strong(self, tok):
@@ -987,7 +1019,7 @@ class ASTRenderer:
             sz = self.ps[f"h{self._heading_level}"].fontSize * 0.85
             return f'<font name="Code-Bold" size="{sz}">{raw}</font>'
         sz = self.ps["code_block"].fontSize
-        if self._wording_context or self._in_ins or self._in_del:
+        if self._wording_context or self._in_ins or self._in_del or self._in_table_header:
             return f'<font name="Code" size="{sz}">{raw}</font>'
         return (f'<font name="Code" size="{sz}" color="{self.code_inline_fg}">'
                 f'<span backColor="{self.code_inline_bg}">{raw}</span></font>')

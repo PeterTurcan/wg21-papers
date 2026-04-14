@@ -44,7 +44,9 @@ Settings are stored in `~/.paperworks/config.json`:
 
 - `watch_dirs` - list of directories to scan for markdown papers
 - `output_dir` - where rendered PDFs are written
+- `render_output_dir` - where Render tab preview PDFs are written (falls back to temp dir)
 - `style` - render style name (default: `wg21`)
+- `auto_render` - automatically render stale PDFs when markdown files change (default: `true`)
 - `port` - server port (default: `7780`)
 - `isocpp_username` - isocpp.org login
 - `isocpp_password` - isocpp.org password (stored locally, never transmitted except to isocpp.org)

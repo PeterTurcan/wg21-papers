@@ -276,12 +276,13 @@ def build_inventory(watch_dirs, output_dir, remote_papers=None):
 
         stale_remote_meta = False
         if remote and md:
-            remote_title = (remote.get("title") or "").strip()
-            local_title = (title or "").strip()
+            remote_title = " ".join((remote.get("title") or "").split()).lower()
+            local_title = " ".join((title or "").split()).lower()
             if remote_title and local_title and remote_title != local_title:
                 stale_remote_meta = True
-            remote_author = (remote.get("author") or "").strip()
-            if remote_author and primary_author and remote_author != primary_author:
+            remote_author = " ".join((remote.get("author") or "").split()).lower()
+            local_author = " ".join(primary_author.split()).lower()
+            if remote_author and local_author and remote_author != local_author:
                 stale_remote_meta = True
 
         # Derive status

@@ -215,6 +215,8 @@ def _flush_md_pending():
     if not candidates:
         return
     cfg = load_config()
+    if not cfg.get("auto_render", True):
+        return
     out_dir = cfg.get("output_dir", "")
     if not out_dir:
         _add_log("render", "Output directory not configured; skipping auto-render", status="error")
@@ -293,11 +295,11 @@ def _on_pdf_changed(path: str):
     global _pdf_debounce_timer
     with _pdf_pending_lock:
         _pdf_pending[path] = time.time()
-    if _pdf_debounce_timer is not None:
-        _pdf_debounce_timer.cancel()
-    _pdf_debounce_timer = threading.Timer(PDF_DEBOUNCE, _flush_pdf_pending)
-    _pdf_debounce_timer.daemon = True
-    _pdf_debounce_timer.start()
+        already_scheduled = _pdf_debounce_timer is not None and _pdf_debounce_timer.is_alive()
+    if not already_scheduled:
+        _pdf_debounce_timer = threading.Timer(PDF_DEBOUNCE, _flush_pdf_pending)
+        _pdf_debounce_timer.daemon = True
+        _pdf_debounce_timer.start()
 
 
 def _start_pdf_watchdog(output_dir):
@@ -393,6 +395,7 @@ def get_config():
         "render_output_dir": cfg.get("render_output_dir", ""),
         "style": cfg.get("style", "wg21"),
         "render_style": cfg.get("render_style", "wg21"),
+        "auto_render": cfg.get("auto_render", True),
         "port": cfg.get("port", 7780),
         "isocpp_username": cfg.get("isocpp_username", ""),
         "has_password": bool(cfg.get("isocpp_password", "")),
@@ -403,7 +406,7 @@ def update_config():
     data = request.get_json(force=True) or {}
     cfg = load_config()
     changed = []
-    for key in ("output_dir", "render_output_dir", "style", "render_style", "isocpp_username", "isocpp_password"):
+    for key in ("output_dir", "render_output_dir", "style", "render_style", "auto_render", "isocpp_username", "isocpp_password"):
         if key in data:
             cfg[key] = data[key]
             changed.append(key.replace("isocpp_", ""))
@@ -555,8 +558,44 @@ def upload_paper():
         "title": data.get("title", ""),
         "author": data.get("author", ""),
         "abstract": data.get("abstract", ""),
+        "status": data.get("status", ""),
     })
     return jsonify({"job_id": job_id})
+
+@app.route("/api/upload-all", methods=["POST"])
+def upload_all():
+    if not _isocpp.authenticated:
+        return jsonify({"error": "Not authenticated"}), 401
+    cfg = load_config()
+    remote_papers, err = _isocpp.fetch_papers()
+    if err:
+        return jsonify({"error": f"Could not fetch remote papers: {err}"}), 500
+    papers = build_inventory(
+        cfg.get("watch_dirs", []),
+        cfg.get("output_dir", ""),
+        remote_papers,
+    )
+    queued = 0
+    for p in papers:
+        if not p.get("pdf_path") or not p.get("remote"):
+            continue
+        if p.get("status") == "mailed":
+            continue
+        _isocpp.submit({
+            "type": "upload",
+            "form_id": p["remote"]["form_id"],
+            "pdf_path": p["pdf_path"],
+            "doc_number": p["doc_number"],
+            "title": p.get("title", ""),
+            "author": p.get("primary_author", ""),
+            "abstract": p.get("brutal_summary", ""),
+        })
+        queued += 1
+    if not queued:
+        return jsonify({"error": "No papers to upload"}), 400
+    _add_log("upload", f"Queued {queued} uploads")
+    return jsonify({"queued": queued})
+
 
 @app.route("/api/transition", methods=["POST"])
 def transition_paper():
@@ -857,13 +896,6 @@ def shutdown():
 
 def run_server(cfg):
     port = cfg.get("port", 7780)
-
-    _add_log("startup", "Scanning inventory...")
-    papers = build_inventory(
-        cfg.get("watch_dirs", []),
-        cfg.get("output_dir", ""),
-    )
-    _add_log("startup", f"Found {len(papers)} papers")
 
     t = threading.Thread(target=_render_worker, daemon=True)
     t.start()

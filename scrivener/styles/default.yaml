@@ -63,9 +63,11 @@ fonts:
   body_italic:
     font: noto-serif-italic
     axes: { wdth: 75, wght: 400 }
+    size_adjust: 0.95
   body_bold_italic:
     font: noto-serif-italic
     axes: { wdth: 75, wght: 537 }
+    size_adjust: 0.95
   code:
     font: noto-sans-mono
     axes: { wdth: 62.5, wght: 400 }
@@ -136,7 +138,6 @@ table:
 # --- Title block ---
 title:
   rule_thickness: 3
-  space_after_rule: 0
   logo_height: 36
   logo_column_width: 55
 

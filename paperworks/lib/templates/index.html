@@ -215,6 +215,7 @@
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" id="summary-pills"></div>
       <div style="display:flex;gap:4px;">
         <button class="btn btn-blue" id="btn-render" onclick="renderAll()" style="display:none;">Render</button>
+        <button class="btn btn-blue" id="btn-upload-all" onclick="uploadAll()" style="display:none;">Upload</button>
       </div>
     </div>
     <div class="filter-bar">
@@ -286,7 +287,11 @@
           </td>
         </tr>
       </table>
-      <div style="margin-top:6px;text-align:right">
+      <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between">
+        <label class="toggle on" id="auto-render-toggle" onclick="toggleAutoRender()">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          <span>Auto-render on file change</span>
+        </label>
         <button class="btn" onclick="saveOutputDirs()">Save</button>
       </div>
     </div>
@@ -367,6 +372,8 @@ function addLog(e) {
   d.innerHTML=`<span class="lt">${esc(e.time||'')}</span> <span class="${cls}">${esc(e.action||'')}</span> <span class="ld">${esc(e.detail||'')}</span>`;
   box.prepend(d);
   while(box.children.length>100) box.removeChild(box.lastChild);
+  if(e.status==='working') setStatus('working', e.detail||e.action||'Working...');
+  else if(e.status==='done'&&e.action==='startup') setStatus('ready', e.detail||'Ready');
 }
 
 function updateQueue() {
@@ -414,6 +421,9 @@ function renderPapers() {
   const renderCount=_papers.filter(p=>p.status==='needs_render').length;
   const rb=document.getElementById('btn-render');
   if(renderCount>0){rb.textContent=`RENDER ${renderCount}`;rb.style.display='inline-block';}else rb.style.display='none';
+  const uploadCount=_papers.filter(p=>p.pdf_path&&p.remote&&p.status!=='mailed').length;
+  const ub=document.getElementById('btn-upload-all');
+  if(uploadCount>0){ub.textContent=`UPLOAD ${uploadCount}`;ub.style.display='inline-block';}else ub.style.display='none';
   const restoreIdx=_expandedIdx;
   _expandedIdx=null;
   if(restoreIdx!==null) toggleDetail(restoreIdx);
@@ -433,7 +443,7 @@ function toggleDetail(idx) {
   const wk=busy?' working':'';
   let acts='';
   if(p.md_path) acts+=`<button class="btn btn-blue${wk}" onclick="event.stopPropagation();renderSingle(${idx})"${dis}>RENDER</button>`;
-  if(p.pdf_path&&p.remote) acts+=`<button class="btn btn-primary${wk}" onclick="event.stopPropagation();submitUpload(${idx})"${dis}>UPLOAD</button>`;
+  if(p.pdf_path&&p.remote) acts+=`<button class="btn btn-blue${wk}" onclick="event.stopPropagation();submitUpload(${idx})"${dis}>UPLOAD</button>`;
   d.innerHTML=`<td colspan="6"><div class="detail-content"><div class="detail-grid">
     <span class="dl">Document</span><span class="dv">${esc(p.doc_number)||'-'}</span>
     <span class="dl">Title</span><span class="dv">${esc(p.title)||'-'}</span>
@@ -510,7 +520,7 @@ function submitTransition(idx, target) {
 function submitUpload(idx) {
   const p = _papers[idx];
   if (!p || !p.remote) return;
-  submitJob(idx, '/api/upload', {form_id: p.remote.form_id, doc_number: p.doc_number, path: p.pdf_path, title: p.title, author: p.primary_author || '', abstract: p.brutal_summary || ''});
+  submitJob(idx, '/api/upload', {form_id: p.remote.form_id, doc_number: p.doc_number, path: p.pdf_path, title: p.title, author: p.primary_author || '', abstract: p.brutal_summary || '', status: (p.remote && p.remote.status) || ''});
 }
 function renderSingle(idx) {
   const p = _papers[idx];
@@ -535,8 +545,22 @@ async function renderAll() {
     showToast('Render failed'); endWork('btn-render', null);
   }
 }
+async function uploadAll() {
+  startWork('btn-upload-all', null);
+  setStatus('working', 'Uploading all...');
+  try {
+    const r = await fetch('/api/upload-all', {method: 'POST'});
+    const d = await r.json();
+    if (r.ok) showToast(`Queued ${d.queued} uploads`, true);
+    else { showToast(d.error || 'Nothing to upload'); endWork('btn-upload-all', null); }
+  } catch (e) {
+    showToast('Upload failed'); endWork('btn-upload-all', null);
+  }
+}
 // -- API --
-async function loadInventory(){try{const r=await fetch('/api/inventory');const d=await r.json();_papers=d.papers||[];for(const dn of[..._dirtySet]){if(!_papers.find(p=>p.doc_number===dn&&p.pdf_path))_dirtySet.delete(dn);}updateSummary(d.summary||{total:0});renderPapers();}catch(e){showToast('Failed to load inventory');}}
+let _invTimer=null;
+async function _doLoadInventory(){try{const r=await fetch('/api/inventory');const d=await r.json();_papers=d.papers||[];for(const dn of[..._dirtySet]){if(!_papers.find(p=>p.doc_number===dn&&p.pdf_path))_dirtySet.delete(dn);}updateSummary(d.summary||{total:0});renderPapers();}catch(e){showToast('Failed to load inventory');}}
+function loadInventory(){if(_invTimer)clearTimeout(_invTimer);return new Promise(r=>{_invTimer=setTimeout(()=>{_invTimer=null;_doLoadInventory().then(r);},500);});}
 
 async function doLogin(){
   const cfg=await(await fetch('/api/config')).json();
@@ -606,6 +630,8 @@ async function addDir(){const inp=document.getElementById('add-dir-input');const
 async function removeDir(path){const r=await fetch('/api/dirs',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:path})});if(r.ok){const d=await r.json();renderDirs(d.watch_dirs);}}
 async function toggleDir(path,field,value){const r=await fetch('/api/dirs/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:path,field,value})});if(r.ok){const d=await r.json();renderDirs(d.watch_dirs);}}
 async function browseDir(inputId){try{const r=await fetch('/api/pick-dir');const d=await r.json();if(d.path)document.getElementById(inputId).value=d.path;}catch(e){showToast('Browse failed');}}
+let _autoRender=true;
+function toggleAutoRender(){_autoRender=!_autoRender;document.getElementById('auto-render-toggle').className='toggle'+(_autoRender?' on':'');postConfig({auto_render:_autoRender});}
 // -- Render cards --
 let _previewOn=true;
 let _catalogTimer=null;
@@ -714,7 +740,7 @@ function connectSSE(){
     else if(d.event==='job_started') setStatus('working',`${doc} ${d.type}...`);
     else if(d.event==='job_completed'){if(d.type==='upload')_dirtySet.delete(doc);_workingSet.delete(doc);renderPapers();}
     else if(d.event==='job_failed'){showToast(`${doc}: ${d.error||'failed'}`);_workingSet.delete(doc);renderPapers();}
-    else if(d.event==='queue_drained'){_queueDepth=0;updateQueue();setStatus('ready','Ready');loadInventory();}
+    else if(d.event==='queue_drained'){_queueDepth=0;updateQueue();endWork('btn-upload-all',null);setStatus('ready','Ready');loadInventory();}
   });
   es.addEventListener('file_changed',e=>{const d=JSON.parse(e.data);setStatus('working',`File changed: ${d.filename}`);const m=_papers.find(p=>p.pdf_path&&p.pdf_path.replace(/\\/g,'/').endsWith('/'+d.filename));if(m&&m.doc_number)_dirtySet.add(m.doc_number);loadInventory().then(()=>setStatus('ready','Ready'));});
   es.addEventListener('render_start',e=>{
@@ -756,6 +782,8 @@ connectSSE();
   const cfg=await(await fetch('/api/config')).json();
   document.getElementById('output-dir').value=cfg.output_dir||'';
   document.getElementById('render-output-dir').value=cfg.render_output_dir||'';
+  _autoRender=cfg.auto_render!==false;
+  document.getElementById('auto-render-toggle').className='toggle'+(_autoRender?' on':'');
   document.getElementById('style-select').dataset.cur=cfg.style||'wg21';
   document.getElementById('render-style-select').dataset.cur=cfg.render_style||'wg21';
   document.getElementById('cred-user').value=cfg.isocpp_username||'';

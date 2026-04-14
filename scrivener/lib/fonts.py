@@ -1,6 +1,12 @@
-"""Font cache, variable-font instantiation, and ReportLab registration."""
+"""Font cache, variable-font instantiation, and ReportLab registration.
 
-from io import BytesIO
+Variable fonts are instantiated at specific axis values via fontTools.
+Instantiated fonts are cached to .fonts/cache/ as static TTFs so
+subsequent runs skip the expensive glyph computation. Cache is
+invalidated when the source font file is newer than the cached file.
+"""
+
+from pathlib import Path
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -21,13 +27,29 @@ def _resolve(file_name):
     return _fonts_dir / file_name
 
 
+def _axes_key(axes):
+    return "-".join(f"{k}{v}" for k, v in sorted(axes.items()))
+
+
+def _cache_path(name, axes):
+    return _fonts_dir / "cache" / f"{name}-{_axes_key(axes)}.ttf"
+
+
 def ensure_font(name, var_path, axes):
-    if name in _cache:
+    cache_key = (str(var_path), tuple(sorted(axes.items())) if axes else ())
+    if _cache.get(name) == cache_key:
         return
     if not axes:
         pdfmetrics.registerFont(TTFont(name, str(var_path)))
-        _cache[name] = True
+        _cache[name] = cache_key
         return
+
+    cached = _cache_path(name, axes)
+    if cached.exists() and cached.stat().st_mtime >= Path(var_path).stat().st_mtime:
+        pdfmetrics.registerFont(TTFont(name, str(cached)))
+        _cache[name] = cache_key
+        return
+
     from fontTools.ttLib import TTFont as FTFont
     from fontTools.varLib.instancer import instantiateVariableFont
 
@@ -37,19 +59,11 @@ def ensure_font(name, var_path, axes):
     for rec in vf["name"].names:
         if rec.nameID == 6:
             rec.string = ps_name
-    buf = BytesIO()
-    vf.save(buf)
-    buf.seek(0)
-    try:
-        pdfmetrics.registerFont(TTFont(name, buf))
-    except Exception:
-        import tempfile
-        tmp = tempfile.NamedTemporaryFile(suffix=".ttf", delete=False)
-        buf.seek(0)
-        tmp.write(buf.read())
-        tmp.flush()
-        pdfmetrics.registerFont(TTFont(name, tmp.name))
-    _cache[name] = True
+
+    cached.parent.mkdir(parents=True, exist_ok=True)
+    vf.save(str(cached))
+    pdfmetrics.registerFont(TTFont(name, str(cached)))
+    _cache[name] = cache_key
 
 
 def get_cmap(var_path, axes):
@@ -70,8 +84,6 @@ def get_cmap(var_path, axes):
 
 
 def ensure_lazy(name):
-    if name in _cache:
-        return
     if name not in _lazy:
         return
     var_path, axes = _lazy[name]

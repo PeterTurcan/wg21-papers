@@ -1,5 +1,10 @@
 """Monkey-patch ReportLab's inline backColor rendering to use
-rounded rectangles with padding derived from font metrics."""
+rounded rectangles with padding derived from font metrics.
+
+This replaces ReportLab's default _do_post_text with a version
+that draws inline code backgrounds as rounded rects. Controls
+the fill, stroke, radius, and padding of inline `code` spans.
+"""
 
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus import paragraph as _mod
@@ -30,9 +35,6 @@ def _patched(tx):
         top = y0 + asc + gap / 3
         h = top - bot
 
-        from reportlab.lib.colors import HexColor
-        stroke_color = HexColor("#e0ddd8")
-
         # Merge consecutive spans with the same color into one rectangle.
         merged = []
         for x1, x2, color in xs.backColors:
@@ -45,10 +47,8 @@ def _patched(tx):
         for x1, x2, color in merged:
             c.saveState()
             c.setFillColor(color)
-            c.setStrokeColor(stroke_color)
-            c.setLineWidth(0.5)
             c.roundRect(x1 - pad_x, bot, (x2 - x1) + 2 * pad_x,
-                        h, RADIUS, stroke=1, fill=1)
+                        h, RADIUS, stroke=0, fill=1)
             c.restoreState()
         xs.backColors = []
         xs.backColor = None

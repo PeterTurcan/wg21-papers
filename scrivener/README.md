@@ -21,7 +21,9 @@ there is no intermediate HTML step, no browser rendering quirks, no
 print-to-PDF margin negotiation. Variable fonts are instantiated
 at arbitrary axis values. Styles are YAML files that cascade like
 CSS. Fonts download on demand from URLs in a manifest file and
-cache locally. The tool is a PDF compiler, not a service.
+cache locally. Instantiated variable fonts are cached as static
+TTFs so subsequent runs skip the expensive glyph computation.
+The tool is a PDF compiler, not a service.
 
 Scrivener is the local rendering path. Paperkiller remains available
 as the server-side path for the web UI and REST API. Both produce
@@ -303,7 +305,6 @@ accepts the same keys:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `title.rule_thickness` | number | `3` | Thickness of rule below title |
-| `title.space_after_rule` | number | `0` | Space after the title rule |
 | `title.logo_height` | number | `36` | Logo height in points |
 | `title.logo_column_width` | number | `55` | Width reserved for logo column |
 
@@ -396,7 +397,10 @@ download URLs. Styles reference fonts by ID, not by filename.
 To add a font, add an entry to `fonts.yaml` with `id`, `file`,
 and `url`, then reference the ID in a style's `fonts:` section.
 The font downloads automatically on first use into the shared
-`.fonts/` cache (gitignored).
+`.fonts/` cache (gitignored). Instantiated variable fonts (with
+axes pinned to specific values) are cached as static TTFs in
+`.fonts/cache/`. The cache is invalidated when the source font
+file is newer than the cached file.
 
 ## Images
 
@@ -587,8 +591,8 @@ it.
 
 ### Inline Code Styling
 
-Inline code spans render with rounded background rectangles, a
-subtle border, and horizontal padding. This is implemented via a
+Inline code spans render with rounded background rectangles
+and horizontal padding. This is implemented via a
 ReportLab paragraph patch that draws rounded rects behind
 `backColor` spans.
 
@@ -597,7 +601,10 @@ ReportLab paragraph patch that draws rounded rects behind
 Fonts are instantiated at exact axis values specified in the style.
 A single variable font file can produce different weights and widths
 without shipping separate font files. The `axes` dict in each font
-slot controls the instantiation:
+slot controls the instantiation. Instantiated fonts are cached as
+static TTFs in `.fonts/cache/` so the expensive fontTools
+computation runs only once per font per axis configuration.
+Subsequent renders load the cached static font directly:
 
 ```yaml
 fonts:
@@ -666,14 +673,14 @@ Values resolve in this order (last wins):
 | `lib/config.py` | Style loading with `inherits:` cascade, `deep_merge()`, font manifest, `resolve_font_files()`, option handling, front matter extraction, config merge, `sp()`, `load_logo`, `list_images()` |
 | `lib/renderer.py` | `ASTRenderer`. AST-to-flowable conversion. The largest module |
 | `lib/flowables.py` | `AccentBox`, `AccentRule`, `PageChrome`. Drawing primitives |
-| `lib/fonts.py` | Font cache, variable-font instantiation, ReportLab registration |
+| `lib/fonts.py` | Font cache (in-memory + disk), variable-font instantiation, ReportLab registration |
 | `lib/colors.py` | Color math. `hex_to_hsl`, `resolve_accent`, `derive_mid`, `resolve_colors` |
 | `lib/highlight.py` | Syntax highlighting via Pygments |
 | `lib/inline_patch.py` | Rounded background rectangles for inline code |
 | `fonts.yaml` | Font manifest (logical IDs to files and URLs) |
 | `styles/*.yaml` | Style definitions |
 | `images/` | Shared image assets (logos) |
-| `.fonts/` | Download cache for fonts (gitignored) |
+| `.fonts/` | Download cache for variable fonts (gitignored). `.fonts/cache/` holds instantiated static TTFs |
 | `.out/` | Default PDF output directory (gitignored) |
 | `gap-report.md` | Feature comparison with paperkiller |
 

@@ -117,12 +117,14 @@ class IsoCppSession:
             except Exception as e:
                 return False, f"Login request failed: {e}"
 
-            if "logout" in r.text.lower() or "sign out" in r.text.lower():
+            text = r.text.lower()
+            if ("logout" in text or "sign out" in text
+                    or "you are now logged in" in text):
                 self._authenticated = True
                 self._username = username
                 return True, "Logged in successfully"
 
-            if "invalid" in r.text.lower() or "incorrect" in r.text.lower():
+            if "invalid" in text or "incorrect" in text:
                 return False, "Invalid username or password"
 
             return False, "Unexpected response - login may have failed"
@@ -287,13 +289,14 @@ class IsoCppSession:
         fields = {}
         submits = []
         for inp in form.find_all("input"):
+            itype = (inp.get("type") or "").lower()
+            if itype == "file":
+                continue
+            if itype == "submit":
+                submits.append((inp.get("name", ""), inp.get("value", "")))
+                continue
             name = inp.get("name")
             if not name:
-                continue
-            if inp.get("type") == "file":
-                continue
-            if inp.get("type") == "submit":
-                submits.append((name, inp.get("value", "")))
                 continue
             fields[name] = inp.get("value", "")
 
@@ -310,14 +313,15 @@ class IsoCppSession:
         return fields, checked, submits
 
     def _pick_save_button(self, submits):
-        """Pick the best submit button for a plain save (no status change).
+        """Pick the submit button that saves without changing status.
 
-        Prefers a button with "save" that isn't a status transition.
-        Falls back to the first available button. Returns (name, value) or None.
+        Prefers the plain "Save" button (no name, no status transition).
+        Falls back to the first available button.
+        Returns (name, value) or None.
         """
         for name, value in submits:
-            val_lower = value.lower()
-            if "save" in val_lower and "review" not in val_lower and "draft" not in val_lower:
+            val = value.lower()
+            if "save" in val and "draft" not in val and "review" not in val and "delete" not in val:
                 return (name, value)
         return submits[0] if submits else None
 
@@ -364,7 +368,8 @@ class IsoCppSession:
             save_btn = self._pick_save_button(submits)
             no_btn = False
             if save_btn:
-                fields[save_btn[0]] = save_btn[1]
+                if save_btn[0]:
+                    fields[save_btn[0]] = save_btn[1]
             else:
                 no_btn = True
 

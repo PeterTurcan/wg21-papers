@@ -13,6 +13,7 @@ DEFAULTS = {
     "style": "wg21",
     "render_style": "wg21",
     "port": 7780,
+    "auto_render": True,
     "isocpp_username": "",
     "isocpp_password": "",
 }

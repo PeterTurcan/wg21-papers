@@ -148,7 +148,9 @@ concurrent ReportLab font registration corruption.
 
 `build_pdf` is self-contained: it loads the font manifest,
 downloads missing fonts, registers them, and builds the PDF.
-Callers only need to provide a style dict.
+Callers only need to provide a style dict. Variable fonts are
+instantiated on first use and cached as static TTFs in
+`.fonts/cache/` - subsequent renders skip fontTools entirely.
 
 ## No Public Scraping
 
