@@ -128,7 +128,7 @@ def scan_markdown_dirs(watch_dirs):
     Returns dict keyed by normalized doc_number.
     """
     papers = {}
-    for entry in watch_dirs:
+    for dir_idx, entry in enumerate(watch_dirs, 1):
         if not entry.get("enabled", True):
             continue
         dirpath = Path(entry["path"])
@@ -167,6 +167,7 @@ def scan_markdown_dirs(watch_dirs):
                 "brutal_summary": brutal,
                 "md_path": str(md_path),
                 "md_mtime": md_path.stat().st_mtime,
+                "folder_idx": dir_idx,
             }
     return papers
 
@@ -323,6 +324,7 @@ def build_inventory(watch_dirs, output_dir, remote_papers=None):
             "stale_pdf": stale_pdf,
             "stale_remote_meta": stale_remote_meta,
             "warnings": warnings,
+            "folder_idx": md.get("folder_idx") if md else None,
         }
 
     # Group by base, keep only latest revision, attach prior revisions

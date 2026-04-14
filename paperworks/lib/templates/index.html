@@ -224,6 +224,7 @@
     <div class="table-wrap" id="table-wrap">
       <table>
         <thead><tr>
+          <th style="width:24px;text-align:center;cursor:pointer" onclick="toggleFolderSort()" title="Sort by folder">#</th>
           <th style="width:95px">Document</th>
           <th style="width:30px"></th>
           <th style="width:34px"></th>
@@ -345,7 +346,7 @@
 <div id="toast"></div>
 
 <script>
-let _papers=[], _filter='', _workingSet=new Set(), _dirtySet=new Set(), _queueDepth=0, _expandedIdx=null;
+let _papers=[], _filter='', _workingSet=new Set(), _dirtySet=new Set(), _queueDepth=0, _expandedIdx=null, _folderSort=false;
 
 // -- Tabs --
 function showTab(name) {
@@ -401,15 +402,18 @@ function badgeHtml(status,idx) {
 
 // -- Papers --
 
+function toggleFolderSort(){_folderSort=!_folderSort;renderPapers();}
 function renderPapers() {
   const tbody=document.getElementById('tbody'), empty=document.getElementById('empty'), tw=document.getElementById('table-wrap');
   const ft=_filter.toLowerCase();
   const indexed=_papers.map((p,i)=>({p,i})).filter(({p})=>!ft||[p.doc_number,p.title,p.audience].filter(Boolean).join(' ').toLowerCase().includes(ft));
+  if(_folderSort) indexed.sort((a,b)=>{const fa=a.p.folder_idx||999,fb=b.p.folder_idx||999;return fa!==fb?fa-fb:0;});
   if(!indexed.length){tbody.innerHTML='';empty.style.display='block';tw.style.display='none';return;}
   empty.style.display='none';tw.style.display='block';
   tbody.innerHTML=indexed.map(({p,i:idx})=>{
     const dirty=p.doc_number&&p.pdf_path&&_dirtySet.has(p.doc_number)?'<span class="dirty-dot"></span>':'';
     return `<tr onclick="toggleDetail(${idx})" data-idx="${idx}">
+      <td class="mono muted" style="width:24px;text-align:center;font-size:10px">${esc(''+(p.folder_idx||''))}</td>
       <td class="mono" style="padding-right:2px">${esc(p.doc_number)||'-'}${dirty}</td>
       <td style="width:30px;text-align:center;padding-left:0;padding-right:4px">${p.md_path?`<a class="file-btn file-btn-md" href="/api/file?path=${encodeURIComponent(p.md_path)}" target="_blank" onclick="event.stopPropagation()" title="Open Markdown">MD</a>`:''}</td>
       <td style="width:34px;text-align:center;padding-left:0;padding-right:4px">${p.pdf_path?`<a class="file-btn file-btn-pdf" href="/api/file?path=${encodeURIComponent(p.pdf_path)}" target="_blank" onclick="event.stopPropagation()" title="Open PDF">PDF</a>`:''}</td>
@@ -444,7 +448,7 @@ function toggleDetail(idx) {
   let acts='';
   if(p.md_path) acts+=`<button class="btn btn-blue${wk}" onclick="event.stopPropagation();renderSingle(${idx})"${dis}>RENDER</button>`;
   if(p.pdf_path&&p.remote) acts+=`<button class="btn btn-blue${wk}" onclick="event.stopPropagation();submitUpload(${idx})"${dis}>UPLOAD</button>`;
-  d.innerHTML=`<td colspan="6"><div class="detail-content"><div class="detail-grid">
+  d.innerHTML=`<td colspan="7"><div class="detail-content"><div class="detail-grid">
     <span class="dl">Document</span><span class="dv">${esc(p.doc_number)||'-'}</span>
     <span class="dl">Title</span><span class="dv">${esc(p.title)||'-'}</span>
     <span class="dl">Authors</span><span class="dv">${esc(p.authors)||'-'}</span>
