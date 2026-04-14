@@ -2,21 +2,21 @@
 rendering logic for converting mistune AST tokens into ReportLab
 flowables."""
 
+import logging
 import re
 from html import unescape
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import (
     HRFlowable,
     Image as RLImage,
-    Indenter,
-    KeepTogether,
     ListFlowable,
     ListItem,
     PageBreak,
     Paragraph,
-    Preformatted,
     Spacer,
     Table,
     TableStyle,
@@ -25,8 +25,9 @@ from reportlab.platypus import (
 
 from . import escape_xml
 from .colors import parse_color
-from .config import sp, load_logo
-from .flowables import AccentBox, AccentRule
+from .config import sp
+from .logo import load_logo
+from .flowables import AccentBox, TitleEnd
 from .fonts import ensure_lazy, ensure_code_family
 from .highlight import highlight
 
@@ -98,7 +99,7 @@ class ASTRenderer:
                 leading=bs * lead_scale, spaceBefore=sb, spaceAfter=sa,
                 keepWithNext=True)
 
-        toc_fs = bs * 0.9
+        toc_fs = bs * s.get("toc_font_scale", 0.9)
         toc_lh = toc_fs * s["line_height"]
         for level in range(2, 4):
             key = f"toc_h{level}"
@@ -119,16 +120,14 @@ class ASTRenderer:
         self.cap_shift = (cap_vc - 0.5) * lh
 
         wcfg = s.get("wording", {})
-        self.ins_color = wcfg.get("ins_color")
-        self.del_color = wcfg.get("del_color")
+        self.ins_color = wcfg["ins_color"]
+        self.del_color = wcfg["del_color"]
         self.code_inline_fg = s.get("code_inline_fg", s["code_fg"])
         self.code_inline_bg = s.get("code_inline_bg", s["code_bg"])
 
         fonts_cfg = s.get("fonts", {})
         italic_adj = fonts_cfg.get("body_italic", {}).get("size_adjust")
-        bold_italic_adj = fonts_cfg.get("body_bold_italic", {}).get("size_adjust")
         self._italic_size = round(bs * italic_adj, 2) if italic_adj and italic_adj != 1.0 else None
-        self._bold_italic_size = round(bs * bold_italic_adj, 2) if bold_italic_adj and bold_italic_adj != 1.0 else None
 
     def _inject_cjk_fallback(self, text):
         if not self.body_cmap:
@@ -249,7 +248,6 @@ class ASTRenderer:
         bar = parse_color(variant["bar_color"])
         bar_w = wcfg["bar_width"]
         pad = wcfg["padding"]
-        radius = wcfg["radius"]
 
         if not flows:
             return []
@@ -269,7 +267,7 @@ class ASTRenderer:
         box = AccentBox(
             tbl, bg, bar, bar_w,
             left_pad, right_pad, pad,
-            width=self.content_width, radius=radius,
+            width=self.content_width,
             cap_shift=self.cap_shift)
 
         return [
@@ -300,7 +298,7 @@ class ASTRenderer:
         if level == 1 and not self.seen_h1:
             self.seen_h1 = True
             if not self.has_fm_title:
-                return self._title_block(text)
+                return self.title_block(text)
 
         if level >= 1:
             anchor = f"h_{len(self.headings)}"
@@ -308,10 +306,11 @@ class ASTRenderer:
 
         flows.append(Paragraph(f'<a name="{anchor}"/>{text}', self.ps[style_key]))
 
-        hcfg = self.style.get("headings", {}).get(style_key, {})
+        headings_cfg = self.style.get("headings", {})
+        hcfg = headings_cfg.get(style_key, {})
         if hcfg.get("rule"):
             rule = HRFlowable(
-                width="100%", thickness=1,
+                width="100%", thickness=headings_cfg["rule_thickness"],
                 color=parse_color(self.heading_rule_color),
                 spaceBefore=self.gap_sm,
                 spaceAfter=self.gap,
@@ -320,7 +319,7 @@ class ASTRenderer:
             flows.append(rule)
         return flows
 
-    def _title_block(self, title_markup):
+    def title_block(self, title_markup):
         from reportlab.pdfbase.pdfmetrics import stringWidth
 
         flows = []
@@ -341,7 +340,8 @@ class ASTRenderer:
                 logo_img = load_logo(logo_path, logo_h)
                 if logo_img:
                     logo_img.hAlign = "RIGHT"
-            except Exception:
+            except Exception as e:
+                log.warning("failed to load logo %s: %s", logo_path, e)
                 logo_img = None
 
         avail_w = self.content_width - logo_col_w if logo_img else self.content_width
@@ -383,6 +383,7 @@ class ASTRenderer:
                 lineCap='butt'))
         else:
             flows.append(Spacer(1, space_after))
+        flows.append(TitleEnd())
         return flows
 
     def build_front_matter_flowables(self, fm):
@@ -469,7 +470,7 @@ class ASTRenderer:
             textColor=toc_fg,
             spaceAfter=0)
         toc_rule = HRFlowable(
-            width="100%", thickness=2,
+            width="100%", thickness=self.style.get("toc_rule_thickness", 2),
             color=parse_color(self.heading_rule_color),
             spaceBefore=self.gap_sm,
             spaceAfter=self.gap * 2,
@@ -545,12 +546,14 @@ class ASTRenderer:
             tmp = tempfile.NamedTemporaryFile(suffix=".svg", delete=False)
             tmp.write(svg.encode("utf-8"))
             tmp.close()
-            drawing = svg2rlg(tmp.name)
-            os.unlink(tmp.name)
+            try:
+                drawing = svg2rlg(tmp.name)
+            finally:
+                os.unlink(tmp.name)
             if drawing:
                 from .config import PAGE_CONFIGS
                 pc = PAGE_CONFIGS[self.style.get("page_size", "letter")]
-                max_h = (pc["size"][1] - 2 * pc["margin"]) * 0.8
+                max_h = (pc["size"][1] - 2 * pc["margin"]) * self.style.get("mermaid_max_height_ratio", 0.8)
                 s = self.content_width / drawing.width
                 if drawing.height * s > max_h:
                     s = max_h / drawing.height
@@ -559,8 +562,8 @@ class ASTRenderer:
                 drawing.scale(s, s)
                 return [Spacer(1, self.gap_sm), drawing,
                         Spacer(1, self.ps["h1"].fontSize)]
-        except Exception:
-            pass
+        except Exception as e:
+            log.warning("mermaid SVG conversion failed: %s", e)
         return None
 
     def _mermaid_svg(self, code):
@@ -568,13 +571,13 @@ class ASTRenderer:
         try:
             from merm import render_diagram
             return render_diagram(code)
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("merm render failed: %s", e)
         try:
             import mermaido
             return mermaido.render_to_string(code)
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("mermaido render failed: %s", e)
         return None
 
     def _render_block_code(self, tok):
@@ -616,7 +619,7 @@ class ASTRenderer:
         pre = XPreformatted(markup, self.ps["code_block"])
         box = AccentBox(
             pre, bg, accent, bar_w,
-            lpad, rpad, vpad, radius=0,
+            lpad, rpad, vpad,
             cap_shift=self.cap_shift)
         return [Spacer(1, self.gap_sm), box, Spacer(1, self.ps["h1"].fontSize)]
 
@@ -678,7 +681,6 @@ class ASTRenderer:
             left_pad=left_pad,
             right_pad=right_pad,
             v_pad=bq["vertical_padding"],
-            radius=bq["corner_radius"],
             cap_shift=self.cap_shift)
 
         flows = [box]
@@ -767,15 +769,17 @@ class ASTRenderer:
                 else:
                     txt = str(cell)
                     fn = "Body"
-                    fs = 10
+                    fs = self.style["body_size"]
                 w = stringWidth(txt, fn, fs)
-                tbl_cfg = self.style.get("table", {})
-                pad = tbl_cfg.get("cell_padding", {})
-                w += pad.get("left", 10) + pad.get("right", 10) + 2
+                tbl_cfg = self.style["table"]
+                pad = tbl_cfg["cell_padding"]
+                w += pad["left"] + pad["right"] + 2
                 if w > natural[i]:
                     natural[i] = w
 
         total_natural = sum(natural)
+        if total_natural == 0:
+            return [self.content_width / ncols] * ncols
         if total_natural <= self.content_width:
             surplus = self.content_width - total_natural
             flex_nat = [w for w in natural if w > self.content_width / ncols]
@@ -972,7 +976,7 @@ class ASTRenderer:
         box = AccentBox(
             pre, bg, accent, cb["bar_width"],
             cb["left_padding"], cb["right_padding"],
-            cb["vertical_padding"], radius=0,
+            cb["vertical_padding"],
             cap_shift=self.cap_shift)
         return [Spacer(1, self.gap_sm), box, Spacer(1, self.ps["h1"].fontSize)]
 
@@ -1024,9 +1028,14 @@ class ASTRenderer:
         return (f'<font name="Code" size="{sz}" color="{self.code_inline_fg}">'
                 f'<span backColor="{self.code_inline_bg}">{raw}</span></font>')
 
+    _SAFE_SCHEMES = {"http", "https", "mailto", ""}
+
     def _inline_link(self, tok):
         children = self._inline_children(tok.get("children", []))
         href = tok.get("attrs", {}).get("url", "")
+        scheme = href.split(":", 1)[0].lower() if ":" in href else ""
+        if scheme and scheme not in self._SAFE_SCHEMES:
+            return children
         return f'<a href="{escape_xml(href)}" color="{self.link_color}">{children}</a>'
 
     def _inline_image(self, tok):
@@ -1100,6 +1109,6 @@ class ASTRenderer:
                     img,
                     Spacer(1, self.gap_sm),
                 ]
-            except Exception:
-                pass
+            except Exception as e:
+                log.warning("failed to load image %s: %s", resolved, e)
         return [Paragraph(f"[image: {escape_xml(src)}]", self.ps["body"])]

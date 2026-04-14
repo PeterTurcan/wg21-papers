@@ -6,6 +6,9 @@ from PIL import Image
 from reportlab.lib.colors import HexColor, toColor
 
 
+_FALLBACK_ACCENT = "#8b1a1a"
+
+
 def parse_color(value):
     """Parse a color from hex (#rrggbb) or ReportLab named color."""
     if not isinstance(value, str):
@@ -28,7 +31,8 @@ def hsl_to_hex(h, s, l):
 
 
 def dominant_chromatic_color(image_path):
-    img = Image.open(image_path).convert("RGB")
+    with Image.open(image_path) as raw:
+        img = raw.convert("RGB")
     img = img.quantize(colors=8, method=Image.Quantize.MEDIANCUT).convert("RGB")
     colors = img.getcolors(maxcolors=img.width * img.height)
     colors.sort(key=lambda c: c[0], reverse=True)
@@ -36,14 +40,14 @@ def dominant_chromatic_color(image_path):
         h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
         if s > 0.15 and 0.1 < l < 0.9:
             return "#{:02x}{:02x}{:02x}".format(r, g, b)
-    return "#8b1a1a"
+    return _FALLBACK_ACCENT
 
 
 def resolve_accent(value, logo_path):
     if value == "from_logo" and logo_path:
         return dominant_chromatic_color(logo_path)
     if value == "from_logo":
-        return "#8b1a1a"
+        return _FALLBACK_ACCENT
     return value
 
 
@@ -55,7 +59,7 @@ def derive_mid(saturated_hex):
 
 
 def resolve_colors(style, logo_path):
-    sat = resolve_accent(style.get("accent_saturated", "#8b1a1a"), logo_path)
+    sat = resolve_accent(style.get("accent_saturated", _FALLBACK_ACCENT), logo_path)
     style["accent_saturated"] = sat
     mid = style.get("accent_mid", "auto")
     if mid == "auto":
@@ -66,4 +70,4 @@ def resolve_colors(style, logo_path):
     if lc == "auto":
         style["link_color"] = style["accent_mid"]
     else:
-        style["link_color"] = lc
+        style["link_color"] = resolve_accent(lc, logo_path)

@@ -395,6 +395,53 @@ A `<pre><code>` block inside wording with insertions and deletions:
 
 :::
 
-## 24. Final Section
+## 24. Heading with Inline `code`
+
+### Subsection using `std::optional<T>`
+
+This exercises the Code-Bold rendering inside headings at heading-scaled size.
+
+---
+
+## 25. Codespan Inside `<ins>` and `<del>`
+
+The function signature changed from <del>`void start()`</del> to <ins>`coroutine_handle<> start()`</ins>.
+
+---
+
+## 26. Codespan in Table Header
+
+| Expression | `noexcept` | Result |
+|------------|------------|--------|
+| `co_await e` | Yes | handle |
+| `co_yield v` | No | void |
+
+---
+
+## 27. Inline Image in Text
+
+The logo ![C++ Alliance](images/C++ Alliance - Logo.svg) appears inline with surrounding text in this paragraph.
+
+---
+
+## 28. Block HTML (Non-Pre)
+
+<div>This is a raw HTML div block that is not a pre/code block.</div>
+
+---
+
+## 29. Table with Empty Header
+
+A table where the header cells are blank (the `nhead == 0` path in the renderer is unreachable from markdown since GFM requires a header row):
+
+|  |  |
+|---|---|
+| Alpha | 1 |
+| Beta | 2 |
+| Gamma | 3 |
+
+---
+
+## 30. Final Section
 
 This is the last section. It verifies that the document ends cleanly without trailing artifacts.

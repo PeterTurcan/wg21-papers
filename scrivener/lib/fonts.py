@@ -67,14 +67,15 @@ def ensure_font(name, var_path, axes):
 
 
 def get_cmap(var_path, axes):
-    key = (str(var_path), tuple(sorted(axes.items())))
+    key = (str(var_path), tuple(sorted(axes.items())) if axes else ())
     if key in _cmap_cache:
         return _cmap_cache[key]
     from fontTools.ttLib import TTFont as FTFont
-    from fontTools.varLib.instancer import instantiateVariableFont
 
     vf = FTFont(str(var_path))
-    instantiateVariableFont(vf, axes, inplace=True)
+    if axes:
+        from fontTools.varLib.instancer import instantiateVariableFont
+        instantiateVariableFont(vf, axes, inplace=True)
     cmap = set()
     for table in vf["cmap"].tables:
         if table.cmap:

@@ -452,8 +452,8 @@ function toggleDetail(idx) {
     ${p.md_path?`<span class="dl">Markdown</span><span class="dv" style="font-family:var(--mono);font-size:10px">${esc(p.md_path)}</span>`:''}
     ${p.pdf_path?`<span class="dl">PDF</span><span class="dv" style="font-family:var(--mono);font-size:10px">${esc(p.pdf_path)}</span>`:''}
     ${p.brutal_summary?`<span class="dl">Abstract</span><span class="dv">${esc(p.brutal_summary)}</span>`:''}
-    ${furl?`<span class="dl">isocpp.org</span><span class="dv"><a href="${furl}" target="_blank">${furl}</a></span>`:''}
-    ${(()=>{const rv=(p.prior_revisions||[]).filter(r=>r.form_url);if(!rv.length)return '';return `<span class="dl">Revisions</span><span class="dv" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${rv.map(r=>`<a class="file-btn file-btn-rev" href="${r.form_url}" target="_blank" onclick="event.stopPropagation()">R${r.revision}</a>`).join('')}</span>`;})()}
+    ${furl?`<span class="dl">isocpp.org</span><span class="dv"><a href="${esc(furl)}" target="_blank">${esc(furl)}</a></span>`:''}
+    ${(()=>{const rv=(p.prior_revisions||[]).filter(r=>r.form_url);if(!rv.length)return '';return `<span class="dl">Revisions</span><span class="dv" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${rv.map(r=>`<a class="file-btn file-btn-rev" href="${esc(r.form_url)}" target="_blank" onclick="event.stopPropagation()">R${r.revision}</a>`).join('')}</span>`;})()}
     ${p.stale_pdf?'<span class="dl">PDF</span><span class="dv" style="color:var(--amber)">Stale - needs render</span>':''}
     ${p.stale_remote_meta?'<span class="dl">Remote</span><span class="dv" style="color:var(--amber)">Metadata out of date</span>':''}
     ${(p.warnings||[]).map(w=>`<span class="dl" style="color:var(--amber)">Warning</span><span class="dv" style="color:var(--amber)">${esc(w)}</span>`).join('')}
@@ -525,16 +525,14 @@ function submitUpload(idx) {
 function renderSingle(idx) {
   const p = _papers[idx];
   if (!p || !p.md_path || !p.doc_number || _workingSet.has(p.doc_number)) return;
-  _workingSet.add(p.doc_number);
-  renderPapers();
+  startWork(null, p.doc_number);
   setStatus('working', `Rendering ${p.doc_number}...`);
   fetch('/api/render', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({md_path: p.md_path})})
-    .then(r=>{if(!r.ok){_workingSet.delete(p.doc_number);renderPapers();showToast(p.doc_number+': render failed');}})
-    .catch(()=>{_workingSet.delete(p.doc_number);renderPapers();showToast(p.doc_number+': render failed');});
+    .then(r=>{if(!r.ok){endWork(null, p.doc_number);showToast(p.doc_number+': render failed');}})
+    .catch(()=>{endWork(null, p.doc_number);showToast(p.doc_number+': render failed');});
 }
 async function renderAll() {
-  const btn = document.getElementById('btn-render');
-  if (btn) { btn.disabled = true; btn.classList.add('working'); }
+  startWork('btn-render', null);
   setStatus('working', 'Rendering all...');
   try {
     const r = await fetch('/api/render-all', {method: 'POST'});
@@ -593,14 +591,14 @@ function renderDirs(dirs){
     return `<tr>
       <td style="width:55px">${badge}</td>
       <td style="width:30px;text-align:right;padding-right:14px;font-family:var(--mono);color:var(--text-muted)">${d.md_count}</td>
-      <td class="dir-path">${d.path}</td>
+      <td class="dir-path">${esc(d.path)}</td>
       <td style="width:70px"><label class="rec-label"><input type="checkbox" ${d.recursive?'checked':''} onchange="toggleDir('${e}','recursive',this.checked)">recursive</label></td>
       <td style="width:24px"><button class="btn-x" onclick="removeDir('${e}')">&times;</button></td>
     </tr>`;
   }).join('');
   el.innerHTML=`<table class="dir-table">${rows}</table>`;
 }
-function populateStyleSelect(selId,styles){const sel=document.getElementById(selId);const cur=sel.value||sel.dataset.cur||'wg21';sel.innerHTML=styles.map(s=>`<option value="${s.id}" ${s.id===cur?'selected':''}>${s.name||s.id}</option>`).join('');}
+function populateStyleSelect(selId,styles){const sel=document.getElementById(selId);const cur=sel.value||sel.dataset.cur||'wg21';sel.innerHTML=styles.map(s=>`<option value="${esc(s.id)}" ${s.id===cur?'selected':''}>${esc(s.name||s.id)}</option>`).join('');}
 async function postConfig(fields){await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});showToast('Saved',true);}
 async function saveOutputDirs(){postConfig({output_dir:document.getElementById('output-dir').value.trim(),render_output_dir:document.getElementById('render-output-dir').value.trim()});}
 async function saveStyle(){postConfig({style:document.getElementById('style-select').value});}
@@ -621,7 +619,7 @@ async function loadCatalog(){
     }).join('');
     const ig=document.getElementById('images-grid');
     if(!(c.images||[]).length){ig.innerHTML='<span class="muted" style="font-size:11px">No images</span>';}
-    else{ig.innerHTML=c.images.map(i=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 10px;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--text-muted)"><img src="/api/image/${encodeURIComponent(i)}" style="width:24px;height:24px;object-fit:contain" />${i}</div>`).join('');}
+    else{ig.innerHTML=c.images.map(i=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:6px 10px;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--text-muted)"><img src="/api/image/${encodeURIComponent(i)}" style="width:24px;height:24px;object-fit:contain" />${esc(i)}</div>`).join('');}
     populateStyleSelect('render-style-select',styles);
   }catch(e){showToast('Failed to load catalog');}
 }
@@ -732,39 +730,39 @@ async function shutDown(){await fetch('/api/shutdown',{method:'POST'});document.
 // -- SSE --
 function connectSSE(){
   const es=new EventSource('/api/events');
-  es.addEventListener('connected',()=>setStatus('ready','Ready'));
-  es.addEventListener('log',e=>addLog(JSON.parse(e.data)));
-  es.addEventListener('job',e=>{
+  es.addEventListener('connected',()=>{_workingSet.clear();_queueDepth=0;updateQueue();endWork('btn-render',null);endWork('btn-upload-all',null);setStatus('ready','Ready');loadInventory();});
+  es.addEventListener('log',e=>{try{addLog(JSON.parse(e.data));}catch(ex){console.error('SSE log parse error',ex);}});
+  es.addEventListener('job',e=>{try{
     const d=JSON.parse(e.data),doc=d.doc_number;
     if(d.event==='job_queued'){_queueDepth=d.queue_depth!=null?d.queue_depth:_queueDepth+1;updateQueue();}
     else if(d.event==='job_started') setStatus('working',`${doc} ${d.type}...`);
-    else if(d.event==='job_completed'){if(d.type==='upload')_dirtySet.delete(doc);_workingSet.delete(doc);renderPapers();}
-    else if(d.event==='job_failed'){showToast(`${doc}: ${d.error||'failed'}`);_workingSet.delete(doc);renderPapers();}
+    else if(d.event==='job_completed'){if(d.type==='upload')_dirtySet.delete(doc);endWork(null,doc);}
+    else if(d.event==='job_failed'){showToast(`${doc}: ${d.error||'failed'}`);endWork(null,doc);}
     else if(d.event==='queue_drained'){_queueDepth=0;updateQueue();endWork('btn-upload-all',null);setStatus('ready','Ready');loadInventory();}
-  });
-  es.addEventListener('file_changed',e=>{const d=JSON.parse(e.data);setStatus('working',`File changed: ${d.filename}`);const m=_papers.find(p=>p.pdf_path&&p.pdf_path.replace(/\\/g,'/').endsWith('/'+d.filename));if(m&&m.doc_number)_dirtySet.add(m.doc_number);loadInventory().then(()=>setStatus('ready','Ready'));});
-  es.addEventListener('render_start',e=>{
+  }catch(ex){console.error('SSE job parse error',ex);}});
+  es.addEventListener('file_changed',e=>{try{const d=JSON.parse(e.data);setStatus('working',`File changed: ${d.filename}`);const m=_papers.find(p=>p.pdf_path&&p.pdf_path.replace(/\\/g,'/').endsWith('/'+d.filename));if(m&&m.doc_number)_dirtySet.add(m.doc_number);loadInventory().then(()=>setStatus('ready','Ready'));}catch(ex){console.error('SSE file_changed parse error',ex);}});
+  es.addEventListener('render_start',e=>{try{
     const d=JSON.parse(e.data);
     setStatus('working',`Rendering 0/${d.total}...`);
-  });
-  es.addEventListener('rendered',e=>{
+  }catch(ex){console.error('SSE render_start parse error',ex);}});
+  es.addEventListener('rendered',e=>{try{
     const d=JSON.parse(e.data);
     const fname=(d.file||'').split(/[\\/]/).pop();
     if(d.status==='starting') { setStatus('working',`Rendering ${fname} (${d.done}/${d.total})...`); return; }
     setStatus('working',`Rendered ${d.done}/${d.total}`);
     const match=_papers.find(p=>p.md_path&&d.file&&p.md_path.replace(/\\/g,'/')===d.file.replace(/\\/g,'/'));
-    if(match&&match.doc_number) _workingSet.delete(match.doc_number);
+    if(match&&match.doc_number) endWork(null,match.doc_number);
     loadInventory();
-  });
-  es.addEventListener('render_done',e=>{
+  }catch(ex){console.error('SSE rendered parse error',ex);}});
+  es.addEventListener('render_done',e=>{try{
     const d=JSON.parse(e.data);
     endWork('btn-render', null);
-    if(d.errors&&!d.done){setStatus('error','Render failed: check log for details');}
+    if(d.errors&&!d.done){setStatus('error','Render failed: check log for details');showToast('Render failed: check log');}
     else{setStatus('ready',`Rendered ${d.done||0} file${(d.done||0)!==1?'s':''}`);}
     _statusTimer=setTimeout(()=>setStatus('ready','Ready'),4000);
     loadInventory();
     debouncedCatalog();
-  });
+  }catch(ex){console.error('SSE render_done parse error',ex);}});
   es.onerror=()=>{setStatus('','Reconnecting...');es.close();setTimeout(connectSSE,3000);};
 }
 

@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import logging
 import os
 import queue
 import subprocess
@@ -9,6 +10,8 @@ import sys
 import time
 import threading
 from pathlib import Path
+
+_log = logging.getLogger(__name__)
 
 import yaml
 from flask import Flask, Response, jsonify, render_template, request, send_file
@@ -84,14 +87,8 @@ _logged_warnings: set[str] = set()
 def _broadcast(event: str, data: dict):
     msg = f"event: {event}\ndata: {json.dumps(data)}\n\n"
     with _sse_lock:
-        dead = []
         for q in _sse_queues:
-            try:
-                q.put_nowait(msg)
-            except queue.Full:
-                dead.append(q)
-        for q in dead:
-            _sse_queues.remove(q)
+            q.put(msg)
 
 
 def _add_log(action, detail, status="ok"):
@@ -146,10 +143,12 @@ def _render_worker():
         out_dir_str = cfg.get("output_dir", "")
         if not out_dir_str:
             _add_log("render", "Output directory not configured", status="error")
+            _broadcast("render_done", {"total": len(batch), "done": 0, "errors": len(batch)})
             continue
         out_dir = Path(out_dir_str)
         if not out_dir.is_dir():
             _add_log("render", f"Output directory not found: {out_dir_str}", status="error")
+            _broadcast("render_done", {"total": len(batch), "done": 0, "errors": len(batch)})
             continue
 
         try:
@@ -345,7 +344,7 @@ def _dir_info(entry):
             else:
                 count = sum(1 for f in p.iterdir() if f.is_file() and f.suffix == ".md")
         except Exception:
-            pass
+            _log.debug("Error counting .md in %s", path, exc_info=True)
     return {
         "path": path, "recursive": recursive,
         "enabled": entry.get("enabled", True),
@@ -363,7 +362,7 @@ def dashboard():
 
 @app.route("/api/events")
 def sse():
-    q: queue.Queue = queue.Queue(maxsize=50)
+    q: queue.Queue = queue.Queue()
     with _sse_lock:
         _sse_queues.append(q)
     def stream():
@@ -453,6 +452,8 @@ def toggle_dir():
     data = request.get_json(force=True) or {}
     resolved = str(Path(data.get("dir", "").strip()).expanduser().resolve())
     field = data.get("field", "enabled")
+    if field not in ("enabled", "recursive"):
+        return jsonify({"error": f"Invalid field: {field}"}), 400
     value = bool(data.get("value", True))
     cfg = load_config()
     for entry in cfg["watch_dirs"]:
@@ -651,56 +652,62 @@ def render_preview():
 
     cfg = load_config()
     render_dir = cfg.get("render_output_dir", "")
+    is_temp_out = False
     if render_dir and Path(render_dir).is_dir():
         out_dir = Path(render_dir)
     else:
         out_dir = Path(tempfile.mkdtemp(prefix="paperworks-preview-"))
+        is_temp_out = True
 
     style_id = "wg21"
     tmp_dir = None
-
-    if request.content_type and "multipart" in request.content_type:
-        f = request.files.get("file")
-        if not f or not f.filename:
-            return jsonify({"error": "No file uploaded"}), 400
-        style_id = request.form.get("style", "wg21")
-        fname = Path(f.filename).name
-        tmp_dir = Path(tempfile.mkdtemp(prefix="paperworks-upload-"))
-        md_path = str(tmp_dir / fname)
-        f.save(md_path)
-    else:
-        data = request.get_json(force=True) or {}
-        md_path = data.get("md_path", "")
-        style_id = data.get("style", "wg21")
-        if not md_path or not Path(md_path).is_file():
-            return jsonify({"error": "Markdown file not found"}), 400
-        fname = Path(md_path).name
+    ok = False
 
     try:
-      with _preview_lock:
-        try:
-            _ensure_scrivener()
-            from scrivener_lib.builder import build_pdf
-            style = _load_style(style_id)
-        except Exception as e:
-            _add_log("preview", f"Scrivener init failed: {e}", status="error")
-            return jsonify({"error": f"Scrivener init failed: {e}"}), 500
+        if request.content_type and "multipart" in request.content_type:
+            f = request.files.get("file")
+            if not f or not f.filename:
+                return jsonify({"error": "No file uploaded"}), 400
+            style_id = request.form.get("style", "wg21")
+            fname = Path(f.filename).name
+            tmp_dir = Path(tempfile.mkdtemp(prefix="paperworks-upload-"))
+            md_path = str(tmp_dir / fname)
+            f.save(md_path)
+        else:
+            data = request.get_json(force=True) or {}
+            md_path = data.get("md_path", "")
+            style_id = data.get("style", "wg21")
+            if not md_path or not Path(md_path).is_file():
+                return jsonify({"error": "Markdown file not found"}), 400
+            fname = Path(md_path).name
 
-        out_file = out_dir / Path(fname).with_suffix(".pdf").name
-        _add_log("preview", f"Rendering {fname} ({style_id})...", status="working")
+        with _preview_lock:
+            try:
+                _ensure_scrivener()
+                from scrivener_lib.builder import build_pdf
+                style = _load_style(style_id)
+            except Exception as e:
+                _add_log("preview", f"Scrivener init failed: {e}", status="error")
+                return jsonify({"error": f"Scrivener init failed: {e}"}), 500
 
-        try:
-            t0 = time.time()
-            build_pdf(md_path, str(out_file), {}, style)
-            duration = round(time.time() - t0, 2)
-            _add_log("preview", f"{fname} -> {out_file.name} ({duration}s)", status="done")
-            return jsonify({"ok": True, "pdf_path": str(out_file)})
-        except Exception as e:
-            _add_log("preview", f"{fname} FAILED: {e}", status="error")
-            return jsonify({"error": str(e)}), 500
+            out_file = out_dir / Path(fname).with_suffix(".pdf").name
+            _add_log("preview", f"Rendering {fname} ({style_id})...", status="working")
+
+            try:
+                t0 = time.time()
+                build_pdf(md_path, str(out_file), {}, style)
+                duration = round(time.time() - t0, 2)
+                _add_log("preview", f"{fname} -> {out_file.name} ({duration}s)", status="done")
+                ok = True
+                return jsonify({"ok": True, "pdf_path": str(out_file)})
+            except Exception as e:
+                _add_log("preview", f"{fname} FAILED: {e}", status="error")
+                return jsonify({"error": str(e)}), 500
     finally:
         if tmp_dir and tmp_dir.exists():
             shutil.rmtree(tmp_dir, ignore_errors=True)
+        if is_temp_out and not ok and out_dir.exists():
+            shutil.rmtree(out_dir, ignore_errors=True)
 
 @app.route("/api/render-all", methods=["POST"])
 def render_all():
@@ -757,7 +764,8 @@ def clear_log():
 def _scrivener_config():
     """Load scrivener config utilities."""
     _ensure_scrivener()
-    from scrivener_lib.config import FONTS_DIR, IMAGES_DIR, MANIFEST_PATH, list_images, list_styles
+    from scrivener_lib.config import FONTS_DIR, IMAGES_DIR, MANIFEST_PATH
+    from scrivener_lib.catalog import list_images, list_styles
     return {
         "FONTS_DIR": FONTS_DIR,
         "IMAGES_DIR": IMAGES_DIR,
@@ -793,9 +801,12 @@ def _serve_scrivener_file(dir_key, filename, mimetype=None):
     """Serve a file from a scrivener directory (fonts or images)."""
     try:
         sc = _scrivener_config()
-        path = sc[dir_key] / filename
+        root = sc[dir_key]
+        path = (root / filename).resolve()
     except Exception:
         return jsonify({"error": "scrivener not found"}), 500
+    if not path.is_relative_to(root.resolve()):
+        return jsonify({"error": "forbidden"}), 403
     if not path.exists() or not path.is_file():
         return jsonify({"error": "not found"}), 404
     return send_file(str(path), mimetype=mimetype) if mimetype else send_file(str(path))
@@ -848,8 +859,10 @@ def pick_file():
 
 @app.route("/assets/<path:filename>")
 def serve_asset(filename):
-    assets_dir = Path(__file__).parent.parent / "assets"
-    path = assets_dir / filename
+    assets_dir = (Path(__file__).parent.parent / "assets").resolve()
+    path = (assets_dir / filename).resolve()
+    if not path.is_relative_to(assets_dir):
+        return jsonify({"error": "forbidden"}), 403
     if not path.exists() or not path.is_file():
         return jsonify({"error": "not found"}), 404
     return send_file(str(path))
@@ -861,6 +874,16 @@ def serve_local_file():
     if not filepath or not Path(filepath).is_file():
         return jsonify({"error": "File not found"}), 404
     p = Path(filepath).resolve()
+    cfg = load_config()
+    allowed = []
+    for d in cfg.get("watch_dirs", []):
+        allowed.append(Path(d["path"]).resolve())
+    if cfg.get("output_dir"):
+        allowed.append(Path(cfg["output_dir"]).resolve())
+    if cfg.get("render_output_dir"):
+        allowed.append(Path(cfg["render_output_dir"]).resolve())
+    if not any(p.is_relative_to(root) for root in allowed if root.is_dir()):
+        return jsonify({"error": "forbidden"}), 403
     if p.suffix.lower() in (".md", ".markdown", ".txt"):
         with open(p, encoding="utf-8") as f:
             content = f.read()

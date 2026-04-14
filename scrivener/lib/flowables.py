@@ -14,7 +14,7 @@ class AccentBox(Flowable):
     Do not duplicate this pattern elsewhere.
     """
     def __init__(self, content, bg, accent, bar_w,
-                 left_pad, right_pad, v_pad, width=None, radius=0,
+                 left_pad, right_pad, v_pad, width=None,
                  cap_shift=0, top_rule=None, top_rule_thickness=None):
         super().__init__()
         self._content = content
@@ -25,7 +25,6 @@ class AccentBox(Flowable):
         self.right_pad = right_pad
         self.v_pad = v_pad
         self.box_width = width
-        self.radius = radius
         self.cap_shift = cap_shift
         self.top_rule = top_rule
         self.top_rule_thickness = top_rule_thickness if top_rule_thickness is not None else 1.5
@@ -50,11 +49,13 @@ class AccentBox(Flowable):
             return []
         top = AccentBox(parts[0], self.bg, self.accent, self.bar_w,
                         self.left_pad, self.right_pad, self.v_pad,
-                        width=self.box_width, radius=0,
-                        cap_shift=self.cap_shift)
+                        width=self.box_width,
+                        cap_shift=self.cap_shift,
+                        top_rule=self.top_rule,
+                        top_rule_thickness=self.top_rule_thickness)
         bot = AccentBox(parts[1], self.bg, self.accent, self.bar_w,
                         self.left_pad, self.right_pad, self.v_pad,
-                        width=self.box_width, radius=0,
+                        width=self.box_width,
                         cap_shift=self.cap_shift)
         return [top, bot]
 
@@ -62,11 +63,7 @@ class AccentBox(Flowable):
         c = self.canv
         c.saveState()
         c.setFillColor(self.bg)
-        if self.radius:
-            c.roundRect(0, 0, self.width, self.height,
-                        self.radius, fill=1, stroke=0)
-        else:
-            c.rect(0, 0, self.width, self.height, fill=1, stroke=0)
+        c.rect(0, 0, self.width, self.height, fill=1, stroke=0)
         if self.top_rule:
             c.saveState()
             c.setFillColor(self.top_rule)
@@ -80,35 +77,27 @@ class AccentBox(Flowable):
         self._content.drawOn(c, self.left_pad, y)
 
 
-class AccentRule(Flowable):
-    def __init__(self, color, width, thickness=2):
-        super().__init__()
-        self.color = parse_color(color)
-        self.rule_width = width
-        self.thickness = thickness
-        self.height = thickness + 2
-
+class TitleEnd(Flowable):
+    """Zero-height sentinel marking the end of title-block flows."""
     def wrap(self, availWidth, availHeight):
-        return self.rule_width, self.height
+        return 0, 0
 
     def draw(self):
-        self.canv.setStrokeColor(self.color)
-        self.canv.setLineWidth(self.thickness)
-        self.canv.setLineCap(0)
-        self.canv.line(0, 1, self.rule_width, 1)
+        pass
 
 
 class PageChrome:
     """Page-level drawing: page number."""
     def __init__(self, style):
         self.pn_color = parse_color(style["page_number_color"])
+        self.pn_font_size = style.get("page_number_font_size", 8)
         pc = PAGE_CONFIGS[style.get("page_size", "letter")]
         self.page_w, self.page_h = pc["size"]
         self.margin = pc["margin"]
 
     def __call__(self, canvas, doc):
         canvas.saveState()
-        canvas.setFont("Body", 8)
+        canvas.setFont("Body", self.pn_font_size)
         canvas.setFillColor(self.pn_color)
         canvas.drawCentredString(
             self.page_w / 2, self.margin - 20,

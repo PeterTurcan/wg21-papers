@@ -1,7 +1,12 @@
 """Per-user configuration, persisted to ~/.paperworks/config.json."""
 
 import json
+import logging
+import os
+import tempfile
 from pathlib import Path
+
+_log = logging.getLogger(__name__)
 
 CONFIG_DIR = Path.home() / ".paperworks"
 CONFIG_PATH = CONFIG_DIR / "config.json"
@@ -39,6 +44,7 @@ def _read_scrivener_config():
         with open(SCRIVENER_CONFIG, encoding="utf-8") as f:
             return json.load(f)
     except Exception:
+        _log.debug("Could not read scrivener config", exc_info=True)
         return {}
 
 
@@ -50,6 +56,7 @@ def load_config():
             with open(CONFIG_PATH, encoding="utf-8") as f:
                 data = json.load(f)
         except Exception:
+            _log.warning("Could not read %s", CONFIG_PATH, exc_info=True)
             cfg = dict(DEFAULTS)
         else:
             cfg = dict(DEFAULTS)
@@ -71,5 +78,14 @@ def load_config():
 
 def save_config(cfg):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=2)
+    fd, tmp = tempfile.mkstemp(dir=CONFIG_DIR, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2)
+        os.replace(tmp, CONFIG_PATH)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise

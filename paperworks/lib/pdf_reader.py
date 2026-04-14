@@ -1,7 +1,10 @@
 """Extract metadata from WG21 PDF papers."""
 
+import logging
 import re
 from pathlib import Path
+
+_log = logging.getLogger(__name__)
 
 
 _DOC_NUM_RE = re.compile(
@@ -141,6 +144,7 @@ def read_pdf(path):
         finally:
             doc.close()
     except Exception:
+        _log.debug("Could not read PDF %s", path, exc_info=True)
         result["doc_number"] = _doc_number_from_filename(path)
         return result
 

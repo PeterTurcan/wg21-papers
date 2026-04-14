@@ -7,6 +7,7 @@ to isocpp.org which shares CSRF tokens across a single session.
 Consumers receive progress via a single on_event callback.
 """
 
+import logging
 import queue
 import re
 import threading
@@ -26,7 +27,9 @@ class IsoCppSession:
     Args:
         on_event: callback(dict) invoked for every queue state change.
             Events: job_queued, job_started, job_completed, job_failed,
-            queue_drained. All events include job_id, doc_number, type.
+            queue_drained. Job-level events include job_id, doc_number,
+            type. queue_drained is a queue-level event with only the
+            event field.
     """
 
     def __init__(self, on_event=None):
@@ -264,7 +267,7 @@ class IsoCppSession:
         try:
             self._on_event(event)
         except Exception:
-            pass
+            logging.getLogger(__name__).exception("_emit callback failed")
 
     # -- Internal executors (run inside worker thread, hold session lock) --
 

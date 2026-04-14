@@ -13,13 +13,15 @@ from .colors import resolve_colors
 from .config import (
     IMAGES_DIR,
     PAGE_CONFIGS,
-    ensure_fonts_downloaded,
     extract_front_matter,
-    load_font_manifest,
     merge_config,
+)
+from .font_manifest import (
+    ensure_fonts_downloaded,
+    load_font_manifest,
     resolve_font_files,
 )
-from .flowables import AccentRule, PageChrome
+from .flowables import PageChrome, TitleEnd
 from .fonts import build_body_cmap, register_families, register_fonts, set_fonts_dir
 from .renderer import ASTRenderer
 
@@ -74,7 +76,11 @@ def build_pdf(md_path, output_path, cli_cfg, style):
 
     body_cmap = build_body_cmap(cfg)
 
-    pc = PAGE_CONFIGS[cfg.get("page_size", "letter")]
+    page_size_name = cfg.get("page_size", "letter")
+    if page_size_name not in PAGE_CONFIGS:
+        valid = ", ".join(sorted(PAGE_CONFIGS))
+        raise ValueError(f"unknown page_size '{page_size_name}'. valid: {valid}")
+    pc = PAGE_CONFIGS[page_size_name]
     page_size = pc["size"]
     margin = pc["margin"]
     page_w, page_h = page_size
@@ -96,7 +102,7 @@ def build_pdf(md_path, output_path, cli_cfg, style):
 
     if has_fm_title:
         title_text = escape_xml(unescape(str(fm["title"])))
-        title_flows = renderer._title_block(title_text)
+        title_flows = renderer.title_block(title_text)
         if fm_flows:
             title_flows = [f for f in title_flows if not isinstance(f, HRFlowable)]
     else:
@@ -106,7 +112,7 @@ def build_pdf(md_path, output_path, cli_cfg, style):
         for f in flowables:
             if in_title:
                 title_flows.append(f)
-                if isinstance(f, AccentRule):
+                if isinstance(f, TitleEnd):
                     in_title = False
             else:
                 rest_flows.append(f)

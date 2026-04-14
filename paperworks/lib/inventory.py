@@ -11,12 +11,15 @@ D/P prefixes are interchangeable for matching: D4007R0 and P4007R0
 refer to the same paper.
 """
 
+import logging
 import re
 from pathlib import Path
 
 import yaml
 
 from .pdf_reader import read_pdf
+
+_log = logging.getLogger(__name__)
 
 _DOC_RE = re.compile(r"([DPN])(\d{3,5})(R(\d+))?", re.IGNORECASE)
 
@@ -56,6 +59,7 @@ def _read_markdown_paper(path):
         with open(path, encoding="utf-8") as f:
             content = f.read(8000)
     except Exception:
+        _log.debug("Could not read %s", path, exc_info=True)
         return None, None
 
     if not content.startswith("---"):
@@ -70,6 +74,7 @@ def _read_markdown_paper(path):
         if not isinstance(fm, dict):
             return None, None
     except Exception:
+        _log.debug("Bad YAML in %s", path, exc_info=True)
         return None, None
 
     body = content[end + 3:]

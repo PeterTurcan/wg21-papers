@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""scrivener - Markdown to PDF converter and live rendering server.
+"""scrivener - Markdown to PDF converter.
 
 Uses ReportLab, mistune v3, and variable fonts to produce
 beautifully formatted PDFs from Markdown files with YAML front
-matter. Styling is fully externalized into style directories.
+matter. Styling is fully externalized into style YAML files.
 
 Usage:
     python scrivener.py doc.md                  # -> .out/doc.pdf
@@ -21,10 +21,10 @@ import sys
 from pathlib import Path
 
 from lib.builder import build_pdf
+from lib.catalog import list_styles
 from lib.config import (
     PROJECT_ROOT,
     apply_options,
-    list_styles,
     load_style,
     resolve_style_path,
 )
@@ -51,10 +51,11 @@ def main():
     parser.add_argument(
         "--logo",
         help="Override the logo image path")
-    parser.add_argument(
+    toc_group = parser.add_mutually_exclusive_group()
+    toc_group.add_argument(
         "--toc", action="store_true", default=None,
         help="Force table of contents on")
-    parser.add_argument(
+    toc_group.add_argument(
         "--no-toc", action="store_true", default=None,
         help="Force table of contents off")
     parser.add_argument(
@@ -81,7 +82,7 @@ def main():
     if args.options:
         opt_path = Path(args.options)
         if opt_path.is_file():
-            with open(opt_path) as f:
+            with open(opt_path, encoding="utf-8") as f:
                 options_dict = json.load(f)
         else:
             options_dict = json.loads(args.options)
@@ -95,6 +96,9 @@ def main():
         else:
             md_files.append(pattern)
     md_files = [Path(f) for f in md_files]
+
+    if args.output and len(md_files) > 1:
+        parser.error("-o/--output cannot be used with multiple input files")
 
     default_outdir = PROJECT_ROOT / ".out"
 
