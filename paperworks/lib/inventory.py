@@ -39,7 +39,7 @@ def _parse_doc_number(raw):
         return None, None, None
     m = _DOC_RE.match(raw.strip().upper())
     if not m:
-        return raw.upper(), raw.upper(), 0
+        return None, None, None
     prefix, num, _, rev = m.groups()
     rev = int(rev) if rev else 0
     full = f"{prefix}{num}R{rev}"
@@ -57,7 +57,7 @@ def _read_markdown_paper(path):
     """
     try:
         with open(path, encoding="utf-8") as f:
-            content = f.read(8000)
+            content = f.read(64_000)
     except Exception:
         _log.debug("Could not read %s", path, exc_info=True)
         return None, None
@@ -145,6 +145,7 @@ def scan_markdown_dirs(watch_dirs):
             doc_str = str(fm["document"])
             full, base, rev = _parse_doc_number(doc_str)
             if not base:
+                _log.warning("Skipping %s: invalid document number %r", md_path, doc_str)
                 continue
 
             reply_to = fm.get("reply-to", [])

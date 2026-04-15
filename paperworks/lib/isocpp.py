@@ -16,6 +16,8 @@ import uuid
 import requests
 from bs4 import BeautifulSoup
 
+_log = logging.getLogger(__name__)
+
 LOGIN_URL = "https://isocpp.org/member/login"
 PAPERS_URL = "https://isocpp.org/papers"
 BASE_URL = "https://isocpp.org"
@@ -279,6 +281,9 @@ class IsoCppSession:
         submit_buttons is a list of (name, value) for all submit inputs.
         """
         page = self._session.get(f"{BASE_URL}/papers/form/{form_id}", timeout=15)
+        if not page.ok:
+            _log.warning("Form %s returned HTTP %d", form_id, page.status_code)
+            return None, None, None
         soup = BeautifulSoup(page.text, "html.parser")
 
         form = None

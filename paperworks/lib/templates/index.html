@@ -361,6 +361,8 @@ function showToast(m,ok) { const t=document.getElementById('toast'); t.textConte
 let _statusTimer=null;
 function setStatus(s,t) { if(_statusTimer){clearTimeout(_statusTimer);_statusTimer=null;} document.getElementById('status-dot').className=s; document.getElementById('status-text').textContent=t; }
 function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function safeUrl(u){if(!u)return '';try{const p=new URL(u);return['http:','https:'].includes(p.protocol)?u:'';}catch{return /^\//.test(u)?u:'';}}
+
 
 // -- Log --
 function addLog(e) {
@@ -455,8 +457,8 @@ function toggleDetail(idx) {
     ${p.md_path?`<span class="dl">Markdown</span><span class="dv" style="font-family:var(--mono);font-size:10px">${esc(p.md_path)}</span>`:''}
     ${p.pdf_path?`<span class="dl">PDF</span><span class="dv" style="font-family:var(--mono);font-size:10px">${esc(p.pdf_path)}</span>`:''}
     ${p.brutal_summary?`<span class="dl">Abstract</span><span class="dv">${esc(p.brutal_summary)}</span>`:''}
-    ${furl?`<span class="dl">isocpp.org</span><span class="dv"><a href="${esc(furl)}" target="_blank">${esc(furl)}</a></span>`:''}
-    ${(()=>{const rv=(p.prior_revisions||[]).filter(r=>r.form_url);if(!rv.length)return '';return `<span class="dl">Revisions</span><span class="dv" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${rv.map(r=>`<a class="file-btn file-btn-rev" href="${esc(r.form_url)}" target="_blank" onclick="event.stopPropagation()">R${r.revision}</a>`).join('')}</span>`;})()}
+    ${furl?`<span class="dl">isocpp.org</span><span class="dv"><a href="${esc(safeUrl(furl))}" target="_blank">${esc(furl)}</a></span>`:''}
+    ${(()=>{const rv=(p.prior_revisions||[]).filter(r=>r.form_url);if(!rv.length)return '';return `<span class="dl">Revisions</span><span class="dv" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${rv.map(r=>`<a class="file-btn file-btn-rev" href="${esc(safeUrl(r.form_url))}" target="_blank" onclick="event.stopPropagation()">R${r.revision}</a>`).join('')}</span>`;})()}
     ${p.stale_pdf?'<span class="dl">PDF</span><span class="dv" style="color:var(--amber)">Stale - needs render</span>':''}
     ${p.stale_remote_meta?'<span class="dl">Remote</span><span class="dv" style="color:var(--amber)">Metadata out of date</span>':''}
     ${(p.warnings||[]).map(w=>`<span class="dl" style="color:var(--amber)">Warning</span><span class="dv" style="color:var(--amber)">${esc(w)}</span>`).join('')}
@@ -559,9 +561,9 @@ async function uploadAll() {
   }
 }
 // -- API --
-let _invTimer=null;
-async function _doLoadInventory(){try{const r=await fetch('/api/inventory');const d=await r.json();_papers=d.papers||[];for(const dn of[..._dirtySet]){if(!_papers.find(p=>p.doc_number===dn&&p.pdf_path))_dirtySet.delete(dn);}updateSummary(d.summary||{total:0});renderPapers();}catch(e){showToast('Failed to load inventory');}}
-function loadInventory(){if(_invTimer)clearTimeout(_invTimer);return new Promise(r=>{_invTimer=setTimeout(()=>{_invTimer=null;_doLoadInventory().then(r);},500);});}
+let _invTimer=null,_invResolve=null;
+async function _doLoadInventory(){try{const r=await fetch('/api/inventory');const d=await r.json();_papers=d.papers||[];for(const dn of[..._dirtySet]){if(!_papers.find(p=>p.doc_number===dn&&p.pdf_path))_dirtySet.delete(dn);}for(const dn of[..._workingSet]){const p=_papers.find(pp=>pp.doc_number===dn);if(!p||p.status!=='needs_render')_workingSet.delete(dn);}updateSummary(d.summary||{total:0});renderPapers();}catch(e){showToast('Failed to load inventory');}}
+function loadInventory(){if(_invTimer)clearTimeout(_invTimer);if(_invResolve){_invResolve();_invResolve=null;}return new Promise(r=>{_invResolve=r;_invTimer=setTimeout(()=>{_invTimer=null;_invResolve=null;_doLoadInventory().then(r);},500);});}
 
 async function doLogin(){
   const cfg=await(await fetch('/api/config')).json();
@@ -589,20 +591,33 @@ function renderDirs(dirs){
   const el=document.getElementById('dir-list');
   if(!dirs.length){el.innerHTML='<div style="color:var(--text-muted);font-size:11px;padding:8px;">No directories configured.</div>';return;}
   const rows=dirs.map(d=>{
-    const e=d.path.replace(/'/g,"\\'").replace(/\\/g,'\\\\');
-    const badge=!d.exists?'<span class="dir-badge paused">missing</span>':d.enabled?`<span class="dir-badge active" onclick="toggleDir('${e}','enabled',false)">active</span>`:`<span class="dir-badge paused" onclick="toggleDir('${e}','enabled',true)">paused</span>`;
-    return `<tr>
+    const badge=!d.exists?'<span class="dir-badge paused">missing</span>':d.enabled?`<span class="dir-badge active" data-action="toggle" data-field="enabled" data-value="false">active</span>`:`<span class="dir-badge paused" data-action="toggle" data-field="enabled" data-value="true">paused</span>`;
+    return `<tr data-path="${esc(d.path)}">
       <td style="width:55px">${badge}</td>
       <td style="width:30px;text-align:right;padding-right:14px;font-family:var(--mono);color:var(--text-muted)">${d.md_count}</td>
       <td class="dir-path">${esc(d.path)}</td>
-      <td style="width:70px"><label class="rec-label"><input type="checkbox" ${d.recursive?'checked':''} onchange="toggleDir('${e}','recursive',this.checked)">recursive</label></td>
-      <td style="width:24px"><button class="btn-x" onclick="removeDir('${e}')">&times;</button></td>
+      <td style="width:70px"><label class="rec-label"><input type="checkbox" ${d.recursive?'checked':''} data-action="toggle" data-field="recursive">recursive</label></td>
+      <td style="width:24px"><button class="btn-x" data-action="remove">&times;</button></td>
     </tr>`;
   }).join('');
   el.innerHTML=`<table class="dir-table">${rows}</table>`;
+  el.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const row=e.target.closest('tr[data-path]');
+      if(!row)return;
+      const path=row.dataset.path;
+      const action=e.target.dataset.action||e.target.closest('[data-action]').dataset.action;
+      if(action==='remove')removeDir(path);
+      else if(action==='toggle'){
+        const field=e.target.dataset.field||e.target.closest('[data-field]').dataset.field;
+        const val=e.target.type==='checkbox'?e.target.checked:e.target.dataset.value==='true';
+        toggleDir(path,field,val);
+      }
+    });
+  });
 }
 function populateStyleSelect(selId,styles){const sel=document.getElementById(selId);const cur=sel.value||sel.dataset.cur||'wg21';sel.innerHTML=styles.map(s=>`<option value="${esc(s.id)}" ${s.id===cur?'selected':''}>${esc(s.name||s.id)}</option>`).join('');}
-async function postConfig(fields){await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});showToast('Saved',true);}
+async function postConfig(fields){const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});if(!r.ok){showToast('Save failed');return;}showToast('Saved',true);}
 async function saveOutputDirs(){postConfig({output_dir:document.getElementById('output-dir').value.trim(),render_output_dir:document.getElementById('render-output-dir').value.trim()});}
 async function saveStyle(){postConfig({style:document.getElementById('style-select').value});}
 async function loadCatalog(){

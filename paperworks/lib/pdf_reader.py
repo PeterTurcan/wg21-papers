@@ -81,7 +81,8 @@ def _extract_abstract_from_doc(doc):
     For multi-page documents, starts at page 1 (page 0 typically has
     the TOC entry). For single-page documents, scans page 0.
 
-    Returns (brutal_summary, full_abstract) or (None, None).
+    Returns (brutal_summary, abstract) or (None, None).
+    The abstract is capped at 1000 characters.
     """
     start = 0 if doc.page_count == 1 else 1
     for pg_num in range(start, min(5, doc.page_count)):

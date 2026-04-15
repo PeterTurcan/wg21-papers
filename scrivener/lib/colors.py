@@ -58,16 +58,17 @@ def derive_mid(saturated_hex):
     return hsl_to_hex(h, s, l)
 
 
-def resolve_colors(style, logo_path):
-    sat = resolve_accent(style.get("accent_saturated", _FALLBACK_ACCENT), logo_path)
-    style["accent_saturated"] = sat
-    mid = style.get("accent_mid", "auto")
+def resolve_colors(cfg, logo_path):
+    """Resolve accent, mid, and link colors. Mutates cfg in place."""
+    sat = resolve_accent(cfg["accent_saturated"], logo_path)
+    cfg["accent_saturated"] = sat
+    mid = cfg.get("accent_mid", "auto")
     if mid == "auto":
-        style["accent_mid"] = derive_mid(sat)
+        cfg["accent_mid"] = derive_mid(sat)
     else:
-        style["accent_mid"] = resolve_accent(mid, logo_path)
-    lc = style.get("link_color", "auto")
+        cfg["accent_mid"] = resolve_accent(mid, logo_path)
+    lc = cfg.get("link_color", "auto")
     if lc == "auto":
-        style["link_color"] = style["accent_mid"]
+        cfg["link_color"] = cfg["accent_mid"]
     else:
-        style["link_color"] = resolve_accent(lc, logo_path)
+        cfg["link_color"] = resolve_accent(lc, logo_path)

@@ -4,7 +4,7 @@ element in every style. Modify with care."""
 from reportlab.platypus import Flowable
 
 from .colors import parse_color
-from .config import PAGE_CONFIGS
+from .config import PAGE_CONFIGS, sp
 
 
 class AccentBox(Flowable):
@@ -56,6 +56,7 @@ class AccentBox(Flowable):
                         cap_shift=self.cap_shift,
                         top_rule=self.top_rule,
                         top_rule_thickness=self.top_rule_thickness)
+        # Continuation omits top_rule: decorative rule belongs only on first fragment.
         bot = AccentBox(parts[1], self.bg, self.accent, self.bar_w,
                         self.left_pad, self.right_pad, self.v_pad,
                         width=self.box_width,
@@ -91,18 +92,24 @@ class TitleEnd(Flowable):
 
 class PageChrome:
     """Page-level drawing: page number."""
-    def __init__(self, style):
+    def __init__(self, style, page_geometry=None):
         self.pn_color = parse_color(style["page_number_color"])
         self.pn_font_size = style.get("page_number_font_size", 8)
-        pc = PAGE_CONFIGS[style.get("page_size", "letter")]
-        self.page_w, self.page_h = pc["size"]
-        self.margin = pc["margin"]
+        if page_geometry:
+            self.page_w = page_geometry["page_w"]
+            self.page_h = page_geometry["page_h"]
+            self.margin = page_geometry["margin"]
+        else:
+            pc = PAGE_CONFIGS[style.get("page_size", "letter")]
+            self.page_w, self.page_h = pc["size"]
+            self.margin = pc["margin"]
+        self.pn_offset = sp(style, 20 / 11)
 
     def __call__(self, canvas, doc):
         canvas.saveState()
         canvas.setFont("Body", self.pn_font_size)
         canvas.setFillColor(self.pn_color)
         canvas.drawCentredString(
-            self.page_w / 2, self.margin - 20,
+            self.page_w / 2, self.margin - self.pn_offset,
             str(canvas.getPageNumber()))
         canvas.restoreState()

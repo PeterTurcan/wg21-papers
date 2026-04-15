@@ -87,6 +87,14 @@ def test_resolve_palette_empty():
     assert style["color"] == "@brand"
 
 
+def test_resolve_palette_mutates_in_place():
+    style = {"palette": {"brand": "#ff0000"}, "color": "@brand"}
+    original_id = id(style)
+    resolve_palette(style)
+    assert id(style) == original_id
+    assert style["color"] == "#ff0000"
+
+
 # -- extract_front_matter --
 
 def test_extract_front_matter():
@@ -217,26 +225,5 @@ def test_load_style_inheritance():
     assert "fields" in style["front_matter"]
 
 
-def test_load_style_circular(tmp_path):
-    a = tmp_path / "a.yaml"
-    b = tmp_path / "b.yaml"
-    a.write_text(f"inherits: b\nname: A\n", encoding="utf-8")
-    b.write_text(f"inherits: a\nname: B\n", encoding="utf-8")
-    # Circular detection relies on STYLES_DIR resolution, so we
-    # test via the same mechanism load_style uses for bases.
-    # The base files need to be in STYLES_DIR for the lookup to work.
-    # Instead, verify the error directly with a self-referencing style.
-    c = tmp_path / "c.yaml"
-    # Write to STYLES_DIR would be invasive; test that direct circular
-    # reference on the same file is caught.
-    import tempfile, os
-    with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", dir=STYLES_DIR,
-            delete=False, encoding="utf-8") as f:
-        f.write(f"inherits: {Path(f.name).stem}\nname: Self\n")
-        temp_style = Path(f.name)
-    try:
-        with pytest.raises(ValueError, match="circular"):
-            load_style(temp_style)
-    finally:
-        os.unlink(temp_style)
+
+# Circular inheritance test lives in test_catalog.py (layer 4).

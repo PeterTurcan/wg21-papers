@@ -115,7 +115,7 @@ def apply_options(style, options_dict):
 
 
 def resolve_palette(style):
-    """Resolve @name color references using style.palette."""
+    """Resolve @name color references using style.palette. Mutates style in place."""
     palette = style.get("palette", {})
     if not palette:
         return

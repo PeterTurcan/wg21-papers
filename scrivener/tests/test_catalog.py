@@ -1,8 +1,6 @@
 """Layer 4: Style and catalog tests."""
 
-import os
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -100,48 +98,34 @@ def test_load_style_wg21_inherits():
     assert len(style["front_matter"]["fields"]) > 0
 
 
+def _assert_no_unresolved_refs(obj, path=""):
+    if isinstance(obj, str) and obj.startswith("@"):
+        pytest.fail(f"unresolved @-reference at {path}: {obj}")
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            if k == "palette":
+                continue
+            _assert_no_unresolved_refs(v, f"{path}.{k}")
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            _assert_no_unresolved_refs(v, f"{path}[{i}]")
+
+
 def test_load_style_palette_resolved():
     style = load_style(resolve_style_path(None))
-    def check(obj, path=""):
-        if isinstance(obj, str) and obj.startswith("@"):
-            pytest.fail(f"unresolved @-reference at {path}: {obj}")
-        elif isinstance(obj, dict):
-            for k, v in obj.items():
-                if k == "palette":
-                    continue
-                check(v, f"{path}.{k}")
-        elif isinstance(obj, list):
-            for i, v in enumerate(obj):
-                check(v, f"{path}[{i}]")
-    check(style)
+    _assert_no_unresolved_refs(style)
 
 
 def test_load_style_wg21_palette_resolved():
     style = load_style(resolve_style_path("wg21"))
-    def check(obj, path=""):
-        if isinstance(obj, str) and obj.startswith("@"):
-            pytest.fail(f"unresolved @-reference at {path}: {obj}")
-        elif isinstance(obj, dict):
-            for k, v in obj.items():
-                if k == "palette":
-                    continue
-                check(v, f"{path}.{k}")
-        elif isinstance(obj, list):
-            for i, v in enumerate(obj):
-                check(v, f"{path}[{i}]")
-    check(style)
+    _assert_no_unresolved_refs(style)
 
 
 # -- circular inheritance --
 
-def test_circular_inheritance():
-    with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", dir=STYLES_DIR,
-            delete=False, encoding="utf-8") as f:
-        f.write(f"inherits: {Path(f.name).stem}\nname: Self\n")
-        temp_style = Path(f.name)
-    try:
-        with pytest.raises(ValueError, match="circular"):
-            load_style(temp_style)
-    finally:
-        os.unlink(temp_style)
+def test_circular_inheritance(tmp_path, monkeypatch):
+    monkeypatch.setattr("lib.config.STYLES_DIR", tmp_path)
+    circ = tmp_path / "circ.yaml"
+    circ.write_text("inherits: circ\nname: Self\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="circular"):
+        load_style(circ)

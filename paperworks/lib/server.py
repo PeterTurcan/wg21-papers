@@ -84,6 +84,11 @@ _pdf_observer = None
 _logged_warnings: set[str] = set()
 
 
+def _output_pdf_path(md_path, out_dir):
+    """Canonical PDF output path for a markdown source."""
+    return Path(out_dir) / Path(md_path).with_suffix(".pdf").name
+
+
 def _broadcast(event: str, data: dict):
     msg = f"event: {event}\ndata: {json.dumps(data)}\n\n"
     with _sse_lock:
@@ -167,7 +172,7 @@ def _render_worker():
         done = 0
         errors = 0
         for md_path in batch:
-            out_file = out_dir / Path(md_path).with_suffix(".pdf").name
+            out_file = _output_pdf_path(md_path, out_dir)
             fname = Path(md_path).name
             _add_log("render", f"Starting {fname}...", status="working")
             _broadcast("rendered", {
@@ -223,11 +228,13 @@ def _flush_md_pending():
     out_path = Path(out_dir)
     batch = []
     for md_path in candidates:
-        md = Path(md_path)
-        if out_path.is_dir():
-            pdf = out_path / md.with_suffix(".pdf").name
-            if pdf.is_file() and pdf.stat().st_mtime >= md.stat().st_mtime:
-                continue
+        try:
+            if out_path.is_dir():
+                pdf = _output_pdf_path(md_path, out_path)
+                if pdf.is_file() and pdf.stat().st_mtime >= Path(md_path).stat().st_mtime:
+                    continue
+        except OSError:
+            continue
         batch.append(md_path)
     if batch:
         _render_queue.put(batch)
@@ -410,7 +417,10 @@ def update_config():
             cfg[key] = data[key]
             changed.append(key.replace("isocpp_", ""))
     if "port" in data:
-        cfg["port"] = int(data["port"])
+        try:
+            cfg["port"] = int(data["port"])
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid port number"}), 400
         changed.append("port")
     save_config(cfg)
     if "output_dir" in data:
@@ -440,9 +450,15 @@ def add_dir():
 @app.route("/api/dirs", methods=["DELETE"])
 def remove_dir():
     data = request.get_json(force=True) or {}
-    resolved = str(Path(data.get("dir", "").strip()).expanduser().resolve())
+    raw_dir = (data.get("dir", "") or "").strip()
+    if not raw_dir:
+        return jsonify({"error": "Missing directory"}), 400
+    resolved = str(Path(raw_dir).expanduser().resolve())
     cfg = load_config()
+    before = len(cfg["watch_dirs"])
     cfg["watch_dirs"] = [d for d in cfg["watch_dirs"] if d["path"] != resolved]
+    if len(cfg["watch_dirs"]) == before:
+        return jsonify({"error": "Directory not found"}), 404
     save_config(cfg)
     _start_md_watchdog(cfg["watch_dirs"])
     return jsonify({"watch_dirs": [_dir_info(d) for d in cfg["watch_dirs"]]})
@@ -450,16 +466,23 @@ def remove_dir():
 @app.route("/api/dirs/toggle", methods=["POST"])
 def toggle_dir():
     data = request.get_json(force=True) or {}
-    resolved = str(Path(data.get("dir", "").strip()).expanduser().resolve())
+    raw_dir = (data.get("dir", "") or "").strip()
+    if not raw_dir:
+        return jsonify({"error": "Missing directory"}), 400
+    resolved = str(Path(raw_dir).expanduser().resolve())
     field = data.get("field", "enabled")
     if field not in ("enabled", "recursive"):
         return jsonify({"error": f"Invalid field: {field}"}), 400
     value = bool(data.get("value", True))
     cfg = load_config()
+    matched = False
     for entry in cfg["watch_dirs"]:
         if entry["path"] == resolved:
             entry[field] = value
+            matched = True
             break
+    if not matched:
+        return jsonify({"error": "Directory not found"}), 404
     save_config(cfg)
     _start_md_watchdog(cfg["watch_dirs"])
     return jsonify({"watch_dirs": [_dir_info(d) for d in cfg["watch_dirs"]]})
@@ -690,7 +713,7 @@ def render_preview():
                 _add_log("preview", f"Scrivener init failed: {e}", status="error")
                 return jsonify({"error": f"Scrivener init failed: {e}"}), 500
 
-            out_file = out_dir / Path(fname).with_suffix(".pdf").name
+            out_file = _output_pdf_path(fname, out_dir)
             _add_log("preview", f"Rendering {fname} ({style_id})...", status="working")
 
             try:
@@ -734,7 +757,7 @@ def render_all():
             if not md.is_file():
                 continue
             if not force:
-                pdf = out_path / md.with_suffix(".pdf").name
+                pdf = _output_pdf_path(md, out_path)
                 if pdf.is_file() and pdf.stat().st_mtime >= md.stat().st_mtime:
                     continue
             batch.append(str(md))
@@ -833,15 +856,20 @@ def serve_image(filename):
 
 # -- Routes: Utility --
 
+_tk_lock = threading.Lock()
+
 def _pick_path(dialog_fn, **kwargs):
     """Show a tkinter file/directory picker and return the resolved path."""
     import tkinter as tk
     from tkinter import filedialog
-    root = tk.Tk()
-    root.withdraw()
-    root.wm_attributes("-topmost", True)
-    path = dialog_fn(**kwargs)
-    root.destroy()
+    with _tk_lock:
+        root = tk.Tk()
+        root.withdraw()
+        root.wm_attributes("-topmost", True)
+        try:
+            path = dialog_fn(**kwargs)
+        finally:
+            root.destroy()
     return str(Path(path).resolve()) if path else None
 
 @app.route("/api/pick-dir")
@@ -905,12 +933,15 @@ def open_folder():
     path = data.get("path", "")
     if not path or not Path(path).is_dir():
         return jsonify({"error": "Not a directory"}), 400
-    if sys.platform == "win32":
-        os.startfile(path)
-    elif sys.platform == "darwin":
-        subprocess.Popen(["open", path])
-    else:
-        subprocess.Popen(["xdg-open", path])
+    try:
+        if sys.platform == "win32":
+            os.startfile(path)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+    except OSError as e:
+        return jsonify({"error": f"Could not open folder: {e}"}), 500
     return jsonify({"ok": True})
 
 @app.route("/api/shutdown", methods=["POST"])

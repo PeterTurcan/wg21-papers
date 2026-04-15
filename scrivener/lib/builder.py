@@ -16,13 +16,9 @@ from .config import (
     extract_front_matter,
     merge_config,
 )
-from .font_manifest import (
-    ensure_fonts_downloaded,
-    load_font_manifest,
-    resolve_font_files,
-)
+from .font_manifest import load_font_manifest
 from .flowables import PageChrome, TitleEnd
-from .fonts import build_body_cmap, build_fallback_cmaps, register_families, register_fonts, set_fonts_dir
+from .fonts import ensure_fonts_ready
 from .renderer import ASTRenderer
 
 
@@ -68,14 +64,7 @@ def build_pdf(md_path, output_path, cli_cfg, style):
 
     resolve_colors(cfg, logo_path)
     manifest = load_font_manifest()
-    resolve_font_files(cfg, manifest)
-    fonts_dir = ensure_fonts_downloaded(cfg, manifest)
-    set_fonts_dir(fonts_dir)
-    register_fonts(cfg)
-    register_families()
-
-    body_cmap = build_body_cmap(cfg)
-    fallback_chain = build_fallback_cmaps(cfg)
+    fonts_dir, body_cmap, fallback_chain = ensure_fonts_ready(cfg, manifest)
 
     page_size_name = cfg.get("page_size", "letter")
     if page_size_name not in PAGE_CONFIGS:
@@ -86,6 +75,8 @@ def build_pdf(md_path, output_path, cli_cfg, style):
     margin = pc["margin"]
     page_w, page_h = page_size
     content_width = page_w - 2 * margin
+    page_geometry = {"page_w": page_w, "page_h": page_h,
+                     "margin": margin, "content_width": content_width}
 
     md = mistune.create_markdown(
         renderer="ast", plugins=["strikethrough", "table"])
@@ -93,7 +84,8 @@ def build_pdf(md_path, output_path, cli_cfg, style):
 
     has_fm_title = bool(fm.get("title"))
     renderer = ASTRenderer(cfg, body_cmap, fallback_chain, content_width,
-                           md_dir, has_fm_title=has_fm_title)
+                           md_dir, has_fm_title=has_fm_title,
+                           page_geometry=page_geometry)
     flowables = renderer.render(tokens)
 
     fm_flows = renderer.build_front_matter_flowables(fm)
@@ -143,7 +135,7 @@ def build_pdf(md_path, output_path, cli_cfg, style):
         topPadding=0, bottomPadding=0,
         id="content")
 
-    header_draw = PageChrome(cfg)
+    header_draw = PageChrome(cfg, page_geometry=page_geometry)
 
     doc = BaseDocTemplate(
         str(output_path),

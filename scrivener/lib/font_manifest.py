@@ -17,9 +17,9 @@ def load_font_manifest():
             for e in entries if "id" in e and "file" in e}
 
 
-def resolve_font_files(style, manifest):
-    """Resolve font: logical ids to file: filenames in the style's fonts config."""
-    fonts_cfg = style.get("fonts", {})
+def resolve_font_files(cfg, manifest):
+    """Resolve font: logical ids to file: filenames in the fonts config. Mutates cfg in place."""
+    fonts_cfg = cfg.get("fonts", {})
     for entry in fonts_cfg.values():
         if not isinstance(entry, dict):
             continue
@@ -31,9 +31,9 @@ def resolve_font_files(style, manifest):
             entry["file"] = info["file"]
 
 
-def ensure_fonts_downloaded(style, manifest):
+def ensure_fonts_downloaded(cfg, manifest):
     """Download missing fonts into the shared .fonts/ cache."""
-    fonts_cfg = style.get("fonts", {})
+    fonts_cfg = cfg.get("fonts", {})
     needed = {}
     for entry in fonts_cfg.values():
         if not isinstance(entry, dict):

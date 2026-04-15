@@ -128,7 +128,9 @@ def main():
             print(f"  ok: {md_file} -> {result}")
             successes.append(md_file)
         except Exception as e:
+            import traceback
             print(f"FAIL: {md_file} -- {e}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             failures.append((md_file, e))
 
     if len(md_files) > 1:

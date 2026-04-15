@@ -14,6 +14,7 @@ from lib.colors import (
     hsl_to_hex,
     parse_color,
     resolve_accent,
+    resolve_colors,
 )
 
 
@@ -103,3 +104,28 @@ def test_parse_color_passthrough():
     from reportlab.lib.colors import HexColor
     obj = HexColor("#123456")
     assert parse_color(obj) is obj
+
+
+# -- resolve_colors --
+
+def test_resolve_colors_mutates_in_place():
+    style = {"accent_saturated": "#8b1a1a", "accent_mid": "auto", "link_color": "auto"}
+    original_id = id(style)
+    resolve_colors(style, None)
+    assert id(style) == original_id
+    assert style["accent_saturated"] == "#8b1a1a"
+    assert style["accent_mid"] != "auto"
+    assert style["link_color"] != "auto"
+
+
+def test_resolve_colors_sets_keys():
+    style = {"accent_saturated": "#8b1a1a"}
+    resolve_colors(style, None)
+    assert "accent_saturated" in style
+    assert "accent_mid" in style
+    assert "link_color" in style
+
+
+def test_resolve_colors_missing_accent_raises():
+    with pytest.raises(KeyError):
+        resolve_colors({}, None)

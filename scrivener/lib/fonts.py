@@ -24,6 +24,8 @@ def set_fonts_dir(path):
 
 
 def _resolve(file_name):
+    if _fonts_dir is None:
+        raise RuntimeError("set_fonts_dir() must be called before font operations")
     return _fonts_dir / file_name
 
 
@@ -72,8 +74,10 @@ def get_cmap(var_path, axes):
         return _cmap_cache[key]
     from fontTools.ttLib import TTFont as FTFont
 
-    vf = FTFont(str(var_path))
-    if axes:
+    cp = _cache_path(Path(var_path).stem, axes or {})
+    src = str(cp) if cp.exists() else str(var_path)
+    vf = FTFont(src)
+    if axes and not cp.exists():
         from fontTools.varLib.instancer import instantiateVariableFont
         instantiateVariableFont(vf, axes, inplace=True)
     cmap = set()
@@ -91,8 +95,8 @@ def ensure_lazy(name):
     ensure_font(name, var_path, axes)
 
 
-def register_fonts(style):
-    fonts_cfg = style.get("fonts", {})
+def register_fonts(cfg):
+    fonts_cfg = cfg.get("fonts", {})
     font_map = {
         "body": "Body",
         "body_bold": "Body-Bold",
@@ -141,8 +145,8 @@ def ensure_code_family():
     _families.add("Code")
 
 
-def build_body_cmap(style):
-    entry = style.get("fonts", {}).get("body", {})
+def build_body_cmap(cfg):
+    entry = cfg.get("fonts", {}).get("body", {})
     if not entry:
         return set()
     path = _resolve(entry["file"])
@@ -150,9 +154,9 @@ def build_body_cmap(style):
     return get_cmap(path, axes)
 
 
-def build_fallback_cmaps(style):
+def build_fallback_cmaps(cfg):
     """Build ordered fallback chain: [(rl_name, cmap), ...]."""
-    fonts_cfg = style.get("fonts", {})
+    fonts_cfg = cfg.get("fonts", {})
     chain = []
     for key, rl_name in [("cjk", "CJK"), ("emoji", "Emoji")]:
         entry = fonts_cfg.get(key)
@@ -165,3 +169,19 @@ def build_fallback_cmaps(style):
         cmap = get_cmap(path, axes)
         chain.append((rl_name, cmap))
     return chain
+
+
+def ensure_fonts_ready(cfg, manifest):
+    """One-call font setup: download, register, and build cmaps.
+
+    Returns (fonts_dir, body_cmap, fallback_chain).
+    """
+    from .font_manifest import ensure_fonts_downloaded, resolve_font_files
+    resolve_font_files(cfg, manifest)
+    fonts_dir = ensure_fonts_downloaded(cfg, manifest)
+    set_fonts_dir(fonts_dir)
+    register_fonts(cfg)
+    register_families()
+    body_cmap = build_body_cmap(cfg)
+    fallback_chain = build_fallback_cmaps(cfg)
+    return fonts_dir, body_cmap, fallback_chain

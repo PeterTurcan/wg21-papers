@@ -60,7 +60,9 @@ def test_highlight_no_lang():
 def test_highlight_escapes_xml():
     code = 'x < 10 && y > 5'
     result = highlight(code, "python", _COLORS)
-    assert "<" not in result or "<font" in result
+    import re
+    stripped = re.sub(r"</?font[^>]*>", "", result)
+    assert "<" not in stripped, f"unescaped '<' in: {stripped}"
     assert "&&" not in result
 
 

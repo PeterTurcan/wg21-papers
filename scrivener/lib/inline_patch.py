@@ -55,4 +55,9 @@ def _patched(tx):
     _orig(tx)
 
 
+import reportlab
+_rl_version = tuple(int(x) for x in reportlab.Version.split("."))
+if _rl_version < (3, 5):
+    import warnings
+    warnings.warn("inline_patch: untested with ReportLab < 3.5")
 _mod._do_post_text = _patched

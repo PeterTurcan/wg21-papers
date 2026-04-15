@@ -34,12 +34,13 @@ from .highlight import highlight
 
 class ASTRenderer:
     def __init__(self, style, body_cmap, fallback_chain, content_width,
-                 md_dir, has_fm_title=False):
+                 md_dir, has_fm_title=False, page_geometry=None):
         self.style = style
         self.body_cmap = body_cmap
         self.fallback_chain = fallback_chain or []
         self.content_width = content_width
         self.md_dir = md_dir
+        self.page_geometry = page_geometry
         self.headings = []
         self.seen_h1 = False
         self._in_heading = False
@@ -127,9 +128,12 @@ class ASTRenderer:
         self.code_inline_fg = s.get("code_inline_fg", s["code_fg"])
         self.code_inline_bg = s.get("code_inline_bg", s["code_bg"])
 
-        from .config import PAGE_CONFIGS
-        pc = PAGE_CONFIGS[s.get("page_size", "letter")]
-        self._page_h = pc["size"][1] - 2 * pc["margin"]
+        if self.page_geometry:
+            self._page_h = self.page_geometry["page_h"] - 2 * self.page_geometry["margin"]
+        else:
+            from .config import PAGE_CONFIGS
+            pc = PAGE_CONFIGS[s.get("page_size", "letter")]
+            self._page_h = pc["size"][1] - 2 * pc["margin"]
 
         fonts_cfg = s.get("fonts", {})
         italic_adj = fonts_cfg.get("body_italic", {}).get("size_adjust")
@@ -568,16 +572,15 @@ class ASTRenderer:
             from svglib.svglib import svg2rlg
             import tempfile, os
             tmp = tempfile.NamedTemporaryFile(suffix=".svg", delete=False)
-            tmp.write(svg.encode("utf-8"))
-            tmp.close()
             try:
+                tmp.write(svg.encode("utf-8"))
+                tmp.close()
                 drawing = svg2rlg(tmp.name)
             finally:
+                tmp.close()
                 os.unlink(tmp.name)
             if drawing:
-                from .config import PAGE_CONFIGS
-                pc = PAGE_CONFIGS[self.style.get("page_size", "letter")]
-                max_h = (pc["size"][1] - 2 * pc["margin"]) * self.style.get("mermaid_max_height_ratio", 0.8)
+                max_h = self._page_h * self.style.get("mermaid_max_height_ratio", 0.8)
                 s = self.content_width / drawing.width
                 if drawing.height * s > max_h:
                     s = max_h / drawing.height
@@ -792,7 +795,6 @@ class ASTRenderer:
         give short columns their natural width and share the rest
         proportionally among wide columns."""
         from reportlab.pdfbase.pdfmetrics import stringWidth
-        import re
 
         natural = [0.0] * ncols
         for row in all_rows:
