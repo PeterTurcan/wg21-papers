@@ -13,8 +13,8 @@ authors = [
   {name = "Vinnie Falco"},
 ]
 dependencies = [
-  "pymupdf~=1.27",
-  "beautifulsoup4~=4.14",
+  "pymupdf~=1.27.0",
+  "beautifulsoup4~=4.14.0",
 ]
 
 [project.optional-dependencies]

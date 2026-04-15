@@ -212,13 +212,7 @@ def find_hidden_regions(page, body_fonts: set[str] | None = None,
     if body_fonts is None:
         return hidden_bboxes
 
-    try:
-        trace = page.get_texttrace()
-    except AttributeError:
-        _log.debug("get_texttrace() not available; skipping hidden region detection")
-        return hidden_bboxes
-
-    for span in trace:
+    for span in page.get_texttrace():
         if span.get("type") == 3:
             continue
 

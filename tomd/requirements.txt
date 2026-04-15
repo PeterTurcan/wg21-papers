@@ -6,5 +6,5 @@
 # Bump these pins intentionally after running the full test suite against
 # the new version.
 
-pymupdf~=1.27
-beautifulsoup4~=4.14
+pymupdf~=1.27.0
+beautifulsoup4~=4.14.0
