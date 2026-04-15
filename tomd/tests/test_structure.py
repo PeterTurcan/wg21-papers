@@ -6,7 +6,7 @@ from lib.pdf.types import (
 )
 from lib.pdf.structure import (
     compare_extractions, structure_sections,
-    heading_confidence,
+    heading_confidence, _extract_metadata,
 )
 
 
@@ -215,3 +215,46 @@ class TestExtractMetadataKey:
         sec = make_section("Document Number: P9999R2")
         meta, _ = structure_sections([sec], has_title=True)
         assert "doc-number" not in meta
+
+
+class TestExtractMetadataMutation:
+    def test_does_not_mutate_input_sections(self):
+        """Regression: _extract_metadata must not mutate its input Sections.
+
+        Callers rely on helpers in this module producing new objects,
+        consistent with _merge_paragraphs.
+        """
+        sec = make_section(
+            "Document Number: P1234R0\nSome leftover\nBody content",
+            kind=SectionKind.PARAGRAPH,
+        )
+        original_text = sec.text
+        _extract_metadata([sec])
+        assert sec.text == original_text
+
+    def test_returns_stripped_section_copy(self):
+        """The returned section has the metadata lines removed."""
+        sec = make_section(
+            "Document Number: P1234R0\nSome leftover",
+            kind=SectionKind.PARAGRAPH,
+        )
+        meta, remaining = _extract_metadata([sec])
+        assert meta.get("document") == "P1234R0"
+        assert len(remaining) == 1
+        assert "Document Number" not in remaining[0].text
+        assert "Some leftover" in remaining[0].text
+
+
+class TestBlockFontSize:
+    def test_line_count_voting(self):
+        """Block.font_size uses line-count voting, not character weighting."""
+        from conftest import make_span
+        block = Block(lines=[
+            Line(spans=[make_span(
+                "word word word word word word word word", font_size=11.0)]),
+            Line(spans=[make_span("short", font_size=14.0)]),
+            Line(spans=[make_span("short", font_size=14.0)]),
+        ])
+        # Lines: two at 14, one at 11 -> 14 wins by line count.
+        # Character count would favor 11.
+        assert block.font_size == 14.0
