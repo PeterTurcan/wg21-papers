@@ -96,6 +96,37 @@ def test_cleanup_dehyphenates_no_hyphen():
     assert "world" in result[0].text
 
 
+def test_cleanup_dehyphenates_single_span_next_line():
+    """Regression: when the next line has one span entirely consumed by
+    dehyphenation, the consumed word must not remain as a duplicate."""
+    span1 = make_span("imple-")
+    span2 = make_span("mentation")
+    block = Block(lines=[Line(spans=[span1]), Line(spans=[span2])])
+    result = cleanup_text([block])
+    full_text = result[0].text
+    assert "implementation" in full_text
+    assert full_text.count("mentation") == 1, (
+        f"'mentation' appears {full_text.count('mentation')} times in {full_text!r}"
+    )
+
+
+def test_cleanup_dehyphenates_next_line_multi_span_consumed():
+    """When the next line has multiple spans and the first is fully consumed,
+    remaining spans must survive."""
+    span1 = make_span("imple-")
+    first_consumed = make_span("mentation")
+    remaining = make_span(" of things")
+    block = Block(lines=[
+        Line(spans=[span1]),
+        Line(spans=[first_consumed, remaining]),
+    ])
+    result = cleanup_text([block])
+    full_text = result[0].text
+    assert "implementation" in full_text
+    assert " of things" in full_text
+    assert full_text.count("mentation") == 1
+
+
 def test_cleanup_merges_cross_page():
     b1 = make_block(["Some text without terminal"], page_num=0)
     b2 = make_block(["continuation here"], page_num=1)
