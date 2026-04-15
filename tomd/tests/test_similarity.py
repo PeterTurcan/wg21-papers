@@ -1,6 +1,6 @@
 """Tests for lib.similarity."""
 
-from lib.similarity import similar
+from lib.similarity import _MAX_COMPARE_LENGTH, similar
 
 
 def test_similar_identical():
@@ -24,11 +24,11 @@ def test_similar_one_empty():
 
 
 def test_similar_circuit_breaker():
-    assert not similar("a" * 201, "b" * 201)
+    assert not similar("a" * (_MAX_COMPARE_LENGTH + 1), "b" * (_MAX_COMPARE_LENGTH + 1))
 
 
 def test_similar_long_identical():
-    assert similar("a" * 250, "a" * 250)
+    assert similar("a" * (_MAX_COMPARE_LENGTH + 50), "a" * (_MAX_COMPARE_LENGTH + 50))
 
 
 def test_similar_short_identical():

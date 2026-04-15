@@ -51,6 +51,8 @@ def similar(a: str, b: str) -> bool:
 
     The per-string check is lenient because the caller (TOC detection)
     provides a second guard via the 3+ consecutive run requirement.
+    Identical strings short-circuit to True regardless of length; the
+    200-char gate only protects against expensive fuzzy-compare work.
     """
     if a == b:
         return True
