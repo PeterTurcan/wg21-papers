@@ -1,6 +1,6 @@
 ---
 title: "Info: A Citable Inventory of Platforms, Operating Systems, and Compiler Toolchains"
-document: D4182R0
+document: P4182R0
 date: 2026-04-10
 reply-to:
   - "Mungo Gill <mungo.gill@me.com>"
