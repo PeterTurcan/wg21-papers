@@ -7,7 +7,7 @@ name = "tomd"
 version = "0.1.0"
 description = "PDF and HTML to Markdown converter for WG21 papers."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = {text = "BSL-1.0"}
 authors = [
   {name = "Vinnie Falco"},
