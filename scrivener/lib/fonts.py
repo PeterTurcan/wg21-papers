@@ -103,6 +103,7 @@ def register_fonts(style):
         "code_italic": "Code-Italic",
         "code_bold_italic": "Code-BoldItalic",
         "cjk": "CJK",
+        "emoji": "Emoji",
     }
     eager = {"body", "body_bold"}
     for key, rl_name in font_map.items():
@@ -147,3 +148,20 @@ def build_body_cmap(style):
     path = _resolve(entry["file"])
     axes = dict(entry.get("axes", {}))
     return get_cmap(path, axes)
+
+
+def build_fallback_cmaps(style):
+    """Build ordered fallback chain: [(rl_name, cmap), ...]."""
+    fonts_cfg = style.get("fonts", {})
+    chain = []
+    for key, rl_name in [("cjk", "CJK"), ("emoji", "Emoji")]:
+        entry = fonts_cfg.get(key)
+        if not entry or "file" not in entry:
+            continue
+        path = _resolve(entry["file"])
+        if not path.exists():
+            continue
+        axes = dict(entry.get("axes", {}))
+        cmap = get_cmap(path, axes)
+        chain.append((rl_name, cmap))
+    return chain

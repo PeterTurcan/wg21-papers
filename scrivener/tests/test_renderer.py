@@ -28,15 +28,15 @@ from lib.renderer import ASTRenderer
 @pytest.fixture
 def renderer(font_registered, min_style, tmp_path):
     return ASTRenderer(
-        min_style, body_cmap={}, content_width=468,
-        md_dir=tmp_path, has_fm_title=True)
+        min_style, body_cmap={}, fallback_chain=[],
+        content_width=468, md_dir=tmp_path, has_fm_title=True)
 
 
 @pytest.fixture
 def renderer_no_fm_title(font_registered, min_style, tmp_path):
     return ASTRenderer(
-        min_style, body_cmap={}, content_width=468,
-        md_dir=tmp_path, has_fm_title=False)
+        min_style, body_cmap={}, fallback_chain=[],
+        content_width=468, md_dir=tmp_path, has_fm_title=False)
 
 
 # -- Block-level rendering --
@@ -392,7 +392,7 @@ def test_build_front_matter_with_fields(font_registered, tmp_path):
     style = copy.deepcopy(load_style(resolve_style_path("wg21")))
     resolve_colors(style, None)
 
-    r = ASTRenderer(style, {}, 468, tmp_path, has_fm_title=True)
+    r = ASTRenderer(style, {}, [], 468, tmp_path, has_fm_title=True)
     fm = {
         "title": "Test Paper",
         "document": "P1234R0",

@@ -711,7 +711,10 @@ def render_preview():
 
 @app.route("/api/render-all", methods=["POST"])
 def render_all():
-    """Queue only markdown files whose PDF is missing or stale."""
+    """Queue markdown files for rendering. Pass force=true to re-render all."""
+    force = False
+    if request.is_json and request.json:
+        force = request.json.get("force", False)
     cfg = load_config()
     output_dir = cfg.get("output_dir", "")
     if not output_dir or not Path(output_dir).is_dir():
@@ -730,9 +733,10 @@ def render_all():
         for md in mds:
             if not md.is_file():
                 continue
-            pdf = out_path / md.with_suffix(".pdf").name
-            if pdf.is_file() and pdf.stat().st_mtime >= md.stat().st_mtime:
-                continue
+            if not force:
+                pdf = out_path / md.with_suffix(".pdf").name
+                if pdf.is_file() and pdf.stat().st_mtime >= md.stat().st_mtime:
+                    continue
             batch.append(str(md))
 
     if not batch:
@@ -790,7 +794,11 @@ def catalog():
                 fid = e.get("id", "")
                 fname = e.get("file", "")
                 cached = (sc["FONTS_DIR"] / fname).exists() if fname else False
-                fonts.append({"id": fid, "file": fname, "cached": cached})
+                font_entry = {"id": fid, "file": fname, "cached": cached}
+                preview = e.get("preview")
+                if preview:
+                    font_entry["preview"] = preview
+                fonts.append(font_entry)
 
         return jsonify({"styles": styles, "images": images, "fonts": fonts})
     except Exception as e:

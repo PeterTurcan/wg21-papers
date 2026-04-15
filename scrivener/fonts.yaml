@@ -17,3 +17,8 @@
 - id: noto-sans-mono
   file: "NotoSansMono[wdth,wght].ttf"
   url: "https://raw.githubusercontent.com/notofonts/notofonts.github.io/main/fonts/NotoSansMono/unhinted/variable-ttf/NotoSansMono%5Bwdth%2Cwght%5D.ttf"
+
+- id: noto-emoji
+  file: "NotoEmoji[wght].ttf"
+  url: "https://raw.githubusercontent.com/google/fonts/main/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf"
+  preview: "\u2705 \u274C \u26A0\uFE0F \u2B50 \u2764\uFE0F"

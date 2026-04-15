@@ -47,6 +47,9 @@ class AccentBox(Flowable):
         parts = self._content.split(self._inner_w, inner_avail)
         if not parts or len(parts) < 2:
             return []
+        _, ph = parts[0].wrap(self._inner_w, inner_avail)
+        if ph < self.v_pad:
+            return []
         top = AccentBox(parts[0], self.bg, self.accent, self.bar_w,
                         self.left_pad, self.right_pad, self.v_pad,
                         width=self.box_width,

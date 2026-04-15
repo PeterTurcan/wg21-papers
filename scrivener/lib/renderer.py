@@ -33,10 +33,11 @@ from .highlight import highlight
 
 
 class ASTRenderer:
-    def __init__(self, style, body_cmap, content_width, md_dir,
-                 has_fm_title=False):
+    def __init__(self, style, body_cmap, fallback_chain, content_width,
+                 md_dir, has_fm_title=False):
         self.style = style
         self.body_cmap = body_cmap
+        self.fallback_chain = fallback_chain or []
         self.content_width = content_width
         self.md_dir = md_dir
         self.headings = []
@@ -126,53 +127,58 @@ class ASTRenderer:
         self.code_inline_fg = s.get("code_inline_fg", s["code_fg"])
         self.code_inline_bg = s.get("code_inline_bg", s["code_bg"])
 
+        from .config import PAGE_CONFIGS
+        pc = PAGE_CONFIGS[s.get("page_size", "letter")]
+        self._page_h = pc["size"][1] - 2 * pc["margin"]
+
         fonts_cfg = s.get("fonts", {})
         italic_adj = fonts_cfg.get("body_italic", {}).get("size_adjust")
         self._italic_size = round(bs * italic_adj, 2) if italic_adj and italic_adj != 1.0 else None
 
-    def _inject_cjk_fallback(self, text):
+    def _resolve_fallback(self, cp):
+        """Return the first fallback font name whose cmap contains cp."""
+        for name, cmap in self.fallback_chain:
+            if cp in cmap:
+                ensure_lazy(name)
+                return name
+        return None
+
+    def _inject_fallback_fonts(self, text):
         if not self.body_cmap:
             return text
-        # Decode numeric character references (&#NNNNN; and &#xHHHH;)
-        # so CJK characters become actual Unicode for glyph checking.
-        # Named entities (&amp; &lt; etc.) stay intact for ReportLab.
         decoded = re.sub(
             r'&#(\d+);', lambda m: chr(int(m.group(1))), text)
         decoded = re.sub(
             r'&#x([0-9a-fA-F]+);', lambda m: chr(int(m.group(1), 16)), decoded)
         result = []
-        cjk_run = []
-        cjk_available = None
+        fb_run = []
+        cur_font = None
         for ch in decoded:
             cp = ord(ch)
             if cp > 127 and cp not in self.body_cmap:
-                if cjk_available is None:
-                    ensure_lazy("CJK")
-                    from reportlab.pdfbase.pdfmetrics import getFont
-                    try:
-                        getFont("CJK")
-                        cjk_available = True
-                    except KeyError:
-                        cjk_available = False
-                if cjk_available:
-                    cjk_run.append(ch)
+                font = self._resolve_fallback(cp)
+                if font != cur_font and fb_run:
+                    result.append(f'<font name="{cur_font}">')
+                    result.append("".join(fb_run))
+                    result.append("</font>")
+                    fb_run = []
+                if font:
+                    cur_font = font
+                    fb_run.append(ch)
                 else:
-                    if cjk_run:
-                        result.append('<font name="CJK">')
-                        result.append("".join(cjk_run))
-                        result.append("</font>")
-                        cjk_run = []
+                    cur_font = None
                     result.append("?")
             else:
-                if cjk_run:
-                    result.append('<font name="CJK">')
-                    result.append("".join(cjk_run))
+                if fb_run:
+                    result.append(f'<font name="{cur_font}">')
+                    result.append("".join(fb_run))
                     result.append("</font>")
-                    cjk_run = []
+                    fb_run = []
+                    cur_font = None
                 result.append(ch)
-        if cjk_run:
-            result.append('<font name="CJK">')
-            result.append("".join(cjk_run))
+        if fb_run:
+            result.append(f'<font name="{cur_font}">')
+            result.append("".join(fb_run))
             result.append("</font>")
         return "".join(result)
 
@@ -220,6 +226,7 @@ class ASTRenderer:
                 flowables.extend(self._wrap_wording(div_class, flows))
             else:
                 flowables.extend(flows)
+        self._keep_short_before_boxes(flowables)
         self._propagate_keep(flowables)
         return flowables
 
@@ -233,6 +240,20 @@ class ASTRenderer:
                 nxt = flowables[i + 1]
                 if isinstance(nxt, Spacer):
                     nxt.keepWithNext = True
+
+    def _keep_short_before_boxes(self, flowables):
+        """Set keepWithNext on single-line paragraphs that precede
+        a keepWithNext spacer (leading spacer of an AccentBox group)."""
+        lh = self.style["body_size"] * self.style["line_height"]
+        for i in range(len(flowables) - 1):
+            cur = flowables[i]
+            nxt = flowables[i + 1]
+            if (isinstance(cur, Paragraph)
+                    and isinstance(nxt, Spacer)
+                    and getattr(nxt, 'keepWithNext', False)):
+                _, h = cur.wrap(self.content_width, self._page_h)
+                if h <= lh:
+                    cur.keepWithNext = True
 
     def _only_text(self, tok):
         """Return raw text if paragraph has exactly one text child, else ''."""
@@ -271,10 +292,12 @@ class ASTRenderer:
             width=self.content_width,
             cap_shift=self.cap_shift)
 
+        spacer_before = Spacer(1, self.gap_sm)
+        spacer_before.keepWithNext = True
         return [
-            Spacer(1, self.gap_sm),
+            spacer_before,
             box,
-            Spacer(1, self.gap_sm),
+            Spacer(1, self.ps["h1"].fontSize),
         ]
 
     def _render_token(self, tok):
@@ -531,7 +554,7 @@ class ASTRenderer:
         text = self._inline_children(tok.get("children", []))
         if text.strip() == "\\newpage":
             return [PageBreak()]
-        text = self._inject_cjk_fallback(text)
+        text = self._inject_fallback_fonts(text)
         if self._wording_context:
             text = self._wording_wrap(text)
         return [Paragraph(text, self.ps["body"])]
@@ -622,7 +645,9 @@ class ASTRenderer:
             pre, bg, accent, bar_w,
             lpad, rpad, vpad,
             cap_shift=self.cap_shift)
-        return [Spacer(1, self.gap_sm), box, Spacer(1, self.ps["h1"].fontSize)]
+        spacer_before = Spacer(1, self.gap_sm)
+        spacer_before.keepWithNext = True
+        return [spacer_before, box, Spacer(1, self.ps["h1"].fontSize)]
 
     def _render_block_quote(self, tok, depth=0):
         ensure_lazy("Body-Italic")
@@ -646,7 +671,7 @@ class ASTRenderer:
                         text = text[m.end():]
                         if not text.strip():
                             continue
-                markup = self._inject_cjk_fallback(text)
+                markup = self._inject_fallback_fonts(text)
                 inner.append(Paragraph(f"<i>{markup}</i>", self.ps["blockquote"]))
             else:
                 inner.extend(self._render_token(child))
@@ -690,7 +715,9 @@ class ASTRenderer:
 
         flows = [box]
         if depth == 0:
-            flows.insert(0, Spacer(1, self.gap_sm))
+            spacer_before = Spacer(1, self.gap_sm)
+            spacer_before.keepWithNext = True
+            flows.insert(0, spacer_before)
             flows.append(Spacer(1, self.ps["h1"].fontSize))
         return flows
 
@@ -718,7 +745,7 @@ class ASTRenderer:
                     nested_lists.extend(self._render_list(sub, depth=depth + 1))
                 else:
                     text = self._inline_children(sub.get("children", []))
-                    text = self._inject_cjk_fallback(text)
+                    text = self._inject_fallback_fonts(text)
                     li_style = (
                         ParagraphStyle("list_item_bq", parent=self.ps["list_item"], textColor=self._bq_fg)
                         if self._bq_fg is not None else self.ps["list_item"]
@@ -863,7 +890,7 @@ class ASTRenderer:
                     cells = []
                     for cell in row.get("children", []):
                         text = self._inline_children(cell.get("children", []))
-                        text = self._inject_cjk_fallback(text)
+                        text = self._inject_fallback_fonts(text)
                         text = self._nobr_numbers(text)
                         cells.append(Paragraph(text, self.ps["body"]))
                     rows.append(cells)
@@ -990,7 +1017,9 @@ class ASTRenderer:
             cb["left_padding"], cb["right_padding"],
             cb["vertical_padding"],
             cap_shift=self.cap_shift)
-        return [Spacer(1, self.gap_sm), box, Spacer(1, self.ps["h1"].fontSize)]
+        spacer_before = Spacer(1, self.gap_sm)
+        spacer_before.keepWithNext = True
+        return [spacer_before, box, Spacer(1, self.ps["h1"].fontSize)]
 
     def _inline_children(self, children):
         if not children:

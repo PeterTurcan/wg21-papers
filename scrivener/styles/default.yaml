@@ -83,6 +83,9 @@ fonts:
   cjk:
     font: noto-sans-cjk
     axes: { wght: 400 }
+  emoji:
+    font: noto-emoji
+    axes: { wght: 400 }
 
 # --- Typography ---
 body_size: 10

@@ -373,8 +373,6 @@ function addLog(e) {
   d.innerHTML=`<span class="lt">${esc(e.time||'')}</span> <span class="${cls}">${esc(e.action||'')}</span> <span class="ld">${esc(e.detail||'')}</span>`;
   box.prepend(d);
   while(box.children.length>100) box.removeChild(box.lastChild);
-  if(e.status==='working') setStatus('working', e.detail||e.action||'Working...');
-  else if(e.status==='done'&&e.action==='startup') setStatus('ready', e.detail||'Ready');
 }
 
 function updateQueue() {
@@ -422,9 +420,10 @@ function renderPapers() {
       <td style="width:70px;text-align:center;overflow:hidden" onclick="event.stopPropagation()">${badgeHtml(p.status,idx)}</td>
     </tr>`;
   }).join('');
-  const renderCount=_papers.filter(p=>p.status==='needs_render').length;
+  const allMd=_papers.filter(p=>p.md_path).length;
   const rb=document.getElementById('btn-render');
-  if(renderCount>0){rb.textContent=`RENDER ${renderCount}`;rb.style.display='inline-block';}else rb.style.display='none';
+  rb.textContent='RENDER ALL';
+  rb.style.display=allMd>0?'inline-block':'none';
   const uploadCount=_papers.filter(p=>p.pdf_path&&p.remote&&p.status!=='mailed').length;
   const ub=document.getElementById('btn-upload-all');
   if(uploadCount>0){ub.textContent=`UPLOAD ${uploadCount}`;ub.style.display='inline-block';}else ub.style.display='none';
@@ -532,19 +531,19 @@ function renderSingle(idx) {
   startWork(null, p.doc_number);
   setStatus('working', `Rendering ${p.doc_number}...`);
   fetch('/api/render', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({md_path: p.md_path})})
-    .then(r=>{if(!r.ok){endWork(null, p.doc_number);showToast(p.doc_number+': render failed');}})
-    .catch(()=>{endWork(null, p.doc_number);showToast(p.doc_number+': render failed');});
+    .then(r=>{if(!r.ok){endWork(null, p.doc_number);setStatus('error',p.doc_number+': render failed');showToast(p.doc_number+': render failed');}})
+    .catch(()=>{endWork(null, p.doc_number);setStatus('error',p.doc_number+': render failed');showToast(p.doc_number+': render failed');});
 }
 async function renderAll() {
   startWork('btn-render', null);
   setStatus('working', 'Rendering all...');
   try {
-    const r = await fetch('/api/render-all', {method: 'POST'});
+    const r = await fetch('/api/render-all', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({force:true})});
     const d = await r.json();
     if (r.ok) showToast(`Queued ${d.queued} files`, true);
-    else { showToast(d.error || 'Nothing to render'); endWork('btn-render', null); }
+    else { showToast(d.error || 'Nothing to render'); setStatus('error',d.error||'Nothing to render'); endWork('btn-render', null); }
   } catch (e) {
-    showToast('Render failed'); endWork('btn-render', null);
+    showToast('Render failed'); setStatus('error','Render failed'); endWork('btn-render', null);
   }
 }
 async function uploadAll() {
@@ -554,9 +553,9 @@ async function uploadAll() {
     const r = await fetch('/api/upload-all', {method: 'POST'});
     const d = await r.json();
     if (r.ok) showToast(`Queued ${d.queued} uploads`, true);
-    else { showToast(d.error || 'Nothing to upload'); endWork('btn-upload-all', null); }
+    else { showToast(d.error || 'Nothing to upload'); setStatus('error',d.error||'Nothing to upload'); endWork('btn-upload-all', null); }
   } catch (e) {
-    showToast('Upload failed'); endWork('btn-upload-all', null);
+    showToast('Upload failed'); setStatus('error','Upload failed'); endWork('btn-upload-all', null);
   }
 }
 // -- API --
@@ -617,7 +616,9 @@ async function loadCatalog(){
     faceEl.textContent=faces;
     const ftb=document.getElementById('fonts-tbody');
     ftb.innerHTML=(c.fonts||[]).map(f=>{
-      const preview=f.cached?`<span style="font-family:'pv-${f.id}';font-size:14px">Aa Bb Cc 123</span>`:'<span class="muted">not downloaded</span>';
+      const sample=f.preview||'Aa Bb Cc 123';
+      const sz=f.preview?18:14;
+      const preview=f.cached?`<span style="font-family:'pv-${f.id}';font-size:${sz}px">${esc(sample)}</span>`:'<span class="muted">not downloaded</span>';
       const dot=f.cached?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 4px var(--green-glow);margin-right:5px;vertical-align:middle"></span>Cached':'<span class="muted">-</span>';
       return `<tr><td><div class="mono" style="font-size:12px">${esc(f.id)}</div><div class="mono" style="font-size:10px;color:var(--text-muted)">${esc(f.file)}</div></td><td>${preview}</td><td style="text-align:right;white-space:nowrap">${dot}</td></tr>`;
     }).join('');
@@ -735,7 +736,7 @@ async function shutDown(){await fetch('/api/shutdown',{method:'POST'});document.
 function connectSSE(){
   const es=new EventSource('/api/events');
   es.addEventListener('connected',()=>{_workingSet.clear();_queueDepth=0;updateQueue();endWork('btn-render',null);endWork('btn-upload-all',null);setStatus('ready','Ready');loadInventory();});
-  es.addEventListener('log',e=>{try{addLog(JSON.parse(e.data));}catch(ex){console.error('SSE log parse error',ex);}});
+  es.addEventListener('log',e=>{try{const d=JSON.parse(e.data);addLog(d);if(d.status==='working')setStatus('working',d.detail||d.action||'Working...');else if(d.status==='done'&&d.action==='startup')setStatus('ready',d.detail||'Ready');}catch(ex){console.error('SSE log parse error',ex);}});
   es.addEventListener('job',e=>{try{
     const d=JSON.parse(e.data),doc=d.doc_number;
     if(d.event==='job_queued'){_queueDepth=d.queue_depth!=null?d.queue_depth:_queueDepth+1;updateQueue();}
@@ -744,7 +745,7 @@ function connectSSE(){
     else if(d.event==='job_failed'){showToast(`${doc}: ${d.error||'failed'}`);endWork(null,doc);}
     else if(d.event==='queue_drained'){_queueDepth=0;updateQueue();endWork('btn-upload-all',null);setStatus('ready','Ready');loadInventory();}
   }catch(ex){console.error('SSE job parse error',ex);}});
-  es.addEventListener('file_changed',e=>{try{const d=JSON.parse(e.data);setStatus('working',`File changed: ${d.filename}`);const m=_papers.find(p=>p.pdf_path&&p.pdf_path.replace(/\\/g,'/').endsWith('/'+d.filename));if(m&&m.doc_number)_dirtySet.add(m.doc_number);loadInventory().then(()=>setStatus('ready','Ready'));}catch(ex){console.error('SSE file_changed parse error',ex);}});
+  es.addEventListener('file_changed',e=>{try{const d=JSON.parse(e.data);setStatus('working',`File changed: ${d.filename}`);const m=_papers.find(p=>p.pdf_path&&p.pdf_path.replace(/\\/g,'/').endsWith('/'+d.filename));if(m&&m.doc_number)_dirtySet.add(m.doc_number);loadInventory().then(()=>setStatus('ready','Ready')).catch(()=>setStatus('error','Inventory failed'));}catch(ex){console.error('SSE file_changed parse error',ex);}});
   es.addEventListener('render_start',e=>{try{
     const d=JSON.parse(e.data);
     setStatus('working',`Rendering 0/${d.total}...`);

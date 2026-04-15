@@ -22,7 +22,7 @@ from .font_manifest import (
     resolve_font_files,
 )
 from .flowables import PageChrome, TitleEnd
-from .fonts import build_body_cmap, register_families, register_fonts, set_fonts_dir
+from .fonts import build_body_cmap, build_fallback_cmaps, register_families, register_fonts, set_fonts_dir
 from .renderer import ASTRenderer
 
 
@@ -75,6 +75,7 @@ def build_pdf(md_path, output_path, cli_cfg, style):
     register_families()
 
     body_cmap = build_body_cmap(cfg)
+    fallback_chain = build_fallback_cmaps(cfg)
 
     page_size_name = cfg.get("page_size", "letter")
     if page_size_name not in PAGE_CONFIGS:
@@ -91,8 +92,8 @@ def build_pdf(md_path, output_path, cli_cfg, style):
     tokens = md(body_text)
 
     has_fm_title = bool(fm.get("title"))
-    renderer = ASTRenderer(cfg, body_cmap, content_width, md_dir,
-                           has_fm_title=has_fm_title)
+    renderer = ASTRenderer(cfg, body_cmap, fallback_chain, content_width,
+                           md_dir, has_fm_title=has_fm_title)
     flowables = renderer.render(tokens)
 
     fm_flows = renderer.build_front_matter_flowables(fm)
