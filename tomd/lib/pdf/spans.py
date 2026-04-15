@@ -6,16 +6,16 @@ region to the word boundary. Monospace boundaries are exempt
 because code boundaries are intentional.
 """
 
-import logging
 from dataclasses import replace
 
 from .types import Block, Line, Span
 
-_log = logging.getLogger(__name__)
-
 
 def _is_style_span(span: Span) -> tuple[bool, bool]:
-    """Return (bold, italic) flags, ignoring monospace."""
+    """Return (bold, italic) flags for style-boundary comparison.
+
+    Monospace spans are skipped by the caller, not by this helper.
+    """
     return (span.bold, span.italic)
 
 

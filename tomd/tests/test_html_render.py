@@ -1,7 +1,7 @@
 """Tests for lib.html.render."""
 
 from lib.html.extract import parse_html
-from lib.html.render import render_body, _render_heading, _inline_text, _collapse_whitespace
+from lib.html.render import render_body
 
 
 class TestHeading:
@@ -175,10 +175,13 @@ class TestInlineFormatting:
 
 class TestCollapseWhitespace:
     def test_collapses_spaces(self):
-        assert _collapse_whitespace("hello   world") == "hello world"
+        md = render_body(parse_html("<p>hello   world</p>"), "mpark")
+        assert "hello world" in md
 
     def test_strips_format_chars(self):
-        assert _collapse_whitespace("hello\u200bworld") == "helloworld"
+        md = render_body(parse_html("<p>hello\u200bworld</p>"), "mpark")
+        assert "helloworld" in md
 
     def test_strips_and_trims(self):
-        assert _collapse_whitespace("  hi  ") == "hi"
+        md = render_body(parse_html("<p>  hi  </p>"), "mpark")
+        assert md.strip() == "hi"

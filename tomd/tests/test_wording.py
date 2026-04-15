@@ -1,10 +1,7 @@
 """Tests for lib.pdf.wording."""
 
 from conftest import make_span, make_line, make_block
-from lib.pdf.wording import (
-    classify_wording, _color_int_to_rgb, _rgb_to_hue_sat,
-    _is_chromatic, _classify_hue, _match_underline, _match_strikethrough,
-)
+from lib.pdf.wording import classify_wording
 
 
 def _color_to_int(r, g, b):
@@ -12,74 +9,60 @@ def _color_to_int(r, g, b):
     return (r << 16) | (g << 8) | b
 
 
-class TestColorConversion:
-    def test_black(self):
-        assert _color_int_to_rgb(0) == (0.0, 0.0, 0.0)
-
-    def test_green(self):
-        r, g, b = _color_int_to_rgb(_color_to_int(0, 133, 71))
-        assert g > r and g > b
-
-    def test_red(self):
-        r, g, b = _color_int_to_rgb(_color_to_int(204, 0, 0))
-        assert r > g and r > b
-
-
-class TestHSVClassification:
-    def test_green_hue(self):
-        h, s = _rgb_to_hue_sat(0.0, 0.52, 0.28)
-        assert _is_chromatic(s)
-        assert _classify_hue(h) == "green"
-
-    def test_red_hue(self):
-        h, s = _rgb_to_hue_sat(0.8, 0.0, 0.0)
-        assert _is_chromatic(s)
-        assert _classify_hue(h) == "red"
-
-    def test_blue_hue(self):
-        h, s = _rgb_to_hue_sat(0.02, 0.34, 0.76)
-        assert _is_chromatic(s)
-        assert _classify_hue(h) == "blue"
-
-    def test_black_not_chromatic(self):
-        _, s = _rgb_to_hue_sat(0.0, 0.0, 0.0)
-        assert not _is_chromatic(s)
-
-    def test_gray_not_chromatic(self):
-        _, s = _rgb_to_hue_sat(0.5, 0.5, 0.5)
-        assert not _is_chromatic(s)
-
-    def test_teal_is_green(self):
-        h, s = _rgb_to_hue_sat(0.0, 0.6, 0.6)
-        assert _is_chromatic(s)
-        assert _classify_hue(h) == "green"
-
-
 class TestDrawingMatch:
-    def test_underline_match(self):
-        span_bbox = (100, 50, 200, 60)
-        drawings = [(60.5, 100, 200, (0, 0.5, 0))]
-        assert _match_underline(span_bbox, drawings, 1.5)
+    def test_underline_boosts_confidence(self):
+        green = _color_to_int(0, 133, 71)
+        from lib.pdf.types import Span, Line, Block
+        spans = [Span(text=f"added {i}", color=green,
+                       bbox=(100, 50, 200, 60)) for i in range(6)]
+        lines = [Line(spans=[s]) for s in spans]
+        block = Block(lines=lines, page_num=0)
+        drawings = {0: [(60.5, 100, 200, (0, 0.5, 0))]}
+        problems = classify_wording([block], drawings)
+        assert len(problems) == 0
 
-    def test_underline_no_match_too_far(self):
-        span_bbox = (100, 50, 200, 60)
-        drawings = [(65, 100, 200, (0, 0.5, 0))]
-        assert not _match_underline(span_bbox, drawings, 1.5)
+    def test_underline_too_far_no_boost(self):
+        green = _color_to_int(0, 133, 71)
+        from lib.pdf.types import Span, Line, Block
+        spans = [Span(text=f"added {i}", color=green,
+                       bbox=(100, 50, 200, 60)) for i in range(6)]
+        lines = [Line(spans=[s]) for s in spans]
+        block = Block(lines=lines, page_num=0)
+        drawings = {0: [(65, 100, 200, (0, 0.5, 0))]}
+        problems = classify_wording([block], drawings)
+        assert len(problems) > 0
 
-    def test_strikethrough_match(self):
-        span_bbox = (100, 50, 200, 60)
-        drawings = [(55, 100, 200, (0.8, 0, 0))]
-        assert _match_strikethrough(span_bbox, drawings, 2.0)
+    def test_strikethrough_boosts_confidence(self):
+        red = _color_to_int(204, 0, 0)
+        from lib.pdf.types import Span, Line, Block
+        spans = [Span(text=f"removed {i}", color=red,
+                       bbox=(100, 50, 200, 60)) for i in range(6)]
+        lines = [Line(spans=[s]) for s in spans]
+        block = Block(lines=lines, page_num=0)
+        drawings = {0: [(55, 100, 200, (0.8, 0, 0))]}
+        problems = classify_wording([block], drawings)
+        assert len(problems) == 0
 
-    def test_strikethrough_no_match_too_far(self):
-        span_bbox = (100, 50, 200, 60)
-        drawings = [(48, 100, 200, (0.8, 0, 0))]
-        assert not _match_strikethrough(span_bbox, drawings, 2.0)
+    def test_strikethrough_too_far_no_boost(self):
+        red = _color_to_int(204, 0, 0)
+        from lib.pdf.types import Span, Line, Block
+        spans = [Span(text=f"removed {i}", color=red,
+                       bbox=(100, 50, 200, 60)) for i in range(6)]
+        lines = [Line(spans=[s]) for s in spans]
+        block = Block(lines=lines, page_num=0)
+        drawings = {0: [(48, 100, 200, (0.8, 0, 0))]}
+        problems = classify_wording([block], drawings)
+        assert len(problems) > 0
 
-    def test_empty_drawings(self):
-        span_bbox = (100, 50, 200, 60)
-        assert not _match_underline(span_bbox, [], 1.5)
-        assert not _match_strikethrough(span_bbox, [], 2.0)
+    def test_no_drawings_medium_confidence(self):
+        green = _color_to_int(0, 133, 71)
+        from lib.pdf.types import Span, Line, Block
+        spans = [Span(text=f"added {i}", color=green,
+                       bbox=(100, 50, 200, 60)) for i in range(6)]
+        lines = [Line(spans=[s]) for s in spans]
+        block = Block(lines=lines, page_num=0)
+        problems = classify_wording([block], {})
+        assert len(problems) > 0
 
 
 class TestClassifyWording:

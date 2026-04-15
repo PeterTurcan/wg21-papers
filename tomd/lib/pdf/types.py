@@ -7,6 +7,7 @@ from enum import Enum
 
 
 class Confidence(Enum):
+    """Confidence level for structural classification decisions."""
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -42,6 +43,7 @@ class Line:
 
     @property
     def font_size(self) -> float:
+        """Maximum font size among non-whitespace spans."""
         if not self.spans:
             return 0.0
         sizes = [s.font_size for s in self.spans if s.text.strip()]
@@ -66,6 +68,7 @@ class Block:
 
     @property
     def font_size(self) -> float:
+        """Most common font size among lines (by character count)."""
         sizes = [ln.font_size for ln in self.lines if ln.text.strip()]
         if not sizes:
             return 0.0
@@ -73,6 +76,7 @@ class Block:
 
 
 class SectionKind(Enum):
+    """The structural role of a document section."""
     TITLE = "title"
     METADATA = "metadata"
     HEADING = "heading"
@@ -98,8 +102,8 @@ class Section:
     spatial_text: str = ""
     page_num: int = 0
     font_size: float = 0.0
-    metadata: dict = field(default_factory=dict)
-    columns: list[list[list]] = field(default_factory=list)
+    metadata: dict[str, str | list[str]] = field(default_factory=dict)
+    columns: list[list[list[Span]]] = field(default_factory=list)
     fence_lang: str = "cpp"
     indent_level: int = 0
 
@@ -131,50 +135,43 @@ SIMILARITY_THRESHOLD = 0.85
 
 # --- Precompiled regex patterns ---
 
-_SECTION_NUM_RE = re.compile(
+SECTION_NUM_RE = re.compile(
     r"^(\d+(?:\.\d+)*)\s+(.+)",
 )
 
-_DOC_NUM_RE = re.compile(
-    r"\b([DPN]\d{3,5}R\d+)\b"
-    r"|\b([DPN]\d{3,5})\b"
-    r"|\b(N\d{3,5})\b",
-    re.IGNORECASE,
-)
-
-_DOC_FIELD_RE = re.compile(
+DOC_FIELD_RE = re.compile(
     r"Document\s+(?:Number|#)[:\s]+([DPN]\d{3,5}(?:R\d+)?|N\d{3,5})",
     re.IGNORECASE,
 )
 
-_REPLY_TO_RE = re.compile(
+REPLY_TO_RE = re.compile(
     r"(?:Reply[- ]to|Author)[:\s]+(.+)",
     re.IGNORECASE,
 )
 
-_AUDIENCE_RE = re.compile(
+AUDIENCE_RE = re.compile(
     r"Audience[:\s]+(.+)",
     re.IGNORECASE,
 )
 
-_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
-
-_PAGE_NUM_RE = re.compile(
+PAGE_NUM_RE = re.compile(
     r"^\d+$"
     r"|^[Pp]age\s+\d+"
     r"|^\d+\s+of\s+\d+",
 )
 
-_BULLET_RE = re.compile(r"^[\s]*[-*\u2022\u2023\u25cf\u25e6\u2043\u2219\u25aa\u25ab]\s+")
+BULLET_CHARS = frozenset("\u2022\u2023\u25cf\u25e6\u2043\u2219\u25aa\u25ab")
 
-_NUMBERED_LIST_RE = re.compile(r"^[\s]*(?:\d+[.)]\s+|[a-z][.)]\s+|\([a-z]\)\s+)", re.IGNORECASE)
+BULLET_RE = re.compile(r"^[\s]*[-*" + "".join(BULLET_CHARS) + r"]\s+")
 
-_COMPOUND_PREFIXES = frozenset({
+NUMBERED_LIST_RE = re.compile(r"^[\s]*(?:\d+[.)]\s+|[a-z][.)]\s+|\([a-z]\)\s+)", re.IGNORECASE)
+
+COMPOUND_PREFIXES = frozenset({
     "self", "non", "well", "cross", "pre", "post", "re", "co", "anti",
     "multi", "semi", "sub", "inter", "intra", "over", "under", "out",
 })
 
-_KNOWN_SECTIONS = frozenset({
+KNOWN_SECTIONS = frozenset({
     "abstract",
     "revision history",
     "references",
@@ -202,8 +199,6 @@ _KNOWN_SECTIONS = frozenset({
     "conclusion",
 })
 
-_ALLOWED_LINK_SCHEMES = frozenset({"http", "https", "mailto"})
-
 TERMINAL_PUNCTUATION = frozenset(".?!:")
 
 FALLBACK_FONT_SIZE = 12.0
@@ -219,8 +214,9 @@ _READABLE_SAMPLE_SIZE = 2000
 def is_readable(text: str) -> bool:
     """Return True if text looks like real content rather than encoded garbage.
 
-    Catches encrypted PDFs, scanned-image-only PDFs, and CID-encoded
-    artifacts that produce mostly non-alphanumeric output.
+    Heuristic check that rejects PDFs with very low alphanumeric content,
+    such as scanned-image-only PDFs or CID-encoded artifacts that produce
+    mostly non-alphanumeric output.
     """
     if not text or len(text.strip()) < _READABLE_MIN_LENGTH:
         return False

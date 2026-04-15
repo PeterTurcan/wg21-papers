@@ -19,6 +19,8 @@ spatial glyph-width decisions to MuPDF spans of the same font after extraction.
 import math
 import re
 
+from .types import Block
+
 _FONT_MODIFIERS = frozenset({
     "thin", "hairline", "extralight", "ultralight", "light",
     "regular", "normal", "book", "medium",
@@ -67,8 +69,13 @@ def _font_name_is_monospace(font_name: str) -> bool:
 
 
 def _coefficient_of_variation(values: list[float]) -> float:
-    """Compute coefficient of variation (stddev / mean). Lower = more uniform."""
+    """Compute coefficient of variation (stddev / mean). Lower = more uniform.
+
+    Uses population variance (divides by N, not N-1).
+    """
     if len(values) < 2:
+        return -1.0
+    if not all(math.isfinite(v) for v in values):
         return -1.0
     mean = sum(values) / len(values)
     if mean == 0:
@@ -119,7 +126,7 @@ def classify_monospace(
     Called during extraction when raw character data is available
     (all three signals), or later with just font_name (signal 1 only).
     When chars are provided, compares fat-character widths (M, W) against
-    thin-character widths (i, l, space) for immediate reject or strong accept.
+    thin-character widths (i, l, space) for immediate reject.
     """
     if chars and char_widths and len(chars) == len(char_widths):
         fat_w = [w for c, w in zip(chars, char_widths)
@@ -154,27 +161,27 @@ def classify_monospace(
     return False
 
 
-def propagate_monospace(mupdf_blocks: list, spatial_blocks: list,
+def propagate_monospace(mupdf_blocks: list[Block], spatial_blocks: list[Block],
                         dominant_font: str) -> None:
     """Apply spatial path's glyph-width monospace decisions to MuPDF spans.
 
     Collects fonts classified as monospace by the spatial path (which has
     per-character data), filters out the dominant body font (the single
     most common font by character count), and sets monospace=True on
-    matching MuPDF spans.
+    matching MuPDF spans. The dominant_font must be pre-lowercased.
     """
     mono_fonts: set[str] = set()
     for b in spatial_blocks:
         for ln in b.lines:
             for s in ln.spans:
                 if s.monospace and s.text.strip():
-                    mono_fonts.add(s.font_name)
+                    mono_fonts.add(s.font_name.lower())
     if dominant_font:
-        mono_fonts = {f for f in mono_fonts if f.lower() != dominant_font}
+        mono_fonts.discard(dominant_font)
     if not mono_fonts:
         return
     for b in mupdf_blocks:
         for ln in b.lines:
             for s in ln.spans:
-                if not s.monospace and s.font_name in mono_fonts:
+                if not s.monospace and s.font_name.lower() in mono_fonts:
                     s.monospace = True

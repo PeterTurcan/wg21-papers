@@ -1,9 +1,7 @@
 """Tests for lib.pdf.mono."""
 
 from conftest import make_span, make_line, make_block
-from lib.pdf.mono import (
-    classify_monospace, _font_name_is_monospace, propagate_monospace,
-)
+from lib.pdf.mono import classify_monospace, propagate_monospace
 
 
 def test_keyword_courier():

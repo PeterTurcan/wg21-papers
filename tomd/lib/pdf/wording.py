@@ -1,12 +1,13 @@
 """Wording section detection via multi-signal HSV color + drawing analysis.
 
-Detects ins/del markup in WG21 PDF papers by combining three signals:
+Detects ins/del markup in WG21 PDF papers by combining two active signals:
   1. HSV color analysis - saturation gates chromaticity, hue identifies
      green (ins) vs red (del) vs blue (link) neighborhoods
   2. Drawing decoration - horizontal underlines (ins) and strikethroughs
      (del) from page.get_drawings() correlated with span bboxes
-  3. Document-level clustering - identifies the document's ins/del colors
-     relative to its body color, not from hardcoded hex values
+
+Document-level body-relative color clustering (_build_body_color) is
+retained for planned v2 integration but not yet wired into classification.
 
 Confidence depends on signal agreement, per the Multi-Signal Confidence rule.
 """
@@ -60,26 +61,22 @@ def _classify_hue(h: float) -> str | None:
     return None
 
 
-def _match_underline(span_bbox, drawings: list, tolerance: float) -> bool:
-    """True if a horizontal drawing exists near span bbox bottom."""
+def _match_drawing(span_bbox, drawings: list, tolerance: float,
+                   anchor: str) -> bool:
+    """True if a horizontal drawing exists near a vertical anchor of the span.
+
+    anchor="bottom" checks near bbox bottom (underline).
+    anchor="center" checks near bbox vertical center (strikethrough).
+    """
     if not drawings:
         return False
     sx0, sy0, sx1, sy1 = span_bbox
-    bottom = sy1
+    if anchor == "center":
+        y_ref = (sy0 + sy1) / 2.0
+    else:
+        y_ref = sy1
     for dy, dx0, dx1, _ in drawings:
-        if abs(dy - bottom) <= tolerance and dx0 <= sx1 and dx1 >= sx0:
-            return True
-    return False
-
-
-def _match_strikethrough(span_bbox, drawings: list, tolerance: float) -> bool:
-    """True if a horizontal drawing exists near span bbox vertical center."""
-    if not drawings:
-        return False
-    sx0, sy0, sx1, sy1 = span_bbox
-    center = (sy0 + sy1) / 2.0
-    for dy, dx0, dx1, _ in drawings:
-        if abs(dy - center) <= tolerance and dx0 <= sx1 and dx1 >= sx0:
+        if abs(dy - y_ref) <= tolerance and dx0 <= sx1 and dx1 >= sx0:
             return True
     return False
 
@@ -122,6 +119,7 @@ def collect_line_drawings(page) -> list[tuple[float, float, float, tuple]]:
                     if x1 - x0 > 5.0:
                         lines.append((y, x0, x1, tuple(color)))
     except Exception:
+        # MuPDF can raise various internal errors from get_drawings()
         _log.debug("get_drawings() failed", exc_info=True)
     return lines
 
@@ -133,15 +131,12 @@ def classify_wording(blocks: list[Block],
                      page_drawings: dict[int, list]) -> list[str]:
     """Classify spans as ins/del/context using multi-signal analysis.
 
-    Three signals: HSV color analysis, drawing decoration correlation,
-    and document-level color clustering. Sets span.wording_role on
-    matching spans.
+    Two active signals: HSV color analysis and drawing decoration
+    correlation. Sets span.wording_role on matching spans.
 
     Returns a list of problem descriptions for the prompts file
-    (empty if all classifications are high confidence).
+    (empty if all ins/del classifications are high confidence).
     """
-    body_rgb = _build_body_color(blocks)
-
     candidates: list[tuple] = []
 
     for block in blocks:
@@ -168,10 +163,10 @@ def classify_wording(blocks: list[Block],
                 if hue_class == "blue":
                     continue
 
-                has_underline = _match_underline(
-                    span.bbox, drawings, _UNDERLINE_Y_TOLERANCE)
-                has_strikethrough = _match_strikethrough(
-                    span.bbox, drawings, _STRIKETHROUGH_Y_TOLERANCE)
+                has_underline = _match_drawing(
+                    span.bbox, drawings, _UNDERLINE_Y_TOLERANCE, "bottom")
+                has_strikethrough = _match_drawing(
+                    span.bbox, drawings, _STRIKETHROUGH_Y_TOLERANCE, "center")
 
                 if hue_class == "green" and has_underline:
                     candidates.append((span, "ins", "high"))
@@ -198,7 +193,7 @@ def classify_wording(blocks: list[Block],
     ins_count = sum(1 for _, r, _ in candidates if r == "ins")
     del_count = sum(1 for _, r, _ in candidates if r == "del")
     ctx_count = sum(1 for _, r, _ in candidates if r == "context")
-    high = sum(1 for _, _, c in candidates if c == "high")
+    high = sum(1 for _, r, c in candidates if c == "high" and r in ("ins", "del"))
     medium = sum(1 for _, _, c in candidates if c == "medium")
     low = sum(1 for _, _, c in candidates if c == "low")
     _log.info("Wording detected: %d ins, %d del, %d context "

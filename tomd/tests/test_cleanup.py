@@ -1,11 +1,9 @@
 """Tests for lib.pdf.cleanup."""
 
 from conftest import make_span, make_line, make_block
-from lib.pdf.cleanup import (
-    strip_format_chars, normalize_whitespace, cleanup_text,
-    _join_cross_page, dehyphenate,
-)
-from lib.pdf.types import is_readable
+from lib.pdf.cleanup import normalize_whitespace, cleanup_text
+from lib import strip_format_chars
+from lib.pdf.types import is_readable, Line, Block
 
 
 def test_strip_format_chars_zwsp():
@@ -63,40 +61,52 @@ def test_is_readable_empty():
     assert not is_readable("")
 
 
-def test_dehyphenate_joins():
-    assert dehyphenate("imple-\nmentation") == "implementation"
+def test_cleanup_dehyphenates_joins():
+    span1 = make_span("imple-")
+    span2 = make_span("mentation of things")
+    block = Block(lines=[Line(spans=[span1]), Line(spans=[span2])])
+    result = cleanup_text([block])
+    assert "implementation" in result[0].text
 
 
-def test_dehyphenate_skips_compound():
-    result = dehyphenate("self-\ncontained")
-    assert "self-" in result
+def test_cleanup_dehyphenates_skips_compound():
+    span1 = make_span("self-")
+    span2 = make_span("contained")
+    block = Block(lines=[Line(spans=[span1]), Line(spans=[span2])])
+    result = cleanup_text([block])
+    assert "self-" in result[0].text
 
 
-def test_dehyphenate_no_hyphen():
-    assert dehyphenate("hello\nworld") == "hello\nworld"
+def test_cleanup_dehyphenates_no_hyphen():
+    span1 = make_span("hello")
+    span2 = make_span("world")
+    block = Block(lines=[Line(spans=[span1]), Line(spans=[span2])])
+    result = cleanup_text([block])
+    assert "hello" in result[0].text
+    assert "world" in result[0].text
 
 
-def test_join_cross_page_merges():
+def test_cleanup_merges_cross_page():
     b1 = make_block(["Some text without terminal"], page_num=0)
     b2 = make_block(["continuation here"], page_num=1)
-    result = _join_cross_page([b1, b2])
+    result = cleanup_text([b1, b2])
     assert len(result) == 1
-    assert result[0].page_num == 0
+    assert "continuation" in result[0].text
 
 
-def test_join_cross_page_no_merge_with_terminal():
+def test_cleanup_no_merge_cross_page_with_terminal():
     b1 = make_block(["Some text with terminal."], page_num=0)
     b2 = make_block(["Next paragraph."], page_num=1)
-    result = _join_cross_page([b1, b2])
+    result = cleanup_text([b1, b2])
     assert len(result) == 2
 
 
-def test_join_cross_page_no_mutation():
+def test_cleanup_cross_page_no_mutation():
     b1 = make_block(["Some text without terminal"], page_num=0)
     b2 = make_block(["continuation here"], page_num=1)
-    original_lines = len(b1.lines)
-    _join_cross_page([b1, b2])
-    assert len(b1.lines) == original_lines
+    original_text = b1.text
+    cleanup_text([b1, b2])
+    assert b1.text == original_text
 
 
 def test_cleanup_text_strips_nbsp():

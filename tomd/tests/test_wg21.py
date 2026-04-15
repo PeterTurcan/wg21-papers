@@ -1,8 +1,7 @@
 """Tests for lib.pdf.wg21."""
 
-from conftest import make_block, make_span, make_line
 from lib.pdf.types import Block, Line, Span
-from lib.pdf.wg21 import extract_metadata_from_blocks, _parse_authors, _lookup_lightness
+from lib.pdf.wg21 import extract_metadata_from_blocks
 
 
 def _meta_block(lines_text, page_num=0, font_size=9.0):
@@ -58,28 +57,41 @@ def test_pre_label_blocks_consumed():
     assert 1 in consumed
 
 
-def test_color_lightness_lookup():
-    colors = {100.0: 0.42, 200.0: 0.17}
-    assert _lookup_lightness(colors, 100.0) == 0.42
-    assert _lookup_lightness(colors, 102.0) == 0.42
-    assert _lookup_lightness(colors, 300.0) == 0.0
+def test_title_prefers_darker_at_same_size():
+    light_block = Block(
+        lines=[Line(spans=[Span(text="Light Title", font_size=16.0)])],
+        page_num=0, bbox=(10, 100, 200, 116))
+    dark_block = Block(
+        lines=[Line(spans=[Span(text="Dark Title", font_size=16.0)])],
+        page_num=0, bbox=(10, 200, 200, 216))
+    meta_block = _meta_block(["Document Number: P1234R0"], font_size=9.0)
+    text_colors = {100.0: 0.42, 200.0: 0.17}
+    meta, consumed = extract_metadata_from_blocks(
+        [light_block, dark_block, meta_block], text_colors)
+    assert meta.get("title") == "Dark Title"
 
 
-def test_color_lightness_empty():
-    assert _lookup_lightness(None, 100.0) == 0.0
-    assert _lookup_lightness({}, 100.0) == 0.0
+def test_title_selected_with_empty_color_data():
+    title_block = _meta_block(["My Paper Title"], font_size=16.0)
+    meta_block = _meta_block(["Document Number: P1234R0"], font_size=9.0)
+    meta, consumed = extract_metadata_from_blocks(
+        [title_block, meta_block], {})
+    assert meta.get("title") == "My Paper Title"
 
 
-def test_parse_authors_name_email():
-    lines = ["Alice Smith alice@example.com"]
-    authors = _parse_authors(lines)
-    assert len(authors) == 1
-    assert "Alice Smith" in authors[0]
-    assert "alice@example.com" in authors[0]
+def test_reply_to_name_email_on_same_line():
+    b = _meta_block(["Document Number: P1234R0",
+                      "Reply-to: Alice Smith alice@example.com"])
+    meta, consumed = extract_metadata_from_blocks([b])
+    assert "reply-to" in meta
+    assert any("Alice Smith" in a for a in meta["reply-to"])
+    assert any("alice@example.com" in a for a in meta["reply-to"])
 
 
-def test_parse_authors_name_then_email():
-    lines = ["Bob Jones", "bob@example.com"]
-    authors = _parse_authors(lines)
-    assert len(authors) == 1
-    assert "Bob Jones" in authors[0]
+def test_reply_to_name_then_email_on_next_line():
+    b = _meta_block(["Document Number: P1234R0",
+                      "Reply-to: Bob Jones",
+                      "bob@example.com"])
+    meta, consumed = extract_metadata_from_blocks([b])
+    assert "reply-to" in meta
+    assert any("Bob Jones" in a for a in meta["reply-to"])

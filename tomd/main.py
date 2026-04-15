@@ -20,6 +20,7 @@ _PDF_EXTENSIONS = frozenset({".pdf"})
 
 
 def main():
+    """CLI entry point: parse arguments, resolve inputs, and convert files."""
     parser = argparse.ArgumentParser(
         prog="tomd",
         description="Convert PDF and HTML files to Markdown.",
@@ -55,6 +56,7 @@ def main():
             input_files.extend(expanded)
         else:
             input_files.append(pattern)
+    input_files = list(dict.fromkeys(input_files))
     input_files = [Path(f) for f in input_files]
 
     if args.output and len(input_files) > 1:
@@ -104,6 +106,9 @@ def main():
 
             successes.append(input_file)
         except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(
+                "FAIL: %s", input_file, exc_info=True)
             print(f"FAIL: {input_file} -- {e}", file=sys.stderr)
             failures.append(input_file)
 

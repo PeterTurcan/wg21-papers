@@ -2,23 +2,27 @@
 
 import logging
 import re
-import unicodedata
 from collections import defaultdict
 from dataclasses import replace
 
+from .. import strip_format_chars, DOC_NUM_RE
 from .types import (
     Block, Line, Span, PageEdgeItem,
     Y_TOLERANCE, REPEATING_THRESHOLD, EDGE_ITEMS_PER_PAGE,
     TERMINAL_PUNCTUATION,
-    _PAGE_NUM_RE, _DOC_NUM_RE, _COMPOUND_PREFIXES,
+    PAGE_NUM_RE, COMPOUND_PREFIXES,
 )
 
 _log = logging.getLogger(__name__)
 
 
-def _get_edge_items(blocks: list[Block], page_num: int,
+def get_edge_items(blocks: list[Block], page_num: int,
                     page_height: float) -> list[PageEdgeItem]:
-    """Get the top N and bottom N text items from a page by y-coordinate."""
+    """Get the top N and bottom N text items from a page by y-coordinate.
+
+    Deduplicates by (text, rounded y-position) to avoid counting the
+    same visual item twice when blocks overlap edge regions.
+    """
     items = []
     for block in blocks:
         for line in block.lines:
@@ -53,9 +57,9 @@ def detect_repeating(all_edge_items: list[list[PageEdgeItem]],
                      total_pages: int) -> set[tuple[float, str]]:
     """Identify header/footer items that repeat across pages.
 
-    For each page, captures the top 3 and bottom 3 items by
-    y-coordinate. Items appearing at the same y-position on more
-    than half the pages are classified as repeating.
+    For each page, captures the top and bottom EDGE_ITEMS_PER_PAGE items
+    by y-coordinate. Items appearing at the same y-position on at least
+    half the pages are classified as repeating.
 
     Returns a set of (y_region, text_or_pattern) tuples to strip.
     """
@@ -82,12 +86,12 @@ def detect_repeating(all_edge_items: list[list[PageEdgeItem]],
             _log.debug("Repeating exact: y=%.1f text=%r", y_key, texts[0])
             continue
 
-        if all(_PAGE_NUM_RE.match(t) for t in texts):
+        if all(PAGE_NUM_RE.match(t) for t in texts):
             repeating.add((y_key, "__PAGE_NUM__"))
             _log.debug("Repeating page number at y=%.1f", y_key)
             continue
 
-        if all(_DOC_NUM_RE.search(t) for t in texts):
+        if all(DOC_NUM_RE.search(t) for t in texts):
             repeating.add((y_key, "__DOC_NUM__"))
             _log.debug("Repeating doc number at y=%.1f", y_key)
             continue
@@ -118,10 +122,10 @@ def strip_repeating(blocks: list[Block], repeating: set[tuple[float, str]],
                 if rpattern == text:
                     stripped = True
                     break
-                if rpattern == "__PAGE_NUM__" and _PAGE_NUM_RE.match(text):
+                if rpattern == "__PAGE_NUM__" and PAGE_NUM_RE.match(text):
                     stripped = True
                     break
-                if rpattern == "__DOC_NUM__" and _DOC_NUM_RE.search(text):
+                if rpattern == "__DOC_NUM__" and DOC_NUM_RE.search(text):
                     stripped = True
                     break
             if not stripped:
@@ -133,39 +137,6 @@ def strip_repeating(blocks: list[Block], repeating: set[tuple[float, str]],
                 page_num=block.page_num,
             ))
     return result
-
-
-def dehyphenate(text: str) -> str:
-    """Join words broken by end-of-line hyphenation.
-
-    When a line ends with a hyphen and the next starts with a lowercase
-    letter, joins the word. Skips known compound prefixes.
-    """
-    lines = text.split("\n")
-    result = []
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if (i + 1 < len(lines)
-                and line.endswith("-")
-                and len(line) > 1
-                and lines[i + 1]
-                and lines[i + 1][0].islower()):
-            prefix = line[:-1].split()[-1].lower() if line[:-1].split() else ""
-            if prefix not in _COMPOUND_PREFIXES:
-                next_word = lines[i + 1].split()[0] if lines[i + 1].split() else ""
-                joined = line[:-1] + next_word
-                rest = lines[i + 1][len(next_word):].lstrip()
-                result.append(joined)
-                if rest:
-                    lines[i + 1] = rest
-                else:
-                    i += 1
-                i += 1
-                continue
-        result.append(line)
-        i += 1
-    return "\n".join(result)
 
 
 def _join_cross_page(blocks: list[Block]) -> list[Block]:
@@ -206,15 +177,6 @@ def _join_cross_page(blocks: list[Block]) -> list[Block]:
 
 _MULTI_SPACE_RE = re.compile(r"[ \t]{2,}")
 _NBSP = "\u00a0"
-_FORMAT_CHARS = frozenset(
-    chr(c) for c in range(0x10000)
-    if unicodedata.category(chr(c)) == 'Cf'
-)
-
-
-def strip_format_chars(text: str) -> str:
-    """Remove Unicode format characters (category Cf)."""
-    return "".join(c for c in text if c not in _FORMAT_CHARS)
 
 
 def normalize_whitespace(text: str) -> str:
@@ -266,7 +228,7 @@ def find_hidden_regions(page, body_fonts: set[str] | None = None,
 
 
 def strip_hidden_blocks(blocks: list[Block],
-                        hidden_bboxes: set[tuple]) -> list[Block]:
+                        hidden_bboxes: set[tuple[float, float, float, float]]) -> list[Block]:
     """Remove blocks whose text is entirely within hidden regions."""
     if not hidden_bboxes:
         return blocks
@@ -274,7 +236,7 @@ def strip_hidden_blocks(blocks: list[Block],
     import fitz
     result = []
     for block in blocks:
-        all_hidden = True
+        has_visible = False
         for line in block.lines:
             for span in line.spans:
                 if not span.text.strip():
@@ -285,11 +247,11 @@ def strip_hidden_blocks(blocks: list[Block],
                     for hb in hidden_bboxes
                 )
                 if not is_hidden:
-                    all_hidden = False
+                    has_visible = True
                     break
-            if not all_hidden:
+            if has_visible:
                 break
-        if not all_hidden:
+        if has_visible:
             result.append(block)
     return result
 
@@ -334,7 +296,7 @@ def cleanup_text(blocks: list[Block]) -> list[Block]:
                     elif len(line.spans) > 1:
                         line = Line(spans=line.spans[1:],
                                     bbox=line.bbox, page_num=line.page_num)
-                pending_trim = None
+                    pending_trim = None
 
             if (i + 1 < len(block.lines)
                     and line.spans and block.lines[i + 1].spans):
@@ -345,7 +307,7 @@ def cleanup_text(blocks: list[Block]) -> list[Block]:
                         and next_first.text
                         and next_first.text[0].islower()):
                     prefix = last_span.text[:-1].split()[-1].lower() if last_span.text[:-1].split() else ""
-                    if prefix not in _COMPOUND_PREFIXES:
+                    if prefix not in COMPOUND_PREFIXES:
                         next_text = next_first.text
                         words = next_text.split()
                         first_word = words[0] if words else ""

@@ -1,27 +1,41 @@
 """Tests for lib.toc."""
 
-from lib.toc import _normalize_toc_entry, find_toc_indices
+from lib.toc import find_toc_indices
 
 
-def test_normalize_strips_dot_leaders():
-    assert "abstract" in _normalize_toc_entry("Abstract ......... 5")
+def test_find_toc_strips_dot_leaders():
+    texts = ["Abstract ......... 5", "Introduction", "Motivation"]
+    headings = {"abstract", "introduction", "motivation"}
+    indices = find_toc_indices(texts, headings)
+    assert 0 in indices
 
 
-def test_normalize_strips_trailing_page_number():
-    result = _normalize_toc_entry("Abstract 42")
-    assert "42" not in result
+def test_find_toc_strips_trailing_page_number():
+    texts = ["Abstract 42", "Introduction 15", "Motivation 22"]
+    headings = {"abstract", "introduction", "motivation"}
+    indices = find_toc_indices(texts, headings)
+    assert 0 in indices
 
 
-def test_normalize_strips_section_prefix():
-    assert _normalize_toc_entry("2.1 Introduction") == "introduction"
+def test_find_toc_strips_section_prefix():
+    texts = ["2.1 Introduction", "2.2 Motivation", "2.3 Design"]
+    headings = {"introduction", "motivation", "design"}
+    indices = find_toc_indices(texts, headings)
+    assert 0 in indices
 
 
-def test_normalize_lowercases():
-    assert _normalize_toc_entry("ABSTRACT") == "abstract"
+def test_find_toc_case_insensitive():
+    texts = ["ABSTRACT", "INTRODUCTION", "MOTIVATION"]
+    headings = {"abstract", "introduction", "motivation"}
+    indices = find_toc_indices(texts, headings)
+    assert 0 in indices
 
 
-def test_normalize_collapses_whitespace():
-    assert "  " not in _normalize_toc_entry("Some   Entry")
+def test_find_toc_collapses_whitespace():
+    texts = ["Some   Entry", "Another   Entry", "Third   Entry"]
+    headings = {"some entry", "another entry", "third entry"}
+    indices = find_toc_indices(texts, headings)
+    assert 0 in indices
 
 
 def test_find_toc_basic_run():

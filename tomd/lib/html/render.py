@@ -1,16 +1,21 @@
 """DOM-to-Markdown rendering for WG21 HTML papers."""
 
 import re
+import urllib.parse
 
 from bs4 import BeautifulSoup, Tag, NavigableString
 
-from ..pdf.cleanup import strip_format_chars
+from .. import strip_format_chars, SECTION_NUM_PREFIX_RE, ALLOWED_LINK_SCHEMES
 
 _HEADING_TAGS = frozenset({"h1", "h2", "h3", "h4", "h5", "h6"})
 
 
 def render_body(soup: BeautifulSoup, generator: str) -> str:
-    """Render the HTML body to Markdown."""
+    """Render the HTML body to Markdown.
+
+    Warning: this function may mutate the soup tree (extracting nested
+    list elements). Do not reuse the soup object after calling this.
+    """
     body = soup.find("body") or soup
     parts: list[str] = []
     _render_children(body, parts, generator)
@@ -18,7 +23,7 @@ def render_body(soup: BeautifulSoup, generator: str) -> str:
 
 
 def _render_children(element, parts: list[str], generator: str):
-    """Recursively render child elements."""
+    """Render each child of element, appending Markdown strings to parts."""
     for child in element.children:
         if isinstance(child, NavigableString):
             text = str(child).strip()
@@ -81,7 +86,7 @@ def _render_element(el: Tag, generator: str) -> str | None:
     if tag in ("span", "a", "code", "em", "strong", "b", "i", "sub", "sup",
                "ins", "del", "mark", "small", "s", "u", "abbr", "cite",
                "dfn", "var", "kbd", "samp", "time", "data", "wbr"):
-        return _render_inline(el, generator)
+        return _render_inline(el)
 
     parts = []
     _render_children(el, parts, generator)
@@ -89,24 +94,21 @@ def _render_element(el: Tag, generator: str) -> str | None:
     return result if result else None
 
 
-def _render_heading(el: Tag) -> str:
+_HEADING_SKIP_CLASSES = frozenset({"header-section-number", "secno", "self-link"})
+
+
+def _render_heading(el: Tag) -> str | None:
     """Render a heading element to ATX Markdown."""
     level = int(el.name[1])
-    for span in el.find_all("span", class_="header-section-number"):
-        span.decompose()
-    for span in el.find_all("span", class_="secno"):
-        span.decompose()
-    for a in el.find_all("a", class_="self-link"):
-        a.decompose()
-    text = _inline_text(el).strip()
+    text = _inline_text_excluding(el, _HEADING_SKIP_CLASSES).strip()
     if not text:
         return None
-    text = re.sub(r"^\d+(?:\.\d+)*\.?\s+", "", text)
+    text = SECTION_NUM_PREFIX_RE.sub("", text)
     text = re.sub(r"^\*\*(.+)\*\*$", r"\1", text)
     return f"{'#' * level} {text}"
 
 
-def _render_paragraph(el: Tag, generator: str) -> str:
+def _render_paragraph(el: Tag, generator: str) -> str | None:
     """Render a paragraph to a single unwrapped line."""
     text = _collapse_whitespace(_inline_text(el))
     return text if text else None
@@ -196,7 +198,7 @@ def _render_wording_div(el: Tag, generator: str) -> str:
     return f"{fence}\n\n{inner}\n\n:::"
 
 
-def _render_list(el: Tag, marker: str, generator: str) -> str:
+def _render_list(el: Tag, marker: str, generator: str) -> str | None:
     """Render an ordered or unordered list."""
     items = []
     for i, li in enumerate(el.find_all("li", recursive=False)):
@@ -208,7 +210,7 @@ def _render_list(el: Tag, marker: str, generator: str) -> str:
             if sub_rendered:
                 indented = "\n".join("  " + line for line in sub_rendered.split("\n"))
                 nested_parts.append(indented)
-            sub.decompose()
+            sub.extract()
 
         if text:
             items.append(f"{prefix} {text}")
@@ -217,7 +219,7 @@ def _render_list(el: Tag, marker: str, generator: str) -> str:
     return "\n".join(items) if items else None
 
 
-def _render_table(el: Tag) -> str:
+def _render_table(el: Tag) -> str | None:
     """Render a table as a Markdown pipe table."""
     rows: list[list[str]] = []
     for tr in el.find_all("tr"):
@@ -243,7 +245,7 @@ def _render_table(el: Tag) -> str:
     return "\n".join(lines)
 
 
-def _render_blockquote(el: Tag, generator: str) -> str:
+def _render_blockquote(el: Tag, generator: str) -> str | None:
     """Render a blockquote with > prefix."""
     parts = []
     _render_children(el, parts, generator)
@@ -253,7 +255,7 @@ def _render_blockquote(el: Tag, generator: str) -> str:
     return "> " + inner.replace("\n", "\n> ")
 
 
-def _render_dl(el: Tag, generator: str) -> str:
+def _render_dl(el: Tag, generator: str) -> str | None:
     """Render a definition list."""
     items = []
     for child in el.children:
@@ -270,9 +272,23 @@ def _render_dl(el: Tag, generator: str) -> str:
     return "\n".join(items) if items else None
 
 
-def _render_inline(el: Tag, generator: str) -> str:
+def _render_inline(el: Tag) -> str:
     """Render an inline element."""
     return _inline_text(el)
+
+
+def _inline_text_excluding(el: Tag, skip_classes: frozenset[str]) -> str:
+    """Like _inline_text but skips child elements with any class in skip_classes."""
+    parts = []
+    for child in el.children:
+        if isinstance(child, NavigableString):
+            parts.append(str(child))
+        elif isinstance(child, Tag):
+            child_classes = set(child.get("class", []))
+            if child_classes & skip_classes:
+                continue
+            parts.append(_inline_text(child))
+    return "".join(parts)
 
 
 def _inline_text(el: Tag) -> str:
@@ -314,7 +330,11 @@ def _inline_text(el: Tag) -> str:
                     if href.startswith("#"):
                         parts.append(text)
                     else:
-                        parts.append(f"[{text}]({href})")
+                        scheme = urllib.parse.urlparse(href).scheme.lower()
+                        if scheme in ALLOWED_LINK_SCHEMES:
+                            parts.append(f"[{text}]({href})")
+                        else:
+                            parts.append(text)
                 elif text:
                     parts.append(text)
                 continue

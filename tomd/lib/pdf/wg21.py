@@ -8,13 +8,13 @@ table detection or structuring runs.
 import logging
 import re
 
-from .cleanup import strip_format_chars
+from .. import strip_format_chars, EMAIL_RE, DATE_RE
 from .types import Block
 
 _log = logging.getLogger(__name__)
 
 _LABEL_RE = re.compile(
-    r"(Document\s*(?:Number|#)|Date|Audience|Reply[- ]?to|Project)\s*:",
+    r"(Document\s*(?:Number|#)|Date|Audience|Reply[- ]?to)\s*:",
     re.IGNORECASE,
 )
 
@@ -23,9 +23,7 @@ _DOC_NUM_VALUE_RE = re.compile(
     re.IGNORECASE,
 )
 
-_EMAIL_RE = re.compile(r"[\w.+-]+@[\w.-]+\.\w+")
-
-_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_PARENS_RE = re.compile(r"[()]")
 
 
 def _clean(text: str) -> str:
@@ -43,11 +41,11 @@ def _parse_authors(lines: list[str]) -> list[str]:
         if not line:
             continue
 
-        email_match = _EMAIL_RE.search(line)
+        email_match = EMAIL_RE.search(line)
         if email_match:
             email = email_match.group(0)
             name_part = line[:email_match.start()].strip()
-            name_part = re.sub(r"[()]", "", name_part).strip()
+            name_part = _PARENS_RE.sub("", name_part).strip()
 
             if name_part:
                 authors.append(f"{name_part} <{email}>")
@@ -58,7 +56,7 @@ def _parse_authors(lines: list[str]) -> list[str]:
             else:
                 authors.append(f"<{email}>")
         else:
-            line_clean = re.sub(r"[()]", "", line).strip()
+            line_clean = _PARENS_RE.sub("", line).strip()
             if line_clean and not _LABEL_RE.match(line_clean):
                 if pending_name:
                     authors.append(pending_name)
@@ -70,7 +68,7 @@ def _parse_authors(lines: list[str]) -> list[str]:
     return authors
 
 
-def _store_field(metadata: dict, label: str, value_lines: list[str]):
+def _store_field(metadata: dict, label: str, value_lines: list[str]) -> None:
     """Store a parsed metadata field into the dict."""
     label_lower = label.lower()
 
@@ -81,7 +79,7 @@ def _store_field(metadata: dict, label: str, value_lines: list[str]):
             metadata["document"] = m.group(1).upper()
     elif label_lower == "date":
         value = _clean(" ".join(value_lines))
-        m = _DATE_RE.search(value)
+        m = DATE_RE.search(value)
         if m:
             metadata["date"] = m.group(0)
     elif label_lower == "audience":
@@ -118,6 +116,9 @@ def extract_metadata_from_blocks(blocks: list[Block],
     darkest color (secondary, via space-color proxy for Type 3 fonts).
 
     Returns (metadata_dict, consumed_block_indices).
+    Metadata dict keys: "title", "document", "date", "audience", "reply-to".
+    All keys are optional; only fields found in the PDF are included.
+    "reply-to" value is a list of "Name <email>" strings.
     """
     metadata: dict = {}
     consumed: set[int] = set()
@@ -173,7 +174,7 @@ def extract_metadata_from_blocks(blocks: list[Block],
                 vl_text = _clean(vl.text)
                 if _LABEL_RE.match(vl_text):
                     break
-                value_lines.append(vl.text)
+                value_lines.append(_clean(vl.text))
 
             _store_field(metadata, label, value_lines)
 
@@ -186,15 +187,17 @@ def extract_metadata_from_blocks(blocks: list[Block],
                     if j in consumed:
                         continue
                     next_text = _clean(next_block.lines[0].text) if next_block.lines else ""
-                    if next_text and not _LABEL_RE.match(next_text):
-                        has_email = any(_EMAIL_RE.search(ln.text) for ln in next_block.lines)
-                        if has_email:
-                            extra_authors = _parse_authors([ln.text for ln in next_block.lines])
-                            if extra_authors:
-                                existing = metadata.get("reply-to", [])
-                                metadata["reply-to"] = existing + extra_authors
-                                consumed.add(j)
-                    break
+                    if not next_text or _LABEL_RE.match(next_text):
+                        break
+                    has_email = any(EMAIL_RE.search(ln.text) for ln in next_block.lines)
+                    if has_email:
+                        extra_authors = _parse_authors([ln.text for ln in next_block.lines])
+                        if extra_authors:
+                            existing = metadata.get("reply-to", [])
+                            metadata["reply-to"] = existing + extra_authors
+                            consumed.add(j)
+                    else:
+                        break
 
     if title_idx is not None and "title" not in metadata:
         idx, title_text = title_idx

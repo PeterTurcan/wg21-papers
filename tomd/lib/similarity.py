@@ -19,10 +19,8 @@ _JACCARD_THRESHOLD = 0.65
 def _sequence_similarity(a: str, b: str) -> float:
     """Character-level similarity using difflib.SequenceMatcher.
 
-    Returns 0.0-1.0. Returns 0.0 for strings over MAX_COMPARE_LENGTH.
+    Returns 0.0-1.0. Caller is responsible for the length guard.
     """
-    if len(a) > _MAX_COMPARE_LENGTH or len(b) > _MAX_COMPARE_LENGTH:
-        return 0.0
     if not a and not b:
         return 1.0
     if not a or not b:
@@ -33,12 +31,10 @@ def _sequence_similarity(a: str, b: str) -> float:
 def _jaccard_similarity(a: str, b: str) -> float:
     """Word-level similarity using set intersection/union.
 
-    Returns 0.0-1.0. Returns 0.0 for strings over MAX_COMPARE_LENGTH.
+    Returns 0.0-1.0. Caller is responsible for the length guard.
     Systematically scores lower than SequenceMatcher on short strings
     with one extra word.
     """
-    if len(a) > _MAX_COMPARE_LENGTH or len(b) > _MAX_COMPARE_LENGTH:
-        return 0.0
     sa = set(a.lower().split())
     sb = set(b.lower().split())
     if not sa and not sb:

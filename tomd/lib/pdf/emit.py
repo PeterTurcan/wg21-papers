@@ -2,45 +2,11 @@
 
 import logging
 
+from .. import format_front_matter
 from .cleanup import normalize_whitespace
-from .types import Line, Span, Section, SectionKind, Confidence
+from .types import Line, Span, Section, SectionKind, Confidence, BULLET_CHARS
 
 _log = logging.getLogger(__name__)
-
-_UNICODE_BULLETS = frozenset("\u2022\u2023\u25cf\u25e6\u2043\u2219\u25aa\u25ab")
-
-
-_FRONT_MATTER_ORDER = ["title", "document", "date", "audience", "reply-to"]
-
-
-def _yaml_value(key: str, val) -> str:
-    """Format a single YAML value, quoting where needed."""
-    if isinstance(val, list):
-        items = [f'  - "{v}"' for v in val]
-        return f"{key}:\n" + "\n".join(items)
-    if key == "title":
-        return f'{key}: "{val}"'
-    return f"{key}: {val}"
-
-
-def _format_front_matter(metadata: dict) -> str:
-    """Format metadata as YAML front matter.
-
-    Field order: title, document, date, audience, reply-to.
-    Reply-to is a YAML list of double-quoted strings.
-    Title is double-quoted (may contain colons).
-    """
-    if not metadata:
-        return ""
-    lines = ["---"]
-    for key in _FRONT_MATTER_ORDER:
-        if key in metadata:
-            lines.append(_yaml_value(key, metadata[key]))
-    for key, val in metadata.items():
-        if key not in _FRONT_MATTER_ORDER:
-            lines.append(_yaml_value(key, val))
-    lines.append("---")
-    return "\n".join(lines)
 
 
 def _render_span(span: Span, skip_bold: bool = False) -> str:
@@ -142,7 +108,7 @@ def _render_heading_spans(sec: Section) -> str:
 
 def _normalize_bullet(char: str) -> str:
     """Replace Unicode bullet characters with *."""
-    if char in _UNICODE_BULLETS:
+    if char in BULLET_CHARS:
         return "*"
     return char
 
@@ -153,10 +119,7 @@ def _normalize_bullets(text: str) -> str:
 
 
 def _render_list_spans(sec: Section) -> str:
-    """Render a list section with span formatting and normalized bullets.
-
-    Applies indentation based on indent_level for nested lists.
-    """
+    """Render a list section with span formatting and normalized bullets."""
     if sec.lines:
         result_lines = []
         for line in sec.lines:
@@ -175,11 +138,11 @@ def _estimate_char_width(sec_lines: list) -> float:
     """Estimate monospace character width from span bbox and text length."""
     for line in sec_lines:
         for span in line.spans:
-            text = span.text.replace(" ", "")
-            if len(text) >= 2:
+            n = len(span.text.replace(" ", ""))
+            if n >= 2:
                 w = span.bbox[2] - span.bbox[0]
                 if w > 0:
-                    return w / len(span.text)
+                    return w / n
     return _DEFAULT_CHAR_WIDTH
 
 
@@ -299,10 +262,7 @@ def _render_table(sec: Section) -> str:
 
 def _render_section_md(sec: Section) -> str:
     """Render a single section to Markdown."""
-    if sec.kind == SectionKind.TITLE:
-        return _render_heading_spans(sec)
-
-    if sec.kind == SectionKind.HEADING:
+    if sec.kind in (SectionKind.TITLE, SectionKind.HEADING):
         return _render_heading_spans(sec)
 
     if sec.kind == SectionKind.TABLE:
@@ -332,7 +292,7 @@ def emit_markdown(metadata: dict, sections: list[Section]) -> str:
     """
     parts: list[str] = []
 
-    fm = _format_front_matter(metadata)
+    fm = format_front_matter(metadata)
     if fm:
         parts.append(fm)
 
@@ -360,12 +320,13 @@ def emit_markdown(metadata: dict, sections: list[Section]) -> str:
     return md
 
 
-def emit_prompts(metadata: dict, sections: list[Section]) -> str | None:
+def emit_prompts(sections: list[Section]) -> str | None:
     """Generate the companion prompts file for uncertain regions.
 
     Returns None if there are no uncertain regions.
     """
-    uncertain = [s for s in sections if s.kind == SectionKind.UNCERTAIN]
+    uncertain = [(idx, s) for idx, s in enumerate(sections)
+                 if s.kind == SectionKind.UNCERTAIN]
     if not uncertain:
         return None
 
@@ -377,10 +338,9 @@ def emit_prompts(metadata: dict, sections: list[Section]) -> str | None:
     parts.append("each into clean Markdown.")
     parts.append("")
 
-    for i, sec in enumerate(uncertain):
+    for i, (idx, sec) in enumerate(uncertain):
         ctx_before = ""
         ctx_after = ""
-        idx = sections.index(sec)
         if idx > 0 and sections[idx - 1].kind != SectionKind.UNCERTAIN:
             ctx_before = sections[idx - 1].text[:200].strip()
         if idx + 1 < len(sections) and sections[idx + 1].kind != SectionKind.UNCERTAIN:

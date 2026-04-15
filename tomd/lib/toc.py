@@ -1,4 +1,4 @@
-"""Table of Contents detection and removal.
+"""Table of Contents detection.
 
 Format-agnostic: operates on plain strings and returns indices.
 No dependency on PDF or HTML converter types.
@@ -7,13 +7,13 @@ No dependency on PDF or HTML converter types.
 import logging
 import re
 
+from . import SECTION_NUM_PREFIX_RE
 from .similarity import similar
 
 _log = logging.getLogger(__name__)
 
 _TRAILING_PAGE_NUM_RE = re.compile(r"\s+\d{1,4}\s*$")
 _DOT_LEADER_RE = re.compile(r"\s*[.·]{2,}[\s.·]*")
-_SECTION_NUM_PREFIX_RE = re.compile(r"^\d+(?:\.\d+)*\.?\s+")
 
 _TOC_LABELS = frozenset({
     "table of contents",
@@ -26,16 +26,21 @@ _MIN_TOC_RUN = 3
 _MAX_GAP = 3
 
 
+def _first_line(text: str) -> str:
+    """Extract and strip the first line of a multi-line string."""
+    return text.split("\n")[0].strip()
+
+
 def _normalize_toc_entry(text: str) -> str:
     """Normalize text for TOC comparison.
 
     Strips trailing page numbers, dot leaders, section number prefixes.
     Collapses whitespace, lowercases.
     """
-    text = text.split("\n")[0].strip()
+    text = _first_line(text)
     text = _DOT_LEADER_RE.sub(" ", text)
     text = _TRAILING_PAGE_NUM_RE.sub("", text)
-    text = _SECTION_NUM_PREFIX_RE.sub("", text)
+    text = SECTION_NUM_PREFIX_RE.sub("", text)
     text = _WHITESPACE_RE.sub(" ", text).strip().lower()
     return text
 
@@ -74,8 +79,7 @@ def find_toc_indices(texts: list[str], headings: set[str]) -> set[int]:
 
     matches = []
     for i, text in enumerate(texts):
-        first_line = text.split("\n")[0].strip()
-        matches.append(_matches_heading(first_line))
+        matches.append(_matches_heading(_first_line(text)))
 
     # Find the first match - everything before it is pre-TOC (title, metadata)
     first_match = -1
@@ -93,7 +97,7 @@ def find_toc_indices(texts: list[str], headings: set[str]) -> set[int]:
 
     for i in range(first_match, len(matches)):
         if matches[i]:
-            first_line = texts[i].split("\n")[0].strip().lower()
+            first_line = _first_line(texts[i]).lower()
             if first_line in seen_first_lines:
                 break
             seen_first_lines.add(first_line)
@@ -118,11 +122,11 @@ def find_toc_indices(texts: list[str], headings: set[str]) -> set[int]:
     if toc_indices:
         first = min(toc_indices)
         prev = first - 1
-        if prev >= 0 and _is_toc_label(texts[prev].split("\n")[0].strip()):
+        if prev >= 0 and _is_toc_label(_first_line(texts[prev])):
             toc_indices.add(prev)
             _log.debug("TOC label at index %d", prev)
 
     if toc_indices:
-        _log.info("Detected TOC: %d entries removed", len(toc_indices))
+        _log.info("Detected TOC: %d entries detected", len(toc_indices))
 
     return toc_indices

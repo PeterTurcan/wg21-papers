@@ -20,8 +20,9 @@ _TABLE_Y_OVERLAP_MARGIN = 5.0
 def _block_column_positions(block: Block) -> list[float] | None:
     """Return the x-start positions of columns in a block, or None.
 
-    A block is columnar if it has 2+ lines where line N+1 starts
-    significantly to the right of where line N's content sits.
+    A block is columnar if it has 2+ lines where every line after
+    the first starts significantly to the right of the first line's
+    x-start position.
     """
     if len(block.lines) < 2:
         return None
@@ -82,10 +83,18 @@ def detect_tables(blocks: list[Block]) -> tuple[list[Section], list[Block]]:
             for blk in table_blocks:
                 row = []
                 for line in blk.lines[:num_cols]:
-                    row.append(line.spans)
+                    row.append(list(line.spans))
                     all_lines.append(line)
                 while len(row) < num_cols:
                     row.append([])
+                for line in blk.lines[num_cols:]:
+                    all_lines.append(line)
+                    line_x = line.bbox[0]
+                    best_col = min(
+                        range(num_cols),
+                        key=lambda ci: abs(line_x - cols[ci]),
+                    )
+                    row[best_col].extend(line.spans)
                 rows.append(row)
 
             text = "\n".join(
@@ -116,7 +125,7 @@ def detect_tables(blocks: list[Block]) -> tuple[list[Section], list[Block]]:
 
 def exclude_table_regions(blocks: list[Block],
                           table_sections: list[Section]) -> list[Block]:
-    """Remove blocks that overlap with detected table regions."""
+    """Remove blocks whose vertical midpoint falls within a detected table region."""
     if not table_sections:
         return blocks
 

@@ -1,18 +1,20 @@
 """HTML to Markdown converter for WG21 papers."""
 
 import logging
+import os
 from pathlib import Path
 
-from .. import ascii_escape
+from .. import ascii_escape, format_front_matter
 from . import extract as _extract
 from . import render as _render
 
 _log = logging.getLogger(__name__)
 
 
-def convert_html(path: Path) -> tuple[str, str | None]:
+def convert_html(path: Path | os.PathLike[str]) -> tuple[str, str | None]:
     """Convert an HTML file to Markdown.
 
+    Reads the file as UTF-8 (with replacement for decode errors).
     Returns (markdown_text, prompts_text_or_none).
     HTML conversion produces a prompts file only when sections
     cannot be converted cleanly.
@@ -31,23 +33,7 @@ def convert_html(path: Path) -> tuple[str, str | None]:
 
     parts = []
     if metadata:
-        fm_lines = ["---"]
-        order = ["title", "document", "date", "audience", "reply-to"]
-        for key in order:
-            if key in metadata:
-                val = metadata[key]
-                if isinstance(val, list):
-                    items = [f'  - "{v}"' for v in val]
-                    fm_lines.append(f"{key}:\n" + "\n".join(items))
-                elif key == "title":
-                    fm_lines.append(f'{key}: "{val}"')
-                else:
-                    fm_lines.append(f"{key}: {val}")
-        for key, val in metadata.items():
-            if key not in order:
-                fm_lines.append(f"{key}: {val}")
-        fm_lines.append("---")
-        parts.append("\n".join(fm_lines))
+        parts.append(format_front_matter(metadata))
 
     if body_md.strip():
         parts.append(body_md.strip())

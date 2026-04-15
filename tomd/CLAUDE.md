@@ -99,18 +99,18 @@ Auto-resolution via `--llm` flag is deferred to v2. For v1, the tool produces a 
 ## File Map
 
 - `main.py` - CLI entry point. Argparse, glob expansion, output path logic, main(). No conversion logic.
-- `lib/__init__.py` - Package marker for shared library.
+- `lib/__init__.py` - Shared text utilities and constants for PDF and HTML converters: `ascii_escape`, `strip_format_chars`, `format_front_matter`, `ALLOWED_LINK_SCHEMES`, and shared regex patterns (`EMAIL_RE`, `DATE_RE`, `DOC_NUM_RE`, `SECTION_NUM_PREFIX_RE`).
 - `lib/similarity.py` - Dual-algorithm string similarity (SequenceMatcher + Jaccard). Per-algorithm thresholds, 200-char circuit breaker. Format-agnostic.
 - `lib/toc.py` - Table of Contents detection. Matches section texts against known headings using fuzzy similarity. Bridges small gaps. Format-agnostic - no dependency on PDF types.
 - `lib/pdf/__init__.py` - Exports `convert_pdf()`. Orchestrates the full pipeline in order. Includes monospace propagation, wording classification, and page 0 color extraction via space-color proxy.
 - `lib/pdf/wording.py` - Wording section detection via multi-signal HSV color + drawing decoration analysis. Detects ins/del markup. Confidence levels with prompts file for ambiguous cases.
-- `lib/pdf/types.py` - Data classes (`Block`, `Span`, `Line`, `Section`, `PageEdgeItem`), enums (`Confidence`, `SectionKind`), named constants, precompiled regex, `is_readable()`.
+- `lib/pdf/types.py` - Data classes (`Block`, `Span`, `Line`, `Section`, `PageEdgeItem`), enums (`Confidence`, `SectionKind`), named constants (all public, no underscore prefix), precompiled regex, `is_readable()`.
 - `lib/pdf/extract.py` - Dual extraction: `extract_mupdf()` (dict API) and `extract_spatial()` (rawdict + four spatial rules). Link collection and attachment. Calls `classify_monospace` during span construction.
 - `lib/pdf/mono.py` - Triple-signal monospace detection. Font name decomposition (strip modifiers, split camelCase, check keywords), glyph width uniformity, glyph spacing uniformity.
-- `lib/pdf/cleanup.py` - Header/footer detection (top-3/bottom-3 edge items), repeating strip, span whitespace (NBSP, multi-space on non-mono), dehyphenation, cross-page join, zero-width char strip.
+- `lib/pdf/cleanup.py` - Header/footer detection (edge items per page), repeating strip, span whitespace (NBSP, multi-space on non-mono), dehyphenation, cross-page join, hidden region detection.
 - `lib/pdf/spans.py` - Span normalization. Snaps bold/italic style boundaries to word edges. Monospace exempt.
 - `lib/pdf/table.py` - Table detection from MuPDF block/line positions. Detects columnar layout (x-gap between lines), extracts as high-confidence TABLE sections, excludes table regions from spatial path.
-- `lib/pdf/structure.py` - Dual-path comparison, metadata extraction, heading intelligence (multi-signal), position-based list detection (x-coordinates), paragraph merging, code block detection, language label detection, nesting validation.
+- `lib/pdf/structure.py` - Dual-path comparison, metadata extraction, heading intelligence (multi-signal, `heading_confidence` public), position-based list detection (x-coordinates), paragraph merging, code block detection, language label detection, nesting validation.
 - `lib/pdf/emit.py` - Markdown generation (headings, paragraphs, code blocks, tables, nested lists) with span-level formatting (inline code, bold, italic, links). Prompts file generation for uncertain regions.
 
 ## Header/Footer Stripping

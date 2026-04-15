@@ -38,7 +38,7 @@ def test_emit_uncertain_has_comment():
 
 def test_emit_prompts_none_when_no_uncertain():
     sec = make_section("hello")
-    assert emit_prompts({}, [sec]) is None
+    assert emit_prompts([sec]) is None
 
 
 def test_emit_prompts_has_content():
@@ -46,7 +46,7 @@ def test_emit_prompts_has_content():
                        confidence=Confidence.UNCERTAIN)
     sec.mupdf_text = "mupdf version"
     sec.spatial_text = "spatial version"
-    result = emit_prompts({}, [sec])
+    result = emit_prompts([sec])
     assert result is not None
     assert "MuPDF extraction" in result
     assert "Spatial extraction" in result
@@ -63,3 +63,9 @@ def test_front_matter_reply_to_list():
     assert "reply-to:" in md
     assert '"Alice <a@b.com>"' in md
     assert '"Bob <c@d.com>"' in md
+
+
+def test_front_matter_special_chars_quoted():
+    from lib import format_front_matter
+    result = format_front_matter({"document": "P1234R0", "audience": "SG1: Concurrency"})
+    assert '"SG1: Concurrency"' in result

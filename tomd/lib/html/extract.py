@@ -1,15 +1,13 @@
-"""HTML parsing, generator detection, and metadata extraction."""
+"""HTML parsing, generator detection, metadata extraction, and boilerplate stripping."""
 
 import logging
 import re
 
 from bs4 import BeautifulSoup, Tag
 
-_log = logging.getLogger(__name__)
+from .. import EMAIL_RE, DATE_RE, DOC_NUM_RE
 
-_EMAIL_RE = re.compile(r"[\w.+-]+@[\w.-]+\.\w+")
-_DOC_NUM_RE = re.compile(r"[DPN]\d{3,5}(?:R\d+)?", re.IGNORECASE)
-_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_log = logging.getLogger(__name__)
 
 
 def parse_html(text: str) -> BeautifulSoup:
@@ -18,7 +16,11 @@ def parse_html(text: str) -> BeautifulSoup:
 
 
 def detect_generator(soup: BeautifulSoup) -> str:
-    """Identify which tool generated this HTML paper."""
+    """Identify which tool generated this HTML paper.
+
+    Returns one of: "mpark", "bikeshed", "hackmd", "hand-written", "unknown".
+    Checks meta generator tag first, then structural heuristics.
+    """
     for meta in soup.find_all("meta"):
         name = (meta.get("name") or "").lower()
         content = meta.get("content") or ""
@@ -42,7 +44,11 @@ def detect_generator(soup: BeautifulSoup) -> str:
 
 
 def extract_metadata(soup: BeautifulSoup, generator: str) -> dict:
-    """Extract WG21 metadata fields from the HTML."""
+    """Extract WG21 metadata fields from the HTML.
+
+    Returns a dict with possible keys: title, document, date,
+    audience, reply-to.
+    """
     if generator == "mpark":
         return _extract_mpark_metadata(soup)
     if generator == "bikeshed":
@@ -76,13 +82,13 @@ def _extract_mpark_metadata(soup: BeautifulSoup) -> dict:
 
         if "document" in label:
             text = value_cell.get_text(strip=True)
-            m = _DOC_NUM_RE.search(text)
+            m = DOC_NUM_RE.search(text)
             if m:
                 metadata["document"] = m.group(0).upper()
 
         elif label == "date":
             text = value_cell.get_text(strip=True)
-            m = _DATE_RE.search(text)
+            m = DATE_RE.search(text)
             if m:
                 metadata["date"] = m.group(0)
 
@@ -110,7 +116,7 @@ def _parse_mpark_authors(cell: Tag) -> list[str]:
         line = line.strip().strip("<>").strip()
         if not line:
             continue
-        email_match = _EMAIL_RE.search(line)
+        email_match = EMAIL_RE.search(line)
         if email_match:
             email = email_match.group(0)
             name_part = line[:email_match.start()].strip().strip("<>").strip()
@@ -125,7 +131,7 @@ def _parse_mpark_authors(cell: Tag) -> list[str]:
                 authors.append(f"<{email}>")
         else:
             cleaned = re.sub(r"[<>]", "", line).strip()
-            if cleaned and not _DOC_NUM_RE.match(cleaned):
+            if cleaned and not DOC_NUM_RE.match(cleaned):
                 if pending_name:
                     authors.append(pending_name)
                 pending_name = cleaned
@@ -140,8 +146,8 @@ def _extract_bikeshed_metadata(soup: BeautifulSoup) -> dict:
 
     h1 = soup.find("h1", class_="p-name")
     if h1:
-        text = h1.get_text(strip=True)
-        m = _DOC_NUM_RE.match(text)
+        text = h1.get_text(" ", strip=True)
+        m = DOC_NUM_RE.match(text)
         if m:
             doc = m.group(0).upper()
             title = text[m.end():].strip()
@@ -154,7 +160,7 @@ def _extract_bikeshed_metadata(soup: BeautifulSoup) -> dict:
     time_tag = soup.find("time", class_="dt-updated")
     if time_tag:
         dt = time_tag.get("datetime") or time_tag.get_text(strip=True)
-        m = _DATE_RE.search(dt)
+        m = DATE_RE.search(dt)
         if m:
             metadata["date"] = m.group(0)
 
@@ -195,13 +201,13 @@ def _extract_handwritten_metadata(soup: BeautifulSoup) -> dict:
             if not line:
                 continue
             if "document" in line.lower() and "number" in line.lower():
-                m = _DOC_NUM_RE.search(line)
+                m = DOC_NUM_RE.search(line)
                 if m:
                     metadata["document"] = m.group(0).upper()
             elif line.lower().startswith("audience"):
                 metadata["audience"] = line.split(":", 1)[-1].strip()
-            elif _DATE_RE.search(line):
-                metadata["date"] = _DATE_RE.search(line).group(0)
+            elif DATE_RE.search(line):
+                metadata["date"] = DATE_RE.search(line).group(0)
 
         for a in addr.find_all("a"):
             href = a.get("href", "")
@@ -225,11 +231,11 @@ def _extract_handwritten_metadata(soup: BeautifulSoup) -> dict:
                 label = th.get_text(strip=True).rstrip(":").lower()
                 value = td.get_text(strip=True)
                 if "document" in label:
-                    m = _DOC_NUM_RE.search(value)
+                    m = DOC_NUM_RE.search(value)
                     if m:
                         metadata["document"] = m.group(0).upper()
                 elif "date" in label:
-                    m = _DATE_RE.search(value)
+                    m = DATE_RE.search(value)
                     if m:
                         metadata["date"] = m.group(0)
                 elif "audience" in label:
@@ -262,11 +268,11 @@ def _extract_generic_metadata(soup: BeautifulSoup) -> dict:
                 label = cells[0].get_text(strip=True).rstrip(":").lower()
                 value = cells[-1].get_text(strip=True)
                 if "document" in label or "doc" in label:
-                    m = _DOC_NUM_RE.search(value)
+                    m = DOC_NUM_RE.search(value)
                     if m:
                         metadata["document"] = m.group(0).upper()
                 elif "date" in label:
-                    m = _DATE_RE.search(value)
+                    m = DATE_RE.search(value)
                     if m:
                         metadata["date"] = m.group(0)
                 elif "audience" in label:
@@ -276,7 +282,10 @@ def _extract_generic_metadata(soup: BeautifulSoup) -> dict:
 
 
 def strip_boilerplate(soup: BeautifulSoup, generator: str) -> list[str]:
-    """Remove non-content elements. Returns list of problem descriptions."""
+    """Remove non-content elements from `soup` in-place.
+
+    Returns list of problem descriptions.
+    """
     problems = []
 
     for tag in soup.find_all(["style", "script", "link"]):

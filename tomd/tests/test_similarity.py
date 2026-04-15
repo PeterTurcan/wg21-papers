@@ -1,6 +1,6 @@
 """Tests for lib.similarity."""
 
-from lib.similarity import similar, _sequence_similarity, _jaccard_similarity
+from lib.similarity import similar
 
 
 def test_similar_identical():
@@ -23,23 +23,13 @@ def test_similar_one_empty():
     assert not similar("hello", "")
 
 
-def test_sequence_circuit_breaker():
-    long = "a" * 201
-    assert _sequence_similarity(long, long) == 0.0
+def test_similar_circuit_breaker():
+    assert not similar("a" * 201, "a" * 201)
 
 
-def test_jaccard_circuit_breaker():
-    long = "a " * 101
-    assert _jaccard_similarity(long, long) == 0.0
+def test_similar_short_identical():
+    assert similar("test", "test")
 
 
-def test_sequence_similarity_identical():
-    assert _sequence_similarity("test", "test") == 1.0
-
-
-def test_jaccard_similarity_identical():
-    assert _jaccard_similarity("hello world", "hello world") == 1.0
-
-
-def test_jaccard_similarity_disjoint():
-    assert _jaccard_similarity("aaa bbb", "ccc ddd") == 0.0
+def test_similar_disjoint_words():
+    assert not similar("aaa bbb", "ccc ddd")

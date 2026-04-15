@@ -6,16 +6,22 @@ import unicodedata
 from collections import Counter
 from dataclasses import replace
 
+from .. import DATE_RE, strip_format_chars
 from .types import (
     Block, Line, Span, Section, SectionKind, Confidence,
     SIMILARITY_THRESHOLD, TERMINAL_PUNCTUATION, FALLBACK_BODY_SIZE,
     MIN_UNCERTAIN_WORDS,
-    _SECTION_NUM_RE, _DOC_FIELD_RE, _REPLY_TO_RE, _AUDIENCE_RE, _DATE_RE,
-    _BULLET_RE, _NUMBERED_LIST_RE, _KNOWN_SECTIONS,
+    SECTION_NUM_RE, DOC_FIELD_RE, REPLY_TO_RE, AUDIENCE_RE,
+    BULLET_RE, NUMBERED_LIST_RE, KNOWN_SECTIONS, BULLET_CHARS,
 )
 
 _HEADING_SIZE_RATIO = 1.05
 _TITLE_SIZE_RATIO = 1.2
+
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+_EMAIL_INLINE_RE = re.compile(r"\S+@\S+\.\S+")
+_MULTI_SPACE_RE = re.compile(r"\s{2,}")
+_LEADING_TRAILING_COMMA_RE = re.compile(r"^[,\s]+|[,\s]+$")
 
 _log = logging.getLogger(__name__)
 
@@ -45,10 +51,11 @@ def _word_similarity(words_a: list[str], words_b: list[str]) -> float:
 def compare_extractions(mupdf_blocks: list[Block],
                         spatial_blocks: list[Block],
                         ) -> list[Section]:
-    """Compare two extraction paths using coarse word-level similarity.
+    """Compare two extraction paths using per-page word-level multiset similarity.
 
-    Walks both paths by page, comparing text region by region.
-    High similarity = confident. Low similarity = uncertain.
+    Groups blocks by page and computes a word-count overlap ratio for each
+    page. High similarity = confident (PARAGRAPH). Low similarity = uncertain.
+    Small uncertain regions below MIN_UNCERTAIN_WORDS are promoted to confident.
     """
     mupdf_by_page: dict[int, list[Block]] = {}
     spatial_by_page: dict[int, list[Block]] = {}
@@ -165,6 +172,8 @@ def compare_extractions(mupdf_blocks: list[Block],
                     ))
             sections = kept
 
+    sections.sort(key=lambda sec: sec.page_num)
+
     for sec in sections:
         if sec.kind != SectionKind.UNCERTAIN:
             continue
@@ -173,6 +182,8 @@ def compare_extractions(mupdf_blocks: list[Block],
         if min(m_len, s_len) < MIN_UNCERTAIN_WORDS:
             sec.kind = SectionKind.PARAGRAPH
             sec.confidence = Confidence.LOW
+            sec.mupdf_text = ""
+            sec.spatial_text = ""
 
     return sections
 
@@ -209,7 +220,7 @@ def _heading_level_from_number(section_num: str) -> int:
     return len(parts) + 1
 
 
-def _heading_confidence(has_number: bool, number_level: int,
+def heading_confidence(has_number: bool, number_level: int,
                         font_level: int | None, is_bold: bool,
                         is_known: bool) -> tuple[int, Confidence]:
     """Determine heading level and confidence from multiple signals.
@@ -270,32 +281,32 @@ def _extract_metadata(sections: list[Section]) -> tuple[dict, list[Section]]:
                 if not lt:
                     continue
 
-                m = _DOC_FIELD_RE.match(lt)
+                m = DOC_FIELD_RE.match(lt)
                 if m:
                     meta["doc-number"] = m.group(1).upper()
                     consumed = True
                     continue
 
-                m = _DATE_RE.search(lt)
-                if m and "date" not in meta and not _SECTION_NUM_RE.match(lt):
+                m = DATE_RE.search(lt)
+                if m and "date" not in meta and not SECTION_NUM_RE.match(lt):
                     if lt.lower().startswith("date"):
                         meta["date"] = m.group(1)
                         consumed = True
                         continue
 
-                m = _REPLY_TO_RE.match(lt)
+                m = REPLY_TO_RE.match(lt)
                 if m:
                     raw = m.group(1).strip()
-                    raw = re.sub(r"<[^>]+>", "", raw)
-                    raw = re.sub(r"\S+@\S+\.\S+", "", raw)
-                    raw = re.sub(r"\s{2,}", " ", raw).strip()
-                    raw = re.sub(r"^[,\s]+|[,\s]+$", "", raw)
+                    raw = _HTML_TAG_RE.sub("", raw)
+                    raw = _EMAIL_INLINE_RE.sub("", raw)
+                    raw = _MULTI_SPACE_RE.sub(" ", raw).strip()
+                    raw = _LEADING_TRAILING_COMMA_RE.sub("", raw)
                     if raw:
                         meta["reply-to"] = raw
                     consumed = True
                     continue
 
-                m = _AUDIENCE_RE.match(lt)
+                m = AUDIENCE_RE.match(lt)
                 if m:
                     meta["audience"] = m.group(1).strip()
                     consumed = True
@@ -307,10 +318,10 @@ def _extract_metadata(sections: list[Section]) -> tuple[dict, list[Section]]:
                     lt = line_text.strip()
                     if not lt:
                         continue
-                    if (_DOC_FIELD_RE.match(lt) or _REPLY_TO_RE.match(lt)
-                            or _AUDIENCE_RE.match(lt)):
+                    if (DOC_FIELD_RE.match(lt) or REPLY_TO_RE.match(lt)
+                            or AUDIENCE_RE.match(lt)):
                         continue
-                    if lt.lower().startswith("date") and _DATE_RE.search(lt):
+                    if lt.lower().startswith("date") and DATE_RE.search(lt):
                         continue
                     leftover.append(lt)
                 if leftover:
@@ -322,7 +333,7 @@ def _extract_metadata(sections: list[Section]) -> tuple[dict, list[Section]]:
             if alpha and all(c.isupper() for c in alpha) and len(text.split()) <= 3:
                 continue
 
-            if _SECTION_NUM_RE.match(text.split("\n")[0]):
+            if SECTION_NUM_RE.match(text.split("\n")[0]):
                 metadata_zone = False
 
         remaining.append(sec)
@@ -357,7 +368,7 @@ def structure_sections(sections: list[Section],
 
         if not title_found:
             if (sec.font_size > body_size * _TITLE_SIZE_RATIO
-                    and not _SECTION_NUM_RE.match(first_line)):
+                    and not SECTION_NUM_RE.match(first_line)):
                 metadata["title"] = first_line
                 sec.kind = SectionKind.TITLE
                 sec.heading_level = 1
@@ -366,18 +377,18 @@ def structure_sections(sections: list[Section],
                 structured.append(sec)
                 continue
 
-        m = _SECTION_NUM_RE.match(first_line)
+        m = SECTION_NUM_RE.match(first_line)
         has_number = m is not None
         section_num = m.group(1) if m else ""
 
         line_fs = sec.font_size
         font_level = font_ranks.get(line_fs)
         is_bold = bool(sec.lines) and sec.lines[0].is_bold
-        is_known = first_line.lower().rstrip(":") in _KNOWN_SECTIONS
+        is_known = first_line.lower().rstrip(":") in KNOWN_SECTIONS
 
         if has_number or font_level is not None or is_known:
             number_level = _heading_level_from_number(section_num) if has_number else 0
-            level, conf = _heading_confidence(
+            level, conf = heading_confidence(
                 has_number, number_level, font_level, is_bold, is_known)
 
             if level > 0:
@@ -389,7 +400,7 @@ def structure_sections(sections: list[Section],
 
         lines = sec.text.split("\n")
         is_list = all(
-            _BULLET_RE.match(ln) or _NUMBERED_LIST_RE.match(ln)
+            BULLET_RE.match(ln) or NUMBERED_LIST_RE.match(ln)
             for ln in lines if ln.strip()
         )
         if is_list and any(ln.strip() for ln in lines):
@@ -409,9 +420,8 @@ def structure_sections(sections: list[Section],
     return metadata, structured
 
 
-_BULLET_CHARS = frozenset("-*\u2022\u2023\u25cf\u25e6\u2043\u2219\u25aa\u25ab")
 _BULLET_SPLIT_RE = re.compile(
-    r"(?=[\u2022\u2023\u25cf\u25e6\u2043\u2219\u25aa\u25ab][\s\u200b])"
+    r"(?=[" + "".join(BULLET_CHARS) + r"][\s\u200b])"
 )
 
 _INDENT_TOLERANCE = 5.0
@@ -445,7 +455,7 @@ def _line_starts_with_bullet(line) -> bool:
     text = line.text.strip()
     if not text:
         return False
-    return text[0] in _BULLET_CHARS
+    return text[0] in BULLET_CHARS
 
 
 def _detect_lists_by_position(sections: list[Section]) -> list[Section]:
@@ -488,10 +498,13 @@ def _join_bullet_marker_lines(lines: list) -> list:
     while i < len(lines):
         line = lines[i]
         text = line.text.strip()
-        if (text and text[0] in _BULLET_CHARS and len(text) <= 3
+        if not line.spans:
+            result.append(line)
+            i += 1
+            continue
+        if (text and text[0] in BULLET_CHARS and len(text) <= 3
                 and i + 1 < len(lines)):
             next_line = lines[i + 1]
-            from .cleanup import strip_format_chars
             bullet = strip_format_chars(text).rstrip()
             combined_text = bullet + " " + next_line.text.lstrip()
             bullet_span = Span(
@@ -619,7 +632,7 @@ def _split_inline_bullets_text(sec: Section) -> list[Section]:
         part = part.strip()
         if not part:
             continue
-        starts_with_bullet = part[0] in _BULLET_CHARS
+        starts_with_bullet = part[0] in BULLET_CHARS
         result.append(Section(
             kind=SectionKind.LIST if starts_with_bullet else SectionKind.PARAGRAPH,
             text=part,
@@ -704,7 +717,6 @@ _LANG_LABELS = {
 
 def _detect_lang_label(sec: Section) -> str | None:
     """Check if a section is a code block language label."""
-    from .cleanup import strip_format_chars
     text = strip_format_chars(sec.text).strip().lower()
     return _LANG_LABELS.get(text)
 
@@ -799,16 +811,20 @@ def _classify_wording_sections(sections: list[Section]) -> list[Section]:
 
 
 def _validate_nesting(sections: list[Section]) -> None:
-    """Ensure heading levels don't skip more than one level deeper."""
+    """Ensure heading levels don't skip more than one level deeper.
+
+    Mutates headings that skip levels: adjusts heading_level and
+    downgrades confidence from HIGH to MEDIUM when corrected.
+    """
     prev_level = 0
     for sec in sections:
         if sec.kind != SectionKind.HEADING:
             continue
         if prev_level > 0 and sec.heading_level > prev_level + 1:
             corrected = prev_level + 1
-            _log.debug("Nesting fix: h%d -> h%d for %r",
-                        sec.heading_level, corrected,
-                        sec.text[:40])
+            _log.info("Nesting fix: h%d -> h%d for %r",
+                       sec.heading_level, corrected,
+                       sec.text[:40])
             sec.heading_level = corrected
             if sec.confidence == Confidence.HIGH:
                 sec.confidence = Confidence.MEDIUM

@@ -4,7 +4,7 @@ import logging
 from collections import Counter
 from pathlib import Path
 
-from .cleanup import (_get_edge_items, detect_repeating, strip_repeating,
+from .cleanup import (get_edge_items, detect_repeating, strip_repeating,
                       cleanup_text, find_hidden_regions, strip_hidden_blocks)
 from .extract import extract_mupdf, extract_spatial, collect_links, attach_links
 from .mono import propagate_monospace
@@ -17,6 +17,8 @@ from .emit import emit_markdown, emit_prompts
 from .types import SectionKind, is_readable
 from .. import ascii_escape
 from ..toc import find_toc_indices
+
+__all__ = ["convert_pdf"]
 
 _log = logging.getLogger(__name__)
 
@@ -52,13 +54,17 @@ def _get_page0_text_colors(page) -> dict[float, float]:
 def convert_pdf(path: Path) -> tuple[str, str | None]:
     """Convert a PDF file to Markdown.
 
-    Returns (markdown_text, prompts_text_or_none).
+    Returns (markdown_text, prompts_text_or_none). The markdown text
+    is ASCII-encoded via `ascii_escape` (non-ASCII chars become escapes).
+    Returns ("", None) for empty or unreadable PDFs.
+    Raises fitz exceptions for corrupt or inaccessible files.
     """
     import fitz
 
     path = Path(path)
-    doc = fitz.open(str(path))
+    doc = None
     try:
+        doc = fitz.open(str(path))
         page_count = doc.page_count
         if page_count == 0:
             return "", None
@@ -74,7 +80,7 @@ def convert_pdf(path: Path) -> tuple[str, str | None]:
             mupdf_blocks = extract_mupdf(page, pg_num)
             spatial_blocks = extract_spatial(page, pg_num)
 
-            edge_items = _get_edge_items(mupdf_blocks, pg_num, page_height)
+            edge_items = get_edge_items(mupdf_blocks, pg_num, page_height)
             all_edge_items.append(edge_items)
 
             links = collect_links(page)
@@ -92,7 +98,7 @@ def convert_pdf(path: Path) -> tuple[str, str | None]:
                         font_counts[s.font_name.lower()] += len(s.text)
         body_fonts = {f for f, _ in font_counts.most_common(5)}
 
-        all_hidden: set = set()
+        all_hidden: set[tuple[float, float, float, float]] = set()
         for pg_num in range(page_count):
             page = doc[pg_num]
             all_hidden |= find_hidden_regions(page, body_fonts)
@@ -105,7 +111,8 @@ def convert_pdf(path: Path) -> tuple[str, str | None]:
             if drawings:
                 page_drawings[pg_num] = drawings
     finally:
-        doc.close()
+        if doc is not None:
+            doc.close()
 
     if all_hidden:
         _log.info("Stripping text hidden by %d covered regions", len(all_hidden))
@@ -173,7 +180,7 @@ def convert_pdf(path: Path) -> tuple[str, str | None]:
         sections = [s for i, s in enumerate(sections) if i not in toc_indices]
 
     md = emit_markdown(metadata, sections)
-    prompts = emit_prompts(metadata, sections)
+    prompts = emit_prompts(sections)
 
     if wording_problems:
         wording_prompt = "\n\n".join(

@@ -3,14 +3,25 @@
 import logging
 from urllib.parse import urlparse
 
+from .. import ALLOWED_LINK_SCHEMES
 from .types import (
     Block, Line, Span,
     WORD_GAP_RATIO, LINE_SPACING_RATIO, PARA_SPACING_RATIO,
-    FALLBACK_FONT_SIZE, _ALLOWED_LINK_SCHEMES,
+    FALLBACK_FONT_SIZE,
 )
 from .mono import classify_monospace
 
 _log = logging.getLogger(__name__)
+
+
+def _compute_bbox(bboxes: list[tuple]) -> tuple[float, float, float, float]:
+    """Compute the bounding box enclosing all given bbox tuples."""
+    return (
+        min(b[0] for b in bboxes),
+        min(b[1] for b in bboxes),
+        max(b[2] for b in bboxes),
+        max(b[3] for b in bboxes),
+    )
 
 
 def extract_mupdf(page, page_num: int) -> list[Block]:
@@ -60,13 +71,13 @@ def extract_mupdf(page, page_num: int) -> list[Block]:
 
 
 def extract_spatial(page, page_num: int) -> list[Block]:
-    """Extract text using raw character coordinates and four spatial rules.
+    """Extract text using raw character coordinates and spatial rules.
 
     Uses page.get_text("rawdict") for (character, x, y) tuples.
-    Applies:
+    Applies dy/dx ratios against font-size-relative thresholds:
       1. Horizontal close -> same word
       2. Horizontal far -> word break (space)
-      3. Vertical close + left reset -> line continuation (same paragraph)
+      3. Vertical moderate -> new line (same block)
       4. Vertical far -> paragraph break
     """
     data = page.get_text("rawdict", flags=0)
@@ -132,14 +143,10 @@ def extract_spatial(page, page_num: int) -> list[Block]:
         _flush_word()
         if not cur_spans:
             return
-        bboxes = [s.bbox for s in cur_spans]
-        x0 = min(b[0] for b in bboxes)
-        y0 = min(b[1] for b in bboxes)
-        x1 = max(b[2] for b in bboxes)
-        y1 = max(b[3] for b in bboxes)
+        bbox = _compute_bbox([s.bbox for s in cur_spans])
         cur_lines.append(Line(
             spans=list(cur_spans),
-            bbox=(x0, y0, x1, y1),
+            bbox=bbox,
             page_num=page_num,
         ))
         cur_spans.clear()
@@ -148,14 +155,10 @@ def extract_spatial(page, page_num: int) -> list[Block]:
         _flush_line()
         if not cur_lines:
             return
-        bboxes = [ln.bbox for ln in cur_lines]
-        x0 = min(b[0] for b in bboxes)
-        y0 = min(b[1] for b in bboxes)
-        x1 = max(b[2] for b in bboxes)
-        y1 = max(b[3] for b in bboxes)
+        bbox = _compute_bbox([ln.bbox for ln in cur_lines])
         blocks.append(Block(
             lines=list(cur_lines),
-            bbox=(x0, y0, x1, y1),
+            bbox=bbox,
             page_num=page_num,
         ))
         cur_lines.clear()
@@ -209,10 +212,10 @@ def collect_links(page) -> list[dict]:
             continue
         try:
             scheme = urlparse(uri).scheme.lower()
-        except Exception:
+        except (ValueError, KeyError):
             _log.debug("Failed to parse link URI: %r", uri, exc_info=True)
             continue
-        if scheme not in _ALLOWED_LINK_SCHEMES:
+        if scheme not in ALLOWED_LINK_SCHEMES:
             continue
         from_rect = link.get("from")
         if from_rect is None:
@@ -225,7 +228,11 @@ def collect_links(page) -> list[dict]:
 
 
 def attach_links(blocks: list[Block], links: list[dict]) -> None:
-    """Match link annotations to text spans by bounding rect overlap."""
+    """Match link annotations to text spans by bounding rect overlap.
+
+    Mutates spans in-place (sets `link_url`). If multiple links
+    overlap the same span, the best-overlap link wins.
+    """
     for link in links:
         lx0, ly0, lx1, ly1 = link["bbox"]
         uri = link["uri"]

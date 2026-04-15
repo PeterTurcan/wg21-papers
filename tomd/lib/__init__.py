@@ -1,6 +1,7 @@
-"""tomd shared library - format-agnostic modules and converter packages."""
+"""Shared text utilities and constants for PDF and HTML converters."""
 
-import html as _html_mod
+import re
+import unicodedata
 
 _NAMED_ENTITIES = {
     0xC0: "&Agrave;", 0xC1: "&Aacute;", 0xC2: "&Acirc;", 0xC3: "&Atilde;",
@@ -39,3 +40,72 @@ def ascii_escape(text: str) -> str:
         else:
             out.append(f"&#{cp};")
     return "".join(out)
+
+
+FORMAT_CHARS = frozenset(
+    chr(c) for c in range(0x110000)
+    if unicodedata.category(chr(c)) == 'Cf'
+)
+
+
+def strip_format_chars(text: str) -> str:
+    """Remove Unicode format characters (category Cf)."""
+    return "".join(c for c in text if c not in FORMAT_CHARS)
+
+
+FRONT_MATTER_ORDER = ("title", "document", "date", "audience", "reply-to")
+
+
+def _yaml_escape(s: str) -> str:
+    """Escape a string for safe inclusion in double-quoted YAML."""
+    return s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
+def _yaml_value(key: str, val) -> str:
+    """Format a single YAML value, quoting where needed."""
+    if isinstance(val, list):
+        items = [f'  - "{_yaml_escape(str(v))}"' for v in val]
+        return f"{key}:\n" + "\n".join(items)
+    val = str(val) if not isinstance(val, str) else val
+    if any(c in val for c in ':{}[]#&*?|>!%@`"\'\n\\'):
+        return f'{key}: "{_yaml_escape(val)}"'
+    return f"{key}: {val}"
+
+
+def format_front_matter(metadata: dict) -> str:
+    """Format metadata dict as YAML front matter.
+
+    Field order: title, document, date, audience, reply-to.
+    Title and values containing YAML-special characters are double-quoted
+    with backslash-escaping for embedded quotes, backslashes, and newlines.
+    Reply-to is a YAML list of double-quoted strings.
+    Returns empty string if metadata is empty.
+    """
+    if not metadata:
+        return ""
+    lines = ["---"]
+    for key in FRONT_MATTER_ORDER:
+        if key in metadata:
+            lines.append(_yaml_value(key, metadata[key]))
+    for key, val in metadata.items():
+        if key not in FRONT_MATTER_ORDER:
+            lines.append(_yaml_value(key, val))
+    lines.append("---")
+    return "\n".join(lines)
+
+
+ALLOWED_LINK_SCHEMES = frozenset({"http", "https", "mailto"})
+
+EMAIL_RE = re.compile(r"[\w.+-]+@[\w.-]+\.\w+")
+
+DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
+
+DOC_NUM_RE = re.compile(
+    r"\b([DPN]\d{3,5}R\d+)\b"
+    r"|\b([DPN]\d{3,5})\b"
+    r"|\b(N\d{3,5})\b"
+    r"|\b(SD-\d+)\b",
+    re.IGNORECASE,
+)
+
+SECTION_NUM_PREFIX_RE = re.compile(r"^\d+(?:\.\d+)*\.?\s+")
