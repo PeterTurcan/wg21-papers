@@ -268,7 +268,7 @@ Stage One defines the concepts. Stage Two provides implementations. Between them
 
 The ABI stability of Stage One provides the boundary. `any_stream` is the contract. The socket behind it can be replaced. Business logic never recompiles.
 
-**Ship the concepts. Let the ecosystem discover the best implementations. Standardize what works.**
+**If the committee pursues this path, the concepts should ship first. Let the ecosystem discover the best implementations. Standardize what works.**
 
 ---
 
@@ -400,7 +400,7 @@ Sender algorithms compose at compile time with full type information. The optimi
 
 The question is whether byte-oriented I/O benefits from the same model.
 
-The properties in Section 3 - type erasure, frame allocation, symmetric transfer - work because coroutines are used directly. A sender layer between the coroutine and the platform loses them. [P4007R0](https://wg21.link/p4007r0)<sup>[3]</sup> documents three structural gaps at the boundary where `std::execution` meets coroutines: error reporting, error returns, and frame allocator timing.
+The properties in Section 3 - type erasure, frame allocation, symmetric transfer - work because coroutines are used directly. A sender layer between the coroutine and the platform loses them. [P4007R0](https://wg21.link/p4007r0)<sup>[3]</sup> documents four structural gaps where `std::execution` meets coroutines: three at the boundary - error reporting, error returns, and frame allocator propagation - and one inside the composition mechanism: the symmetric transfer gap (documented in [P2583R0](https://wg21.link/p2583r0)).
 
 Domain specialization is not fragmentation. GPU compute got `nvexec` with CUDA extensions and a separate namespace. C++ has multiple container types, multiple string types, multiple smart pointer types. Two async models for two distinct domains is the same principle.
 
@@ -414,7 +414,7 @@ The buffer concepts (Paper 4) have no async dependency at all. They are pure voc
 
 If the committee relies exclusively on one async path for networking and that path encounters delays, the networking timeline slips again. This has happened before.
 
-Stage One costs the committee nothing to let proceed in parallel. Pure C++20 with no platform dependency. If sender-based networking succeeds, the buffer concepts and stream concepts enrich it. Nothing is wasted. If it encounters delays, the committee has an independent path ready.
+Stage One carries minimal technical risk if allowed to proceed in parallel. Pure C++20 with no platform dependency. If sender-based networking succeeds, the buffer concepts and stream concepts enrich it. Nothing is wasted. If it encounters delays, the committee has an independent path ready.
 
 Letting both paths proceed is the conservative choice.
 

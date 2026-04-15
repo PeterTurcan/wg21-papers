@@ -157,6 +157,27 @@ A practical workflow:
 2. The LLM emits a classification and a one-sentence justification.
 3. A human reviewer validates a stratified sample - enough to estimate the error rate of the LLM triage.
 
+**Example.** Two functions rejected by Phase 1 for raw pointer operations:
+
+```cpp
+void zero_fill(int* p, size_t n) {
+    for (size_t i = 0; i < n; ++i) p[i] = 0;
+}
+```
+
+LLM classification: **True positive.** The pointer arithmetic is unbounded - the caller controls `n` and nothing constrains it relative to the allocation size.
+
+```cpp
+void copy_header(const char* buf, header& h) {
+    static_assert(sizeof(header) == 16);
+    std::memcpy(&h, buf, sizeof(header));
+}
+```
+
+LLM classification: **Structural false positive.** The `memcpy` is bounded by `sizeof(header)`, a compile-time constant. No annotation resolves this - the profile lacks a mechanism to express "the caller guarantees at least N bytes."
+
+The distinction matters. An AST walk rejects both functions identically. The LLM distinguishes them because it can read the `static_assert` and reason about the bound.
+
 The LLM does not replace the formal guarantee. It expands the code surface that the formal guarantee can reach by identifying where annotations are missing and where the rules are too conservative.
 
 ---

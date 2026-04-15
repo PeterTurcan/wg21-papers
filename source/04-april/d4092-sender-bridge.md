@@ -129,7 +129,7 @@ The bridge consumes senders without `std::execution::task`.
 
 The bridge depends on two things: [Capy](https://github.com/cppalliance/capy)<sup>[4]</sup> (coroutine primitives) and `std::execution` (sender/receiver protocol). No platform I/O. No networking headers. No additional coroutine type. The implementation in Appendix A uses `beman::execution`<sup>[5]</sup>, a community implementation of `std::execution`, but the bridge requires only the standard sender/receiver concepts.
 
-Narrower than `execution::task`: the bridge does not type-erase, does not allocate, and does not impose an `Environment` parameter. Narrower than a completion-token adapter: the bridge does not require Asio or any I/O service. The coroutine type the programmer already uses does not change when the bridge is added.
+Narrower than `execution::task`: the bridge does not type-erase, does not allocate, and does not impose an `Environment` parameter. Narrower than a completion-token adapter: the bridge does not require Asio or any I/O service. Narrower than `with_awaitable_senders` ([P2300R10](https://wg21.link/p2300r10)<sup>[1]</sup> Section 4.17): the bridge uses the IoAwaitable two-argument `await_suspend` to receive the environment, uses `post()` for guaranteed executor dispatch-back rather than relying on scheduler affinity or atomic synchronization for synchronous completions, and separates `error_code` from `exception_ptr` at compile time rather than converting through `unhandled_stopped()`. The coroutine type the programmer already uses does not change when the bridge is added.
 
 The bridge is the proof that coexistence works. Senders compose. Coroutines do I/O. One class template connects them.
 

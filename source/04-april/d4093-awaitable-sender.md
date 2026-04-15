@@ -228,7 +228,7 @@ The authors thank Dietmar K&uuml;hl for `beman::execution`<sup>[4]</sup> and for
 
 1. [P2300R10](https://wg21.link/p2300r10) - "std::execution" (Micha&lstrok; Dominiak et al., 2024). https://wg21.link/p2300r10
 
-2. [P4003R0](https://wg21.link/p4003r0) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026). https://wg21.link/p4003r0
+2. [P4003R1](https://wg21.link/p4003r1) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026). https://wg21.link/p4003r1
 
 3. [cppalliance/capy](https://github.com/cppalliance/capy) - Coroutine primitives library. https://github.com/cppalliance/capy
 

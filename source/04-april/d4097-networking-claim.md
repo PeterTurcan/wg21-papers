@@ -86,6 +86,28 @@ Voters who stated they could not evaluate the networking claim:
 
 These votes counted toward the "consensus in favor" that included networking.
 
+### 2.3 Poll 4
+
+[P2453R0](https://wg21.link/p2453r0)<sup>[5]</sup> documents a second poll that directly addresses networking:
+
+> "Networking in the C++ Standard Library should be based on the sender/receiver model (P2300)."
+>
+> SF:17 / WF:11 / N:10 / WA:4 / SA:6 - Weak consensus.
+
+The chair's published interpretation:
+
+> "In the short term, this poll result doesn't mean much. We don't have a paper in hand that proposes networking based on the [P2300R2] model."
+
+Selected voter comments on Poll 4:
+
+> "there is no concrete proposal to evaluate, let alone one that has been field-tested"
+
+> "I would want to see more implementation experience with a sender/receiver-based networking design before being in favour of this"
+
+> "at least a proof-of-principle implementation (maybe even in the form of a paper rather than code) is needed before changing the status quo"
+
+The most directly networking-specific poll produced a weaker result than Poll 2 and voter comments that explicitly called for evidence that did not yet exist.
+
 ---
 
 ## 3. The Evidence at the Time of the Vote

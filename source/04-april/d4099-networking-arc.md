@@ -70,7 +70,7 @@ These are facts. This series documents them alongside what was not examined.
 
 None of the following existed when the decisions in Section 2 were made.
 
-**C++20 coroutines** were ratified in 2020. They did not exist in 2014 when the unification decision was made, or in 2019 when [P1525R0](https://wg21.link/p1525r0)<sup>[10]</sup> diagnosed the basis operation. The coroutine executor concept constrains the handle type to `coroutine_handle<>`, restoring the type constraint that the rename from `dispatch`/`post`/`defer` to `execute(F&&)` removed.
+**C++20 coroutines** were ratified in 2020. The Coroutines TS was available from 2017 and compiler implementations existed by 2018, but the coroutine executor concept - which resolves the four deficiencies [P1525R0](https://wg21.link/p1525r0)<sup>[10]</sup> identified - was not formulated until 2026. In 2014, when the unification decision was made, coroutines did not exist in any form. In 2019, when [P1525R0](https://wg21.link/p1525r0)<sup>[10]</sup> diagnosed the basis operation, the specific two-framing analysis was not available. The coroutine executor concept constrains the handle type to `coroutine_handle<>`, restoring the type constraint that the rename from `dispatch`/`post`/`defer` to `execute(F&&)` removed.
 
 **The coroutine executor concept** ([P4003R0](https://wg21.link/p4003r0)<sup>[12]</sup>, 2026) provides `dispatch` and `post` - continuation-scheduling primitives with a typed handle. The four deficiencies [P1525R0](https://wg21.link/p1525r0)<sup>[10]</sup> identified do not arise under this concept ([P4095R0](https://wg21.link/p4095r0)<sup>[2]</sup> Section 4).
 
@@ -122,7 +122,7 @@ A: The companion papers document what evidence was available at the time each de
 
 **Q: P2300 will eventually cover networking.**
 
-A: It might. The record documents what has shipped as of 2026. No sender-based networking deployment has been published. The committee now has two models to evaluate. Time will tell which serves networking better, or whether both do.
+A: It might. Prototype implementations exist - Kühl's [P2762R2](https://wg21.link/p2762r2) work and experimental library, Voutilainen's Qt + P2300 networking integration - but no production networking deployment on senders has been published as of 2026. The committee now has two models to evaluate. Time will tell which serves networking better, or whether both do.
 
 **Q: Two models fragment the ecosystem.**
 

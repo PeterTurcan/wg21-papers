@@ -386,6 +386,8 @@ Call `set_error(io_result{ec, n})` where `io_result` carries both the error code
 | Application wiring (11.5)     | Yes                  | Yes                 | No      | Yes           |
 | Bundle into error type (11.6) | Yes                  | Yes                 | Partial | Yes           |
 
+Not all compound-result operations are equally affected. Operations without partial-success semantics - `accept()`, where the peer socket is meaningless on failure - degrade naturally to the three-channel model: the error routes through `set_error` with no data loss because there is no meaningful data to preserve. The compound-result tension is sharpest for operations like `read()` and `write()`, where the byte count carries meaningful data on every path, including failure. A design that handles the degradation case well does not automatically handle the partial-success case. Peter Dimov observed in the reflector discussion cited in Section 6.2 that the mapping "should degrade to the natural mapping when no partial successes are present," and that the value-channel-only approach (11.2) does not achieve this. An operation-level classification based on the presence of partial-success semantics would reduce the trade-off space for operations that lack it, while preserving the full six-position analysis for operations where partial success is real.
+
 ---
 
 ## 12. Anticipated Objections

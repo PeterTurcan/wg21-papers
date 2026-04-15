@@ -608,7 +608,7 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 
 14. [P3801R0](https://wg21.link/p3801r0) - "Concerns about the design of `std::execution::task`" (Jonathan M&uuml;ller, 2025). https://wg21.link/p3801r0
 
-15. [N1925](https://wg21.link/n1925) - "A Proposal to Add Networking Utilities to the C++ Standard Library" (Chris Kohlhoff, 2005). https://wg21.link/n1925
+15. [N1925](https://wg21.link/n1925) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005). https://wg21.link/n1925
 
 16. Boost.Asio AsyncReadStream requirements. https://www.boost.org/doc/libs/1_87_0/doc/html/boost_asio/reference/AsyncReadStream.html
 

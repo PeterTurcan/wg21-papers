@@ -273,13 +273,14 @@ Bolas continued<sup>[14]</sup>:
 
 When the Environment changes, the return type changes, and every caller breaks. The separation was designed to prevent exactly this.
 
-Gor Nishanov designed the coroutine mechanism with an explicit layering model. [P1362R0](https://wg21.link/p1362r0)<sup>[4]</sup> Section 4.4 and [N4287](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4287.pdf)<sup>[36]</sup> define three tiers:
+Gor Nishanov designed the coroutine mechanism with an explicit layering model. [P1362R0](https://wg21.link/p1362r0)<sup>[4]</sup> Section 4.4 and [N4287](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4287.pdf)<sup>[36]</sup> define four tiers:
 
-| Who                  | What                                                                                                  |
-| -------------------- | ----------------------------------------------------------------------------------------------------- |
-| Everybody (millions) | Uses coroutines and awaitables defined by the standard library, Boost, and other high-quality libraries |
-| Power user (10,000)  | Defines new awaitables to customize await for their environment **using existing coroutine types**     |
-| Expert (1,000)       | Defines new coroutine types                                                                           |
+| Who                        | What                                                                                                  |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Everybody (millions)       | Uses coroutines and awaitables defined by the standard library, Boost, and other high-quality libraries |
+| Power user (10,000)        | Defines new awaitables to customize await for their environment **using existing coroutine types**     |
+| Expert (1,000)             | Defines new coroutine types                                                                           |
+| Cream of the crop (200)    | Defines metafunctions, adapters, and composition utilities for coroutines                             |
 
 The middle tier is the one that matters. Power users customize the *environment* by defining new *awaitables* - not by changing the coroutine type. The coroutine type stays fixed; the awaitable carries the domain-specific protocol. The `Environment` parameter inverts this layering: it puts environment customization in the coroutine type itself, forcing a new type for each domain. What Nishanov assigned to the awaitable tier, `task<T, Environment>` moves into the expert tier and exposes in the return type.
 

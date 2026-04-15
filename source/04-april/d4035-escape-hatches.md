@@ -97,7 +97,7 @@ Internally, the library's own parser has already validated the encoding before e
 pct_string_view s = make_pct_string_view_unsafe(data, size, decoded_size);
 ```
 
-This pattern was adopted by three Boost libraries with years of field experience: Boost.URL ([`make_pct_string_view_unsafe`](https://github.com/boostorg/url/blob/develop/include/boost/url/pct_string_view.hpp)<sup>[3]</sup>), Boost.Process ([`basic_cstring_ref`](https://github.com/boostorg/process/blob/develop/include/boost/process/v2/cstring_ref.hpp)<sup>[4]</sup>), and Boost.SQLite ([`cstring_ref`](https://github.com/klemens-morgenstern/sqlite/blob/develop/include/boost/sqlite/cstring_ref.hpp)<sup>[5]</sup>). Three libraries arriving at the same design is not coincidence. It is convergence on a structural need.
+Boost.URL has shipped this pattern with years of field experience: a validating default ([`pct_string_view`](https://github.com/boostorg/url/blob/develop/include/boost/url/pct_string_view.hpp)<sup>[3]</sup>) and an escape hatch ([`make_pct_string_view_unsafe`](https://github.com/boostorg/url/blob/develop/include/boost/url/pct_string_view.hpp)<sup>[3]</sup>) for trusted boundaries. Boost.Process ([`basic_cstring_ref`](https://github.com/boostorg/process/blob/develop/include/boost/process/v2/cstring_ref.hpp)<sup>[4]</sup>) and Boost.SQLite ([`cstring_ref`](https://github.com/klemens-morgenstern/sqlite/blob/develop/include/boost/sqlite/cstring_ref.hpp)<sup>[5]</sup>) independently implemented null-terminated string reference types, confirming the demand for the type that `cstring_view` proposes to standardize.
 
 ---
 

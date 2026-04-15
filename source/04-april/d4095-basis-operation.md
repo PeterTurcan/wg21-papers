@@ -102,7 +102,7 @@ These are real deficiencies of the `execute(F&&)` signature. The sender/receiver
 
 > "For the purpose of this document, by 'one-way execute,' we mean a void-returning function that accepts a nullary Invocable and eagerly submits it for execution on an execution agent that the executor creates for it."
 
-"Submits it for execution." "Execution agent that the executor creates." The language is the work framing throughout. The word "continuation" appears once in the paper, in the context of a deadline executor (Section 2.3). `dispatch`, `post`, and `defer` - the continuation-scheduling primitives that `execute` replaced - do not appear.
+"Submits it for execution." "Execution agent that the executor creates." The language is the work framing throughout. The word "continuation" appears in several places - Section 2.3's deadline executor, Section 3.3's cancellation discussion - but always as a generic term for the callable. [P1525R0](https://wg21.link/p1525r0)<sup>[1]</sup> never engages with the continuation *framing* from [P0113R0](https://wg21.link/p0113r0)<sup>[28]</sup>: the specific meaning where the callable is a resumption handle, the caller has returned, and the OS performs the work. `dispatch`, `post`, and `defer` - the continuation-scheduling primitives that `execute` replaced - do not appear.
 
 ### 3.2 The Universal Async Model
 
@@ -159,7 +159,7 @@ The five reasons are: (1) post-value cleanup - the callable executed, produced a
 
 Under the work framing, the callable can be in any of these five states when its destructor runs. The destructor cannot distinguish them without extra state. The ambiguity is real.
 
-Under the continuation framing, the callable is a continuation that has not yet been resumed. It has not executed. It has not produced a value. It has not produced an error. It is waiting. Reasons (1) and (2) - post-value and post-error cleanup - do not apply because the continuation has not been resumed and therefore has not produced a result. If the executor destroys a continuation without resuming it, the continuation was cancelled. There is only one state an un-resumed continuation can be in: waiting. The four-way ambiguity that [P1525R0](https://wg21.link/p1525r0)<sup>[1]</sup> describes does not arise because three of the five reasons presuppose that the callable has already executed, and a continuation that has not been resumed has not executed.
+Under the continuation framing, the callable is a continuation that has not yet been resumed. It has not executed. It has not produced a value. It has not produced an error. It is waiting. Reasons (1) and (2) - post-value and post-error cleanup - do not apply because the continuation has not been resumed and therefore has not produced a result. If the executor destroys a continuation without resuming it, the continuation was cancelled. There is only one state an un-resumed continuation can be in: waiting. The four-way ambiguity that [P1525R0](https://wg21.link/p1525r0)<sup>[1]</sup> describes does not arise because two of the five reasons - post-value cleanup and post-error cleanup - presuppose that the callable has already executed, and a continuation that has not been resumed has not executed.
 
 ### 4.3 Zero-Allocation Scheduling
 

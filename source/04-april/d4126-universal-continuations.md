@@ -115,9 +115,9 @@ The handle is the only thing the executor sees. It calls `.resume()`. It does no
 
 ## 3. The Problem
 
-The only way to obtain a `coroutine_handle<>` today is from a coroutine. A coroutine requires a frame allocation. The sender-to-awaitable bridge in [P4092R0](https://wg21.link/p4092r0)<sup>[5]</sup> demonstrates this: the bridge creates a coroutine whose sole purpose is to hold a handle that the reactor can resume. The coroutine frame is the tax.
+The only way to obtain a `coroutine_handle<>` today is from a coroutine. A coroutine requires a frame allocation. The awaitable-to-sender bridge in [P4093R0](https://wg21.link/p4093r0)<sup>[5]</sup> demonstrates this: the bridge creates a coroutine whose sole purpose is to hold a handle that the reactor can resume. The coroutine frame is the tax.
 
-[P4092R0](https://wg21.link/p4092r0)<sup>[5]</sup> Appendix A shows the bridge implementation. The `bridge_task` coroutine exists to produce a `coroutine_handle<>`. The coroutine body calls `co_await` on the IoAwaitable, and the `await_suspend` receives the handle from the compiler. The bridge works. It allocates a coroutine frame per I/O operation.
+[P4093R0](https://wg21.link/p4093r0)<sup>[5]</sup> Appendix A shows the bridge implementation. The `bridge_task` coroutine exists to produce a `coroutine_handle<>`. The coroutine body calls `co_await` on the IoAwaitable, and the `await_suspend` receives the handle from the compiler. The bridge works. It allocates a coroutine frame per I/O operation.
 
 For a coroutine user, the frame allocation is the cost of doing business - the frame holds the coroutine's local variables, its suspension-point state, and its promise. The frame earns its allocation. For a sender pipeline, the frame holds nothing the sender needs. The sender already has its own operation state. The frame is overhead.
 
@@ -129,7 +129,7 @@ One allocation per I/O operation. For high-throughput networking - millions of o
 
 An I/O operation can take one of two shapes: a sender or an awaitable. The choice determines which consumption model pays a tax and which runs at zero cost.
 
-**If the I/O operation is a sender,** coroutines consume it through `co_await` on the sender. The sender's `connect` produces an operation state. The coroutine must store that operation state somewhere - typically in the coroutine frame or in a bridge object. The sender's completion calls `set_value` on a receiver, which must resume the coroutine. The machinery to connect a sender to a coroutine - `execution::task`, or a bridge like the one in [P4092R0](https://wg21.link/p4092r0)<sup>[5]</sup> - is the tax coroutines pay. [P3552R3](https://wg21.link/p3552r3)<sup>[22]</sup>, "Add a Coroutine Task Type," is this tax made standard: it type-erases the operation state, allocates, and converts an `error_code` to `exception_ptr` through the execution framework's error-conversion machinery ([P2300R10](https://wg21.link/p2300r10)<sup>[20]</sup>).
+**If the I/O operation is a sender,** coroutines consume it through `co_await` on the sender. The sender's `connect` produces an operation state. The coroutine must store that operation state somewhere - typically in the coroutine frame or in a bridge object. The sender's completion calls `set_value` on a receiver, which must resume the coroutine. The machinery to connect a sender to a coroutine - `execution::task`, or a bridge like the one in [P4093R0](https://wg21.link/p4093r0)<sup>[5]</sup> - is the tax coroutines pay. [P3552R3](https://wg21.link/p3552r3)<sup>[22]</sup>, "Add a Coroutine Task Type," is this tax made standard: it type-erases the operation state, allocates, and converts an `error_code` to `exception_ptr` through the execution framework's error-conversion machinery ([P2300R10](https://wg21.link/p2300r10)<sup>[20]</sup>).
 
 **If the I/O operation is an awaitable,** coroutines consume it directly. `co_await stream.read_some(buf)` is the language feature working as designed. The compiler provides the handle. The awaitable suspends the coroutine. The reactor completes the operation. The executor resumes the coroutine. No bridge. No type erasure. No allocation beyond the coroutine frame that the coroutine already needs for its own state.
 
@@ -340,7 +340,7 @@ A `coroutine_handle<>` is a pointer to a frame. The storage for that frame must 
 
 This means the standard would need to mandate the two-pointer prefix layout - `resume` and `destroy` function pointers at offsets 0 and 1 - so that `from_address` on a user-provided struct produces a valid handle. There is no alternative design that avoids allocation without this guarantee.
 
-### 9.3 What the Standard Must Do
+### 9.3 What the Standard Would Need
 
 [P3203R0](https://wg21.link/p3203r0)<sup>[19]</sup> formalizes what all three major compilers already do. The coroutine frame layout with two function pointers at the front is not an implementation accident - it is the layout every compiler chose independently, and it is the layout that makes `coroutine_handle<>::from_address` work. The question is whether the committee will mandate it.
 
@@ -356,7 +356,7 @@ A callback handle gives senders a zero-allocation entry into the awaitable proto
 
 - **One I/O implementation.** The I/O library implements each operation once as an IoAwaitable. Coroutine users `co_await` it. Sender users invoke `await_suspend` with a callback handle. Both go through the same reactor, the same executor, the same platform implementation.
 
-- **Zero-allocation bridge.** The sender-to-awaitable bridge in [P4092R0](https://wg21.link/p4092r0)<sup>[5]</sup> currently allocates a coroutine frame. With a callback handle, the bridge is two pointers.
+- **Zero-allocation bridge.** The awaitable-to-sender bridge in [P4093R0](https://wg21.link/p4093r0)<sup>[5]</sup> currently allocates a coroutine frame. With a callback handle, the bridge is three pointers.
 
 - **Type-erased streams.** Streams are type-erasable because the executor is type-erased and the handle is type-erased. Both coroutines and senders see the same stream type.
 
@@ -408,7 +408,7 @@ The author thanks Gor Nishanov for the C++20 coroutine model and its explicit su
 
 4. [cppalliance/capy](https://github.com/cppalliance/capy) - Coroutine I/O primitives library. https://github.com/cppalliance/capy
 
-5. [P4092R0](https://wg21.link/p4092r0) - "Consuming Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026). https://wg21.link/p4092r0
+5. [P4093R0](https://wg21.link/p4093r0) - "Producing Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026). https://wg21.link/p4093r0
 
 6. [N4453](https://wg21.link/n4453) - "Resumable Expressions" (Christopher Kohlhoff, 2015). https://wg21.link/n4453
 

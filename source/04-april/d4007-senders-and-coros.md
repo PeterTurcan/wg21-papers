@@ -1,6 +1,6 @@
 ---
 title: "Info: Open Issues in `std::execution::task`"
-document: P4007R1
+document: P4007R2
 date: 2026-04-08
 reply-to:
   - "Vinnie Falco <vinnie.falco@gmail.com>"
@@ -39,7 +39,7 @@ The author provides information and serves at the pleasure of the committee.
 
 Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
 
-The authors developed [P4007R0](https://wg21.link/p4007r0)<sup>[2]</sup> ("Senders and Coroutines"). The classification below holds regardless of whether any alternative design exists.
+The authors developed [P4007R0](https://wg21.link/p4007r0)<sup>[2]</sup> ("Senders and Coroutines") and [P2583R3](https://isocpp.org/files/papers/P2583R3.pdf)<sup>[10]</sup> ("Symmetric Transfer and Sender Composition"). The classification below holds regardless of whether any alternative design exists.
 
 This paper asks for nothing.
 
