@@ -5,6 +5,8 @@ from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
 
+from tomd.lib import DOC_NUM_PATTERN, SECTION_NUM_PATTERN
+
 
 class Confidence(Enum):
     """Confidence level for structural classification decisions."""
@@ -135,15 +137,17 @@ SIMILARITY_THRESHOLD = 0.85
 
 # --- Precompiled regex patterns ---
 
-SECTION_NUM_RE = re.compile(
-    r"^(\d+(?:\.\d+)*)\s+(.+)",
-)
+# Section number at the start of a line with required trailing content
+# (used for heading detection); shares the core shape with
+# SECTION_NUM_PREFIX_RE in lib/__init__.py.
+SECTION_NUM_RE = re.compile(rf"^({SECTION_NUM_PATTERN})\s+(.+)")
 
 # Line-anchored pattern targeting "Document Number: PXXXXRN" field lines in
 # PDF block text. More restrictive than DOC_NUM_RE in lib/__init__.py, which
-# is a broad substring match used for header stripping and HTML contexts.
+# is a broad substring match used for header stripping and HTML contexts;
+# both patterns share the core DOC_NUM_PATTERN shape.
 DOC_FIELD_RE = re.compile(
-    r"Document\s+(?:Number|#)[:\s]+([DPN]\d{3,5}(?:R\d+)?|N\d{3,5})",
+    rf"Document\s+(?:Number|#)[:\s]+({DOC_NUM_PATTERN})",
     re.IGNORECASE,
 )
 

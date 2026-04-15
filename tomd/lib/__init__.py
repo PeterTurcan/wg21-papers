@@ -148,15 +148,24 @@ def parse_author_lines(lines, clean_line=None, skip_line=None):
 
 DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
-# Broad document-number pattern used for header stripping and HTML metadata.
-# For line-anchored field extraction in PDF blocks, see DOC_FIELD_RE in
-# lib/pdf/types.py, which targets "Document Number: PXXXXrN" line prefixes.
-DOC_NUM_RE = re.compile(
-    r"\b([DPN]\d{3,5}R\d+)\b"
-    r"|\b([DPN]\d{3,5})\b"
-    r"|\b(N\d{3,5})\b"
-    r"|\b(SD-\d+)\b",
-    re.IGNORECASE,
+# Core pattern shapes (no anchors, no label context) reused across modules
+# so every document- and section-number pattern has a single source of truth.
+# `lib/pdf/types.py` builds the labeled PDF variants (DOC_FIELD_RE,
+# SECTION_NUM_RE) on top of these.
+DOC_NUM_PATTERN = (
+    r"[DPN]\d{3,5}R\d+"
+    r"|[DPN]\d{3,5}"
+    r"|N\d{3,5}"
+    r"|SD-\d+"
 )
 
-SECTION_NUM_PREFIX_RE = re.compile(r"^\d+(?:\.\d+)*\.?\s+")
+SECTION_NUM_PATTERN = r"\d+(?:\.\d+)*"
+
+# Broad document-number match used for header stripping and HTML metadata.
+# For line-anchored field extraction in PDF blocks, see DOC_FIELD_RE in
+# lib/pdf/types.py, which targets "Document Number: PXXXXrN" line prefixes.
+DOC_NUM_RE = re.compile(rf"\b({DOC_NUM_PATTERN})\b", re.IGNORECASE)
+
+# Leading section-number prefix used by the HTML renderer to strip a number
+# (e.g. "2.1.3 " or "1. ") from heading text.
+SECTION_NUM_PREFIX_RE = re.compile(rf"^{SECTION_NUM_PATTERN}\.?\s+")

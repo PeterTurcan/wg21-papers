@@ -100,7 +100,7 @@ Auto-resolution via `--llm` flag is deferred to v2. For v1, the tool produces a 
 ## File Map
 
 - `main.py` - CLI entry point. Argparse, glob expansion, output path logic, main(). No conversion logic.
-- `lib/__init__.py` - Shared text utilities and constants for PDF and HTML converters: `ascii_escape`, `strip_format_chars`, `format_front_matter`, `ALLOWED_LINK_SCHEMES`, and shared regex patterns (`EMAIL_RE`, `DATE_RE`, `DOC_NUM_RE`, `SECTION_NUM_PREFIX_RE`).
+- `lib/__init__.py` - Shared text utilities and constants for PDF and HTML converters: `ascii_escape`, `strip_format_chars`, `format_front_matter`, `parse_author_lines`, `ALLOWED_LINK_SCHEMES`, shared regex patterns (`EMAIL_RE`, `DATE_RE`, `DOC_NUM_RE`, `SECTION_NUM_PREFIX_RE`), and their reusable shape strings (`DOC_NUM_PATTERN`, `SECTION_NUM_PATTERN`) consumed by `lib/pdf/types.py` to build `DOC_FIELD_RE` and `SECTION_NUM_RE`.
 - `lib/similarity.py` - Dual-algorithm string similarity (SequenceMatcher + Jaccard). Per-algorithm thresholds, 200-char circuit breaker. Format-agnostic.
 - `lib/toc.py` - Table of Contents detection. Matches section texts against known headings using fuzzy similarity. Bridges small gaps. Format-agnostic - no dependency on PDF types.
 - `lib/pdf/__init__.py` - Exports `convert_pdf()`. Orchestrates the full pipeline in order. Includes monospace propagation, wording classification, and page 0 color extraction via space-color proxy.
