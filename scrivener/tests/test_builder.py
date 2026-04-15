@@ -28,7 +28,7 @@ def default_style(font_registered):
 
 @pytest.fixture
 def wg21_style(font_registered):
-    style = load_style(resolve_style_path("wg21"))
+    style = load_style(resolve_style_path("cpp-al"))
     resolve_colors(style, None)
     return style
 

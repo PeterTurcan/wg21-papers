@@ -616,7 +616,7 @@ function renderDirs(dirs){
     });
   });
 }
-function populateStyleSelect(selId,styles){const sel=document.getElementById(selId);const cur=sel.value||sel.dataset.cur||'wg21';sel.innerHTML=styles.map(s=>`<option value="${esc(s.id)}" ${s.id===cur?'selected':''}>${esc(s.name||s.id)}</option>`).join('');}
+function populateStyleSelect(selId,styles){const sel=document.getElementById(selId);const cur=sel.value||sel.dataset.cur||'default';sel.innerHTML=styles.map(s=>`<option value="${esc(s.id)}" ${s.id===cur?'selected':''}>${esc(s.name||s.id)}</option>`).join('');}
 async function postConfig(fields){const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});if(!r.ok){showToast('Save failed');return;}showToast('Saved',true);}
 async function saveOutputDirs(){postConfig({output_dir:document.getElementById('output-dir').value.trim(),render_output_dir:document.getElementById('render-output-dir').value.trim()});}
 async function saveStyle(){postConfig({style:document.getElementById('style-select').value});}
@@ -717,7 +717,7 @@ function fillCard(card,file,previewTab){
 async function renderCard(card){
   const file=card._file;if(!file||card._rendering)return;
   card._rendering=true;
-  const style=document.getElementById('render-style-select').value||'wg21';
+  const style=document.getElementById('render-style-select').value||'default';
   card.classList.add('rendering');
   card._pdfPath=null;
   const btn=card._actionBtn;
@@ -802,8 +802,8 @@ connectSSE();
   document.getElementById('render-output-dir').value=cfg.render_output_dir||'';
   _autoRender=cfg.auto_render!==false;
   document.getElementById('auto-render-toggle').className='toggle'+(_autoRender?' on':'');
-  document.getElementById('style-select').dataset.cur=cfg.style||'wg21';
-  document.getElementById('render-style-select').dataset.cur=cfg.render_style||'wg21';
+  document.getElementById('style-select').dataset.cur=cfg.style||'default';
+  document.getElementById('render-style-select').dataset.cur=cfg.render_style||'default';
   document.getElementById('cred-user').value=cfg.isocpp_username||'';
   if(cfg.has_password) document.getElementById('cred-pass').placeholder='(saved)';
   renderDirs(cfg.watch_dirs||[]);

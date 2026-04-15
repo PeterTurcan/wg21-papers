@@ -15,4 +15,8 @@ def load_logo(path, height):
         drawing.height = height
         drawing.scale(scale, scale)
         return drawing
-    return RLImage(path, height=height, kind="proportional")
+    from PIL import Image as PILImage
+    with PILImage.open(path) as img:
+        iw, ih = img.size
+    scale = height / ih
+    return RLImage(path, width=iw * scale, height=height)

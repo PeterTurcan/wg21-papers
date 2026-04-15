@@ -384,12 +384,12 @@ def test_fm_value_special_chars(renderer):
 # -- build_front_matter_flowables --
 
 def test_build_front_matter_with_fields(font_registered, tmp_path):
-    """Use wg21 style which has front_matter.fields defined."""
+    """Use cpp-al style which has front_matter.fields defined."""
     import copy
     from lib.config import load_style, resolve_style_path
     from lib.colors import resolve_colors
 
-    style = copy.deepcopy(load_style(resolve_style_path("wg21")))
+    style = copy.deepcopy(load_style(resolve_style_path("cpp-al")))
     resolve_colors(style, None)
 
     r = ASTRenderer(style, {}, [], 468, tmp_path, has_fm_title=True)

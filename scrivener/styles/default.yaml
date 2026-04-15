@@ -55,31 +55,29 @@ front_matter_label_color: "@text-muted"
 # --- Fonts ---
 fonts:
   body:
-    font: noto-sans
-    axes: { wdth: 75, wght: 400 }
+    font: source-serif-4
+    axes: { wght: 400 }
   body_bold:
-    font: noto-sans
-    axes: { wdth: 75, wght: 537 }
+    font: source-serif-4
+    axes: { wght: 600 }
   body_italic:
-    font: noto-serif-italic
-    axes: { wdth: 75, wght: 400 }
-    size_adjust: 0.95
+    font: source-serif-4-italic
+    axes: { wght: 400 }
   body_bold_italic:
-    font: noto-serif-italic
-    axes: { wdth: 75, wght: 537 }
-    size_adjust: 0.95
+    font: source-serif-4-italic
+    axes: { wght: 600 }
   code:
-    font: noto-sans-mono
-    axes: { wdth: 62.5, wght: 400 }
+    font: source-code-pro
+    axes: { wght: 400 }
   code_bold:
-    font: noto-sans-mono
-    axes: { wdth: 62.5, wght: 600 }
+    font: source-code-pro
+    axes: { wght: 600 }
   code_italic:
-    font: noto-sans-mono
-    axes: { wdth: 62.5, wght: 400 }
+    font: source-code-pro-italic
+    axes: { wght: 400 }
   code_bold_italic:
-    font: noto-sans-mono
-    axes: { wdth: 62.5, wght: 600 }
+    font: source-code-pro-italic
+    axes: { wght: 600 }
   cjk:
     font: noto-sans-cjk
     axes: { wght: 400 }

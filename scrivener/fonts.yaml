@@ -22,3 +22,27 @@
   file: "NotoEmoji[wght].ttf"
   url: "https://raw.githubusercontent.com/google/fonts/main/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf"
   preview: "\u2705 \u274C \u26A0\uFE0F \u2B50 \u2764\uFE0F"
+
+- id: source-sans-3
+  file: "SourceSans3[wght].ttf"
+  url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sourcesans3/SourceSans3%5Bwght%5D.ttf"
+
+- id: source-sans-3-italic
+  file: "SourceSans3-Italic[wght].ttf"
+  url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sourcesans3/SourceSans3-Italic%5Bwght%5D.ttf"
+
+- id: source-serif-4
+  file: "SourceSerif4[opsz,wght].ttf"
+  url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sourceserif4/SourceSerif4%5Bopsz%2Cwght%5D.ttf"
+
+- id: source-serif-4-italic
+  file: "SourceSerif4-Italic[opsz,wght].ttf"
+  url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sourceserif4/SourceSerif4-Italic%5Bopsz%2Cwght%5D.ttf"
+
+- id: source-code-pro
+  file: "SourceCodePro[wght].ttf"
+  url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sourcecodepro/SourceCodePro%5Bwght%5D.ttf"
+
+- id: source-code-pro-italic
+  file: "SourceCodePro-Italic[wght].ttf"
+  url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sourcecodepro/SourceCodePro-Italic%5Bwght%5D.ttf"

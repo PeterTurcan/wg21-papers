@@ -90,8 +90,8 @@ def test_load_style_default_has_sections():
     assert "fonts" in style
 
 
-def test_load_style_wg21_inherits():
-    style = load_style(resolve_style_path("wg21"))
+def test_load_style_cpp_al_inherits():
+    style = load_style(resolve_style_path("cpp-al"))
     assert "body_size" in style
     assert "front_matter" in style
     assert "fields" in style["front_matter"]
@@ -118,6 +118,11 @@ def test_load_style_palette_resolved():
 
 def test_load_style_wg21_palette_resolved():
     style = load_style(resolve_style_path("wg21"))
+    _assert_no_unresolved_refs(style)
+
+
+def test_load_style_cpp_al_palette_resolved():
+    style = load_style(resolve_style_path("cpp-al"))
     _assert_no_unresolved_refs(style)
 
 

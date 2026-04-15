@@ -1,10 +1,37 @@
 inherits: default
 name: "WG21"
-description: "WG21 committee paper format with front matter metadata"
+description: "WG21 institutional letterhead"
+
+options:
+  - id: toc
+    label: "Table of Contents"
+    type: bool
+    default: false
+  - id: logo
+    label: "Logo"
+    type: image
+    default: "wg21-logo-light-transparent.png"
+  - id: accent_saturated
+    label: "Accent Color"
+    type: color
+    default: "#1a5fb4"
+
+palette:
+  brand: "#1a5fb4"
+
+accent_saturated: "@brand"
+accent_mid: auto
+link_color: "@brand"
+logo: "wg21-logo-light-transparent.png"
+
+code_block:
+  bar_width: 1.5
+
+blockquote:
+  bar_width: 1.5
+
+wording:
+  bar_width: 1.5
 
 front_matter:
-  fields:
-    - { field: document, label: "Document Number" }
-    - { field: date, label: Date }
-    - { field: audience, label: Audience }
-    - { field: reply-to, label: "Reply-to" }
+  bar_width: 1.5

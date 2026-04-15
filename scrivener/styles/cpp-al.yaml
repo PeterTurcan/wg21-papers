@@ -1,0 +1,38 @@
+inherits: default
+name: "C++ Alliance"
+description: "C++ Alliance letterhead with Noto Condensed typography"
+
+fonts:
+  body:
+    font: noto-sans
+    axes: { wdth: 75, wght: 400 }
+  body_bold:
+    font: noto-sans
+    axes: { wdth: 75, wght: 537 }
+  body_italic:
+    font: noto-serif-italic
+    axes: { wdth: 75, wght: 400 }
+    size_adjust: 0.95
+  body_bold_italic:
+    font: noto-serif-italic
+    axes: { wdth: 75, wght: 537 }
+    size_adjust: 0.95
+  code:
+    font: noto-sans-mono
+    axes: { wdth: 62.5, wght: 400 }
+  code_bold:
+    font: noto-sans-mono
+    axes: { wdth: 62.5, wght: 600 }
+  code_italic:
+    font: noto-sans-mono
+    axes: { wdth: 62.5, wght: 400 }
+  code_bold_italic:
+    font: noto-sans-mono
+    axes: { wdth: 62.5, wght: 600 }
+
+front_matter:
+  fields:
+    - { field: document, label: "Document Number" }
+    - { field: date, label: Date }
+    - { field: audience, label: Audience }
+    - { field: reply-to, label: "Reply-to" }

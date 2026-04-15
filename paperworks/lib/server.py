@@ -144,7 +144,7 @@ def _render_worker():
     while True:
         batch = _render_queue.get()
         cfg = load_config()
-        style_name = cfg.get("style", "wg21")
+        style_name = cfg.get("style", "default")
         out_dir_str = cfg.get("output_dir", "")
         if not out_dir_str:
             _add_log("render", "Output directory not configured", status="error")
@@ -399,8 +399,8 @@ def get_config():
         "watch_dirs": [_dir_info(d) for d in cfg.get("watch_dirs", [])],
         "output_dir": cfg.get("output_dir", ""),
         "render_output_dir": cfg.get("render_output_dir", ""),
-        "style": cfg.get("style", "wg21"),
-        "render_style": cfg.get("render_style", "wg21"),
+        "style": cfg.get("style", "default"),
+        "render_style": cfg.get("render_style", "default"),
         "auto_render": cfg.get("auto_render", True),
         "port": cfg.get("port", 7780),
         "isocpp_username": cfg.get("isocpp_username", ""),
@@ -682,7 +682,7 @@ def render_preview():
         out_dir = Path(tempfile.mkdtemp(prefix="paperworks-preview-"))
         is_temp_out = True
 
-    style_id = "wg21"
+    style_id = "default"
     tmp_dir = None
     ok = False
 
@@ -691,7 +691,7 @@ def render_preview():
             f = request.files.get("file")
             if not f or not f.filename:
                 return jsonify({"error": "No file uploaded"}), 400
-            style_id = request.form.get("style", "wg21")
+            style_id = request.form.get("style", "default")
             fname = Path(f.filename).name
             tmp_dir = Path(tempfile.mkdtemp(prefix="paperworks-upload-"))
             md_path = str(tmp_dir / fname)
@@ -699,7 +699,7 @@ def render_preview():
         else:
             data = request.get_json(force=True) or {}
             md_path = data.get("md_path", "")
-            style_id = data.get("style", "wg21")
+            style_id = data.get("style", "default")
             if not md_path or not Path(md_path).is_file():
                 return jsonify({"error": "Markdown file not found"}), 400
             fname = Path(md_path).name

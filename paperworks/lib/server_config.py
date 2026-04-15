@@ -15,8 +15,8 @@ DEFAULTS = {
     "watch_dirs": [],
     "output_dir": "",
     "render_output_dir": "",
-    "style": "wg21",
-    "render_style": "wg21",
+    "style": "default",
+    "render_style": "default",
     "port": 7780,
     "auto_render": True,
     "isocpp_username": "",
@@ -71,7 +71,7 @@ def load_config():
         scr_dirs = scrivener.get("watch_dirs", [])
         cfg["watch_dirs"] = [_normalize_dir(d) for d in scr_dirs]
     if not cfg.get("style") or cfg["style"] == DEFAULTS["style"]:
-        cfg["style"] = scrivener.get("style", "wg21")
+        cfg["style"] = scrivener.get("style", "default")
 
     return cfg
 

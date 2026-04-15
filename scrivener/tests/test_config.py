@@ -219,7 +219,7 @@ def test_resolve_style_path_missing():
 # -- load_style --
 
 def test_load_style_inheritance():
-    style = load_style(STYLES_DIR / "wg21.yaml")
+    style = load_style(STYLES_DIR / "cpp-al.yaml")
     assert "body_size" in style
     assert "front_matter" in style
     assert "fields" in style["front_matter"]
