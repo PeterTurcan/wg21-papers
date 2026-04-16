@@ -103,6 +103,7 @@
     .file-btn-pdf:hover { filter: drop-shadow(0 0 3px #e53935); box-shadow: 0 0 6px rgba(229,57,53,0.4); }
     .file-btn-rev { color: var(--amber); border-color: rgba(240,165,0,0.3); background: rgba(240,165,0,0.08); }
     .file-btn-rev:hover { filter: drop-shadow(0 0 3px var(--amber)); box-shadow: 0 0 6px rgba(240,165,0,0.4); }
+    .file-btn-ghost { opacity: 0.2; pointer-events: none; cursor: default; }
 
     /* Detail row */
     .detail-row td { padding: 0; }
@@ -215,8 +216,8 @@
     <div class="section-header">
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" id="summary-pills"></div>
       <div style="display:flex;gap:4px;">
-        <button class="btn btn-blue" id="btn-render" onclick="renderAll()" style="display:none;">Render</button>
-        <button class="btn btn-blue" id="btn-upload-all" onclick="uploadAll()" style="display:none;">Upload</button>
+        <button class="btn btn-blue" id="btn-render" onclick="renderAll()" disabled>RENDER ALL</button>
+        <button class="btn btn-blue" id="btn-upload-all" onclick="uploadAll()" disabled>UPLOAD</button>
       </div>
     </div>
     <div class="filter-bar">
@@ -403,6 +404,13 @@ function badgeHtml(status,idx) {
 
 // -- Papers --
 
+function fileBadge(path, cls, label, openTitle, missingTitle) {
+  if (path) {
+    return `<a class="file-btn ${cls}" href="/api/file?path=${encodeURIComponent(path)}" target="_blank" onclick="event.stopPropagation()" title="${esc(openTitle)}">${label}</a>`;
+  }
+  return `<span class="file-btn ${cls} file-btn-ghost" title="${esc(missingTitle)}">${label}</span>`;
+}
+
 function toggleFolderSort(){_folderSort=!_folderSort;renderPapers();}
 function renderPapers() {
   const tbody=document.getElementById('tbody'), empty=document.getElementById('empty'), tw=document.getElementById('table-wrap');
@@ -416,8 +424,8 @@ function renderPapers() {
     return `<tr onclick="toggleDetail(${idx})" data-idx="${idx}">
       <td class="mono muted" style="width:24px;text-align:center;font-size:10px">${esc(''+(p.folder_idx||''))}</td>
       <td class="mono${p.intent==='ask'?' ask-paper':''}" style="padding-right:2px">${esc(p.doc_number)||'-'}${dirty}</td>
-      <td style="width:30px;text-align:center;padding-left:0;padding-right:4px">${p.md_path?`<a class="file-btn file-btn-md" href="/api/file?path=${encodeURIComponent(p.md_path)}" target="_blank" onclick="event.stopPropagation()" title="Open Markdown">MD</a>`:''}</td>
-      <td style="width:34px;text-align:center;padding-left:0;padding-right:4px">${p.pdf_path?`<a class="file-btn file-btn-pdf" href="/api/file?path=${encodeURIComponent(p.pdf_path)}" target="_blank" onclick="event.stopPropagation()" title="Open PDF">PDF</a>`:''}</td>
+      <td style="width:30px;text-align:center;padding-left:0;padding-right:4px">${fileBadge(p.md_path,'file-btn-md','MD','Open Markdown','No markdown file')}</td>
+      <td style="width:34px;text-align:center;padding-left:0;padding-right:4px">${fileBadge(p.pdf_path,'file-btn-pdf','PDF','Open PDF','No PDF')}</td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:16px">${esc(p.title)||''}</td>
       <td class="mono muted" style="white-space:nowrap">${esc(p.date)||''}</td>
       <td style="width:70px;text-align:center;overflow:hidden" onclick="event.stopPropagation()">${badgeHtml(p.status,idx)}</td>
@@ -425,11 +433,13 @@ function renderPapers() {
   }).join('');
   const allMd=_papers.filter(p=>p.md_path).length;
   const rb=document.getElementById('btn-render');
-  rb.textContent='RENDER ALL';
-  rb.style.display=allMd>0?'inline-block':'none';
+  rb.disabled=allMd===0;
+  rb.title=allMd===0?'No markdown papers':`Render all ${allMd} papers`;
   const uploadCount=_papers.filter(p=>p.pdf_path&&p.remote&&p.status!=='mailed').length;
   const ub=document.getElementById('btn-upload-all');
-  if(uploadCount>0){ub.textContent=`UPLOAD ${uploadCount}`;ub.style.display='inline-block';}else ub.style.display='none';
+  ub.textContent=uploadCount>0?`UPLOAD ${uploadCount}`:'UPLOAD';
+  ub.disabled=uploadCount===0||!_authenticated;
+  ub.title=!_authenticated?'Not connected to isocpp.org':uploadCount===0?'No papers ready to upload':`Upload ${uploadCount} papers`;
   const restoreIdx=_expandedIdx;
   _expandedIdx=null;
   if(restoreIdx!==null) toggleDetail(restoreIdx);
@@ -452,13 +462,16 @@ function toggleDetail(idx) {
   const uploadWk=busy?' working':'';
   const uploadTitle=!_authenticated?'Not connected to isocpp.org':!p.pdf_path?'No PDF available':!p.remote?'No remote entry on isocpp.org':'Force upload to isocpp.org';
   let acts='';
-  if(p.md_path) acts+=`<button class="btn btn-blue${wk}" onclick="event.stopPropagation();renderSingle(${idx})"${dis}>RENDER</button>`;
+  const renderDis=(!p.md_path||busy)?' disabled':'';
+  const renderTitle=!p.md_path?'No markdown file':'';
+  acts+=`<button class="btn btn-blue${p.md_path?wk:''}" onclick="event.stopPropagation();renderSingle(${idx})"${renderDis} title="${renderTitle}">RENDER</button>`;
   acts+=`<button class="btn btn-blue${uploadWk}" onclick="event.stopPropagation();submitUpload(${idx})"${uploadDis} title="${uploadTitle}">UPLOAD</button>`;
   d.innerHTML=`<td colspan="7"><div class="detail-content"><div class="detail-grid">
     <span class="dl">Document</span><span class="dv">${esc(p.doc_number)||'-'}</span>
     <span class="dl">Title</span><span class="dv">${esc(p.title)||'-'}</span>
     <span class="dl">Authors</span><span class="dv">${esc(p.authors)||'-'}</span>
     <span class="dl">Audience</span><span class="dv">${esc(p.audience)||'-'}</span>
+    ${p.intent?`<span class="dl">Intent</span><span class="dv">${esc({info:'Inform',ask:'Ask'}[p.intent]||p.intent)}</span>`:''}
     ${p.md_path?`<span class="dl">Markdown</span><span class="dv" style="font-family:var(--mono);font-size:10px">${esc(p.md_path)}</span>`:''}
     ${p.pdf_path?`<span class="dl">PDF</span><span class="dv" style="font-family:var(--mono);font-size:10px">${esc(p.pdf_path)}</span>`:''}
     ${p.brutal_summary?`<span class="dl">Abstract</span><span class="dv">${esc(p.brutal_summary)}</span>`:''}
@@ -530,7 +543,9 @@ function submitTransition(idx, target) {
 function submitUpload(idx) {
   const p = _papers[idx];
   if (!p || !p.remote) return;
-  submitJob(idx, '/api/upload', {form_id: p.remote.form_id, doc_number: p.doc_number, path: p.pdf_path, title: p.title, author: p.primary_author || '', abstract: p.brutal_summary || '', status: (p.remote && p.remote.status) || '', audience: p.audience || ''});
+  const intentMap = {info: 'Info', ask: 'Ask'};
+  const title = p.intent ? (intentMap[p.intent] || p.intent) + ': ' + (p.title || '') : (p.title || '');
+  submitJob(idx, '/api/upload', {form_id: p.remote.form_id, doc_number: p.doc_number, path: p.pdf_path, title, author: p.primary_author || '', abstract: p.brutal_summary || '', status: (p.remote && p.remote.status) || '', audience: p.audience || '', intent: p.intent || ''});
 }
 function renderSingle(idx) {
   const p = _papers[idx];

@@ -563,6 +563,15 @@ def auth_status():
 
 # -- Routes: Queue operations --
 
+def _upload_audience(intent, audience):
+    """Return the audience to submit for upload.
+
+    Info papers always target All of WG21 regardless of front matter audience,
+    since they inform the room without implying a scheduling request.
+    """
+    return "WG21" if intent == "info" else audience
+
+
 @app.route("/api/upload", methods=["POST"])
 def upload_paper():
     data = request.get_json(force=True) or {}
@@ -583,7 +592,7 @@ def upload_paper():
         "author": data.get("author", ""),
         "abstract": data.get("abstract", ""),
         "status": data.get("status", ""),
-        "audience": data.get("audience", ""),
+        "audience": _upload_audience(data.get("intent", ""), data.get("audience", "")),
     })
     return jsonify({"job_id": job_id})
 
@@ -606,15 +615,20 @@ def upload_all():
             continue
         if p.get("status") == "mailed":
             continue
+        intent = p.get("intent", "")
+        title = p.get("title", "")
+        if intent:
+            intent_label = {"info": "Info", "ask": "Ask"}.get(intent, intent.capitalize())
+            title = f"{intent_label}: {title}"
         _isocpp.submit({
             "type": "upload",
             "form_id": p["remote"]["form_id"],
             "pdf_path": p["pdf_path"],
             "doc_number": p["doc_number"],
-            "title": p.get("title", ""),
+            "title": title,
             "author": p.get("primary_author", ""),
             "abstract": p.get("brutal_summary", ""),
-            "audience": p.get("audience", ""),
+            "audience": _upload_audience(p.get("intent", ""), p.get("audience", "")),
         })
         queued += 1
     if not queued:

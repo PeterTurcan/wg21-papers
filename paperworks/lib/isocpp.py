@@ -372,6 +372,8 @@ class IsoCppSession:
             name = inp.get("name")
             if not name:
                 continue
+            if name == "audience[]":
+                continue
             fields[name] = inp.get("value", "")
 
         for ta in form.find_all("textarea"):
