@@ -163,7 +163,7 @@ constexpr basic_cstring_view(const charT* str,
 
 Violating the precondition is undefined behavior. The design purchases O(1) construction for callers who already hold null-terminated data. Completely reasonable when the data is trusted.
 
-LEWG designs are evaluated in a climate where safety is a first-order concern. A constructor whose public interface admits undefined behavior when a caller provides unterminated data will face scrutiny that a constructor with well-defined behavior for all inputs does not. This is an observable condition the design operates in.
+LEWG designs are evaluated in a climate where safety is a first-order concern. A constructor whose public interface admits undefined behavior when a caller provides unterminated data will face scrutiny that a constructor with well-defined behavior for all inputs does not. This is the observable condition under which the design operates.
 
 Two callers illustrate the tension:
 
@@ -275,16 +275,16 @@ At Croydon (March 2026), LEWG polled P3655R3's constructor design directly<sup>[
 **POLL:** We would like to see array constructors in this paper for `cstring_view` before forwarding.
 
 | SF | F | N | A | SA |
-|---:|---:|---:|---:|---:|
-| 2 | 3 | 7 | 8 | 5 |
+|---:|--:|--:|--:|---:|
+|  2 | 3 | 7 | 8 |  5 |
 
 Weak consensus against.
 
 **POLL:** We would like to remove the ctor that takes `(char*)` (only) from the proposal for now. (Due to safety concerns.)
 
 | SF | F | N | A | SA |
-|---:|---:|---:|---:|---:|
-| 1 | 5 | 1 | 8 | 9 |
+|---:|--:|--:|--:|---:|
+|  1 | 5 | 1 | 8 |  9 |
 
 Consensus against.
 
