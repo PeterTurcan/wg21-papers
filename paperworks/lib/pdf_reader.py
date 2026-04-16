@@ -15,7 +15,7 @@ _DOC_NUM_RE = re.compile(
 )
 
 _DOC_FIELD_RE = re.compile(
-    r"Document\s+Number[:\s]+([DPN]\d{3,5}(?:R\d+)?|N\d{3,5})",
+    r"Document(?:\s+Number)?[:\s]+([DPN]\d{3,5}(?:R\d+)?|N\d{3,5})",
     re.IGNORECASE,
 )
 

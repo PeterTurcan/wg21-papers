@@ -25,3 +25,12 @@ class TestExtractDocNumber(unittest.TestCase):
     def test_n_paper_structured(self):
         text = "Document Number: N4950\nWorking Draft"
         assert _extract_doc_number(text) == "N4950"
+
+    def test_single_word_document_label(self):
+        """Scrivener wg21 style renders 'Document:' not 'Document Number:'."""
+        text = "Document: P4003R2\nDate: 2026-04-05"
+        assert _extract_doc_number(text) == "P4003R2"
+
+    def test_single_word_document_label_no_revision(self):
+        text = "Document: D4035\nDate: 2026-03-20"
+        assert _extract_doc_number(text) == "D4035"

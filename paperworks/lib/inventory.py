@@ -237,26 +237,37 @@ def build_inventory(watch_dirs, output_dir, remote_papers=None):
         if base:
             md_by_base[f"{base}R{rev}"] = v
 
-    pdf_by_base = {}
+    # PDF filenames are revision-ambiguous; index by base only
+    pdf_by_base_only = {}
     for k, v in pdf_papers.items():
         _, base, rev = _parse_doc_number(k)
         if base:
-            pdf_by_base[f"{base}R{rev}"] = v
+            pdf_by_base_only[base] = v
 
     all_keys = set()
     all_keys.update(md_by_base.keys())
-    all_keys.update(pdf_by_base.keys())
     all_keys.update(remote_by_base.keys())
+
+    # Add PDF-only keys (orphans with no markdown or remote)
+    bases_covered = {
+        _parse_doc_number(k)[1] for k in all_keys
+        if _parse_doc_number(k)[1]
+    }
+    for k, v in pdf_papers.items():
+        _, base, rev = _parse_doc_number(k)
+        if base and base not in bases_covered:
+            all_keys.add(f"{base}R{rev}")
 
     records = {}
     for key in all_keys:
         md = md_by_base.get(key)
-        pdf = pdf_by_base.get(key)
         remote = remote_by_base.get(key)
 
         full, base, rev = _parse_doc_number(key)
         if not base:
             continue
+
+        pdf = pdf_by_base_only.get(base)
 
         # Markdown is source of truth for metadata
         title = (md or {}).get("title") or (pdf or {}).get("title") or (remote or {}).get("title", "")
