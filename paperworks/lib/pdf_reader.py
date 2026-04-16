@@ -35,14 +35,16 @@ _STOP_RE = re.compile(r"^(Revision\s+History|R\d+:|Table\s+of\s+Contents|\d+\.\s
 
 
 def _extract_doc_number(text):
-    """Find the document number, preferring the 'Document Number:' field."""
+    """Find the document number from the 'Document Number:' structured field.
+
+    Only the structured header is trusted. Free-text scanning is intentionally
+    absent: paper titles that mention other paper numbers (e.g. "Coroutine
+    Executors and P2464R0") would otherwise be misidentified.
+    """
     m = _DOC_FIELD_RE.search(text)
     if m:
         return m.group(1).upper()
-    m = _DOC_NUM_RE.search(text)
-    if not m:
-        return None
-    return (m.group(1) or m.group(2) or m.group(3)).upper()
+    return None
 
 
 def _doc_number_from_filename(path):
