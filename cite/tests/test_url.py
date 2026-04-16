@@ -1,11 +1,8 @@
-"""Tests for wg21.link detection, HTTP fallback, and URL replacement."""
-from unittest.mock import patch, MagicMock
-from urllib.error import URLError
-
+"""Tests for wg21.link detection, URL construction, and URL replacement."""
 from helpers import _lines
 from cite import (
     find_wg21_links,
-    _resolve_via_http,
+    _construct_open_std_url,
     apply_wg21_replacements,
     build_exclusion_ranges,
 )
@@ -40,25 +37,30 @@ Code https://wg21.link/p3552r3.
         assert len(results) == 0
 
 
-class TestResolveViaHttp:
-    @patch('cite.urlopen')
-    def test_resolves_url(self, mock_urlopen):
-        mock_resp = MagicMock()
-        mock_resp.url = (
-            'https://www.open-std.org/jtc1/sc22/wg21/'
-            'docs/papers/2024/p2300r10.html')
-        mock_resp.__enter__ = lambda s: s
-        mock_resp.__exit__ = MagicMock(return_value=False)
-        mock_urlopen.return_value = mock_resp
+class TestConstructOpenStdUrl:
+    def test_versioned_slug(self):
+        url = _construct_open_std_url('p4100r0')
+        assert 'p4100r0.pdf' in url
+        assert 'open-std.org' in url
 
-        result = _resolve_via_http('https://wg21.link/p2300r10')
-        assert result is not None
-        assert 'open-std.org' in result
+    def test_unversioned_p_slug_appends_r0(self):
+        url = _construct_open_std_url('p4100')
+        assert 'p4100r0.pdf' in url
 
-    @patch('cite.urlopen', side_effect=URLError('network error'))
-    def test_returns_none_on_failure(self, _mock):
-        result = _resolve_via_http('https://wg21.link/p2300r10')
-        assert result is None
+    def test_n_paper_no_revision(self):
+        url = _construct_open_std_url('n2406')
+        assert 'n2406.pdf' in url
+        assert 'r0' not in url
+
+    def test_uses_current_year(self):
+        import datetime
+        year = str(datetime.datetime.now().year)
+        url = _construct_open_std_url('p4100r0')
+        assert f'/papers/{year}/' in url
+
+    def test_d_paper_unversioned(self):
+        url = _construct_open_std_url('d4171')
+        assert 'd4171r0.pdf' in url
 
 
 class TestApplyWg21Replacements:
@@ -96,3 +98,17 @@ After.""")
         result = apply_wg21_replacements(lines, replacements, excluded)
         assert 'open-std.org' in result[0]
         assert 'wg21.link' in result[2]
+
+    def test_no_substring_collision(self):
+        """Replacing wg21.link/p4100 must not corrupt wg21.link/p4100r0."""
+        lines = _lines("""\
+[Network Endeavor](https://wg21.link/p4100) ([P4100R0](https://wg21.link/p4100r0))<sup>[1]</sup>""")
+        replacements = {
+            'https://wg21.link/p4100':
+                'https://isocpp.org/files/papers/P4100R0.pdf',
+            'https://wg21.link/p4100r0':
+                'https://isocpp.org/files/papers/P4100R0.pdf',
+        }
+        result = apply_wg21_replacements(lines, replacements, set())
+        assert 'P4100R0R0' not in result[0]
+        assert 'P4100R0.pdf' in result[0]

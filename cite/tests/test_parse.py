@@ -4,8 +4,10 @@ from cite import (
     build_exclusion_ranges,
     extract_body_citations,
     find_refs_section,
+    find_uncited_links,
     parse_references,
     check_unversioned_refs,
+    LINK_RE,
 )
 
 
@@ -174,3 +176,94 @@ P2300
         excluded = build_exclusion_ranges(lines)
         results = check_unversioned_refs(lines, excluded, 3)
         assert len(results) == 0
+
+    def test_skips_blockquotes(self):
+        lines = _lines("""\
+> "The sender/receiver model (P2300) is a good basis..."
+
+## References""")
+        excluded = build_exclusion_ranges(lines)
+        results = check_unversioned_refs(lines, excluded, 2)
+        assert len(results) == 0
+
+    def test_skips_headings(self):
+        lines = _lines("""\
+### 6.3 The P2300 Authors' Position
+
+## References""")
+        excluded = build_exclusion_ranges(lines)
+        results = check_unversioned_refs(lines, excluded, 2)
+        assert len(results) == 0
+
+    def test_skips_table_rows(self):
+        lines = _lines("""\
+| P0443 never deployed | P2300 deployed |
+
+## References""")
+        excluded = build_exclusion_ranges(lines)
+        results = check_unversioned_refs(lines, excluded, 2)
+        assert len(results) == 0
+
+    def test_skips_front_matter(self):
+        lines = _lines("""\
+---
+title: "The Unification of Executors and P0443"
+document: P4094R0
+---
+Body text.
+
+## References""")
+        excluded = build_exclusion_ranges(lines)
+        results = check_unversioned_refs(lines, excluded, 6)
+        assert len(results) == 0
+
+    def test_skips_quoted_strings(self):
+        lines = _lines("""\
+Kohlhoff identified this in [P2430R0](...) ("Partial success scenarios with P2300," 2021).
+
+## References""")
+        excluded = build_exclusion_ranges(lines)
+        results = check_unversioned_refs(lines, excluded, 2)
+        assert len(results) == 0
+
+
+class TestLinkRE:
+    def test_doi_url_with_parens(self):
+        line = '[text](https://doi.org/10.1016/0304-3975(75)90017-1)'
+        m = LINK_RE.search(line)
+        assert m is not None
+        assert m.group(2) == 'https://doi.org/10.1016/0304-3975(75)90017-1'
+
+    def test_simple_url(self):
+        line = '[P2300R10](https://wg21.link/p2300r10)'
+        m = LINK_RE.search(line)
+        assert m is not None
+        assert m.group(2) == 'https://wg21.link/p2300r10'
+
+    def test_doi_url_preserves_text(self):
+        line = '[call-by-value](https://doi.org/10.1016/0890-5401(91)90052-4)<sup>[15]</sup>'
+        m = LINK_RE.search(line)
+        assert m is not None
+        assert '(91)90052-4' in m.group(2)
+
+
+class TestFindUncitedLinksInlineCode:
+    def test_skips_link_in_backticks(self):
+        lines = _lines("""\
+See `[text](https://example.com)` in code.
+
+## References""")
+        excluded = build_exclusion_ranges(lines)
+        config = {'exempt_sections': [], 'exempt_links': [], 'exempt_orphans': []}
+        results = find_uncited_links(lines, excluded, 2, config)
+        assert len(results) == 0
+
+    def test_finds_link_outside_backticks(self):
+        lines = _lines("""\
+See [text](https://example.com) here.
+
+## References""")
+        excluded = build_exclusion_ranges(lines)
+        config = {'exempt_sections': [], 'exempt_links': [], 'exempt_orphans': []}
+        results = find_uncited_links(lines, excluded, 2, config)
+        assert len(results) == 1

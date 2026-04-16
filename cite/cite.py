@@ -11,6 +11,7 @@ Usage:
 """
 
 import argparse
+import datetime
 import html.entities
 import json
 import os
@@ -26,7 +27,7 @@ from urllib.request import Request, urlopen
 
 CITE_RE = re.compile(r'<sup>\[(\d+)\]</sup>')
 COMPOUND_CITE_RE = re.compile(r'<sup>\[[\d,\s]+\]</sup>')
-LINK_RE = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+LINK_RE = re.compile(r'\[([^\]]+)\]\(([^()]*(?:\([^()]*\))*[^()]*)\)')
 FENCE_RE = re.compile(r'^(`{3,})')
 REF_HEADING_RE = re.compile(r'^#{1,3}\s+References\s*$')
 HEADING_RE = re.compile(r'^(#{1,6})\s+(.*)')
@@ -118,6 +119,7 @@ class ResolveResult:
     """Results from pass 2 - URL resolution and metadata lookup."""
     url_map: dict[str, str] = field(default_factory=dict)
     metadata: dict[str, PaperMetadata] = field(default_factory=dict)
+    guessed: list[tuple[str, str]] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -392,6 +394,9 @@ def find_uncited_links(
 
         line = lines[i]
         for m in LINK_RE.finditer(line):
+            if _in_inline_code(line, m.start()):
+                continue
+
             text = m.group(1)
             url = m.group(2)
 
@@ -425,24 +430,60 @@ def find_wg21_links(
     return results
 
 
+def _find_front_matter_end(lines: list[str]) -> int:
+    """Return the line index after the closing --- of YAML front matter."""
+    if not lines or not lines[0].strip().startswith('---'):
+        return 0
+    for i in range(1, len(lines)):
+        if lines[i].strip() == '---':
+            return i + 1
+    return 0
+
+
+def _in_inline_code(line: str, pos: int) -> bool:
+    """Check if a position in a line is inside a backtick code span."""
+    backtick_count = 0
+    for i in range(pos):
+        if line[i] == '`':
+            backtick_count += 1
+    return backtick_count % 2 == 1
+
+
 def check_unversioned_refs(
     lines: list[str],
     excluded: set[int],
     refs_start: int,
 ) -> list[tuple[int, str]]:
-    """Find bare P/D numbers without revision suffix in body prose."""
+    """Find bare P/D numbers without revision suffix in body prose.
+
+    Skips front matter, blockquotes, headings, table rows, inline code,
+    and URLs - these contexts use bare numbers intentionally.
+    """
     results = []
     end = refs_start if refs_start >= 0 else len(lines)
+    fm_end = _find_front_matter_end(lines)
 
-    for i in range(end):
+    for i in range(fm_end, end):
         if i in excluded:
             continue
-        for m in PAPER_NUM_RE.finditer(lines[i]):
+        line = lines[i]
+        stripped = line.strip()
+        if stripped.startswith('>'):
+            continue
+        if stripped.startswith('#'):
+            continue
+        if stripped.startswith('|') and '|' in stripped[1:]:
+            continue
+        for m in PAPER_NUM_RE.finditer(line):
             start_pos = m.start()
-            before = lines[i][:start_pos]
+            before = line[:start_pos]
             if before.endswith('wg21.link/'):
                 continue
             if before.endswith('/papers/'):
+                continue
+            if _in_inline_code(line, start_pos):
+                continue
+            if '"' in before and before.count('"') % 2 == 1:
                 continue
             results.append((i, m.group(1)))
 
@@ -588,20 +629,19 @@ def scan(filepath: str, config: dict) -> AuditResult:
 # Pass 2: resolve (network / cache)
 # ---------------------------------------------------------------------------
 
-def _resolve_via_http(url: str) -> Optional[str]:
-    """Resolve a wg21.link URL to its target via HTTP HEAD.
+def _construct_open_std_url(slug: str) -> str:
+    """Construct a canonical open-std.org URL from a paper slug.
 
-    Returns the resolved URL, or None on failure.
-    Results are not persisted; caller caches in memory as needed.
+    For P/D papers without a revision suffix, appends R0.
+    N-papers don't have revisions.
     """
-    try:
-        req = Request(url, method='HEAD')
-        req.add_header('User-Agent', 'cite/1.0')
-        with urlopen(req, timeout=HTTP_TIMEOUT) as resp:
-            return resp.url
-    except (HTTPError, URLError, TimeoutError) as e:
-        print(f"warning: failed to resolve {url}: {e}", file=sys.stderr)
-        return None
+    slug_lower = slug.lower()
+    if (not re.search(r'r\d+$', slug_lower)
+            and not slug_lower.startswith('n')):
+        slug_lower += 'r0'
+    year = datetime.datetime.now().year
+    return (f"https://www.open-std.org/jtc1/sc22/wg21/"
+            f"docs/papers/{year}/{slug_lower}.pdf")
 
 
 def _find_latest_revision(
@@ -715,6 +755,7 @@ def resolve(
     results: list[AuditResult],
     cache_dir: Path,
     skip_resolve: bool = False,
+    skip_guess: bool = False,
 ) -> ResolveResult:
     """Pass 2: resolve URLs and fetch metadata. Batched across all files."""
     resolved = ResolveResult()
@@ -755,7 +796,7 @@ def resolve(
                 continue
 
         # Tier 2: unversioned - find latest revision in index
-        if not REVISION_RE.match(slug_upper) or not re.search(r'R\d+$', slug_upper):
+        if not re.search(r'R\d+$', slug_upper):
             latest = _find_latest_revision(slug_upper, index)
             if latest and latest.get('long_link'):
                 resolved.url_map[wg21_url] = latest['long_link']
@@ -764,13 +805,13 @@ def resolve(
                     all_paper_ids.add(info[0])
                 continue
 
-        # Tier 3: not in index (recent/draft papers) - HTTP fallback
-        result = _resolve_via_http(wg21_url)
-        if result:
-            resolved.url_map[wg21_url] = result
-            info = extract_paper_id_from_url(result)
-            if info:
-                all_paper_ids.add(info[0])
+        # Tier 3: not in index - construct URL deterministically
+        if not skip_guess:
+            constructed = _construct_open_std_url(slug)
+            resolved.url_map[wg21_url] = constructed
+            resolved.guessed.append((slug.upper(), constructed))
+            print(f"  Guessed: {wg21_url} -> {constructed}",
+                  file=sys.stderr)
 
     for pid in sorted(all_paper_ids):
         if pid in resolved.metadata:
@@ -794,12 +835,15 @@ def apply_wg21_replacements(
     """Replace wg21.link URLs with resolved open-std.org URLs.
 
     Skips lines inside fenced code blocks (exclusion set).
+    Longer URLs are replaced first to prevent substring overlap.
     """
     result = list(lines)
+    sorted_repls = sorted(
+        replacements.items(), key=lambda kv: len(kv[0]), reverse=True)
     for i, line in enumerate(result):
         if i in excluded:
             continue
-        for old_url, new_url in replacements.items():
+        for old_url, new_url in sorted_repls:
             if old_url in line:
                 result[i] = result[i].replace(old_url, new_url)
     return result
@@ -918,7 +962,11 @@ def add_missing_ref_entries(
                 if after.startswith(f'<sup>[{num}]</sup>'):
                     url = m.group(2)
                     text = m.group(1)
-                    info = extract_paper_id_from_url(url)
+                    resolved_url = (
+                        resolved.url_map.get(url)
+                        or resolved.url_map.get(url.lower())
+                        or url)
+                    info = extract_paper_id_from_url(resolved_url)
                     if info:
                         pid, _year = info
                         meta = resolved.metadata.get(pid.upper())
@@ -929,7 +977,7 @@ def add_missing_ref_entries(
                                 f'{meta.paper_id}, "{t}," {a}, '
                                 f'{meta.url}')
                             break
-                    entry_text = f'{text}, {url}'
+                    entry_text = f'{text}, {resolved_url}'
                     break
 
         if entry_text is None:
@@ -971,13 +1019,17 @@ def add_citations_to_links(
     inserts = []
 
     for line_idx, text, url in uncited_links:
-        existing = url_to_ref.get(url)
+        resolved_url = (
+            resolved.url_map.get(url)
+            or resolved.url_map.get(url.lower())
+            or url)
+        existing = url_to_ref.get(url) or url_to_ref.get(resolved_url)
         if existing is not None:
             ref_num = existing
         else:
             ref_num = next_num
             next_num += 1
-            info = extract_paper_id_from_url(url)
+            info = extract_paper_id_from_url(resolved_url)
             meta = None
             if info:
                 pid, _year = info
@@ -989,7 +1041,7 @@ def add_citations_to_links(
                 entry_text = (
                     f'{meta.paper_id}, "{t}," {a}, {meta.url}')
             else:
-                entry_text = f'{text}, {url}'
+                entry_text = f'{text}, {resolved_url}'
 
             new_refs[ref_num] = RefEntry(
                 number=ref_num, text=entry_text,
@@ -1044,7 +1096,11 @@ def fix_unversioned_refs(
                     versioned = meta.paper_id
                     break
         if versioned:
-            result[line_idx] = result[line_idx].replace(paper, versioned, 1)
+            result[line_idx] = re.sub(
+                rf'\b{re.escape(paper)}\b(?!R\d)',
+                versioned,
+                result[line_idx],
+                count=1)
             print(f"  Versioned: {paper} -> {versioned} "
                   f"(line {line_idx + 1})", file=sys.stderr)
 
@@ -1224,10 +1280,13 @@ def write(
 
     if resolved.url_map and result.wg21_links:
         replacements = {}
-        for _line_idx, url, _slug in result.wg21_links:
-            for old_url, new_url in resolved.url_map.items():
-                if old_url in url or url in old_url:
-                    replacements[url] = new_url
+        for link in result.wg21_links:
+            url_lower = link.url.lower()
+            resolved_url = (
+                resolved.url_map.get(link.url)
+                or resolved.url_map.get(url_lower))
+            if resolved_url:
+                replacements[link.url] = resolved_url
         if replacements:
             lines = apply_wg21_replacements(
                 lines, replacements, result.excluded)
@@ -1409,6 +1468,9 @@ def main() -> int:
                         help='Path to YAML config')
     parser.add_argument('--no-resolve', action='store_true',
                         help='Skip HTTP URL resolution (offline mode)')
+    parser.add_argument('--no-guess', action='store_true',
+                        help='Do not construct URLs for papers not in '
+                             'the wg21.link index')
 
     args = parser.parse_args()
 
@@ -1454,7 +1516,10 @@ def main() -> int:
 
     # Pass 2: resolve
     cache_dir = Path(__file__).resolve().parent / '.cache'
-    resolved = resolve(results, cache_dir, skip_resolve=args.no_resolve)
+    resolved = resolve(
+        results, cache_dir,
+        skip_resolve=args.no_resolve,
+        skip_guess=args.no_guess)
 
     # Pass 3: write
     any_changes = False
@@ -1494,6 +1559,15 @@ def main() -> int:
             raise
 
         print(f"  Wrote: {r.filepath}", file=sys.stderr)
+
+    if resolved.guessed:
+        print(f"\n{'='*60}", file=sys.stderr)
+        print(f"  Constructed URLs (not verified against index):",
+              file=sys.stderr)
+        print(f"{'='*60}", file=sys.stderr)
+        for slug, url in sorted(resolved.guessed):
+            print(f"  {slug:12s} -> {url}", file=sys.stderr)
+        print(file=sys.stderr)
 
     if args.check:
         return 1 if any_changes else 0

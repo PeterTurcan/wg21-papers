@@ -17,6 +17,7 @@ Accepts one or more files or directories. When given a directory, recursively pr
 - `--check` - Exit 1 if `--fix` would change the file (CI mode)
 - `--config <path>` - Path to YAML config (auto-discovered from paper dir or script dir)
 - `--no-resolve` - Skip HTTP URL resolution (offline mode)
+- `--no-guess` - Do not construct URLs for papers not in the wg21.link index
 
 ### Examples
 
@@ -94,7 +95,9 @@ This enables:
 - Title mismatch detection (titles are correct for all papers including old N-papers)
 - Instant wg21.link resolution without per-URL HTTP requests
 
-**Freshness:** The tool sends a HEAD request to check `Last-Modified` and only re-downloads the full index when the server copy is newer. Falls back to the cached copy when offline. Papers published after the last index update (recent pre-publication drafts) use HTTP fallback resolution.
+**Freshness:** The tool sends a HEAD request to check `Last-Modified` and only re-downloads the full index when the server copy is newer. Falls back to the cached copy when offline.
+
+**Constructed URLs:** Papers not in the index (unpublished or pre-publication) get a deterministically constructed `open-std.org` URL from the paper number and current year. This is reliable for the author's own papers (you know the year, revision, and that the paper will be published). For foreign papers, the year or extension might be wrong - use `--no-guess` to disable. Constructed URLs are logged to stderr and summarized at the end of each run.
 
 Non-ASCII characters in metadata (author names with diacriticals) are converted to HTML entities: named where available (e.g. `&eacute;`), decimal numeric otherwise (e.g. `&#322;`).
 
