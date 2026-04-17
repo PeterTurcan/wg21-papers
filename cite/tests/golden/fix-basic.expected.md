@@ -21,6 +21,3 @@ Later [cppcoro](https://github.com/lewissbaker/cppcoro)<sup>[3]</sup>.
 
 [3] [cppcoro, Lewis Baker](https://github.com/lewissbaker/cppcoro)
 
-
-
-

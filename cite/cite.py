@@ -26,6 +26,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 CITE_RE = re.compile(r'<sup>\[(\d+)\]</sup>')
+CITE_LINK_RE = re.compile(r'<sup>\[\[(\d+)\]\]\([^)]*\)</sup>')
 COMPOUND_CITE_RE = re.compile(r'<sup>\[[\d,\s]+\]</sup>')
 LINK_RE = re.compile(r'\[([^\]]+)\]\(([^()]*(?:\([^()]*\))*[^()]*)\)')
 FENCE_RE = re.compile(r'^(`{3,})')
@@ -39,6 +40,9 @@ PAPER_NUM_RE = re.compile(r'\b([PD]\d{4})\b(?!R\d)')
 VERSIONED_PAPER_RE = re.compile(r'\b[PD]\d{4}R\d+\b')
 OPEN_STD_PAPER_RE = re.compile(
     r'open-std\.org/jtc1/sc22/wg21/docs/papers/(\d{4})/([a-z]\d+(?:r\d+)?)',
+    re.IGNORECASE)
+ISOCPP_PAPER_RE = re.compile(
+    r'isocpp\.org/files/papers/([a-zA-Z]\d+(?:r\d+)?)',
     re.IGNORECASE)
 TRAILING_URL_RE = re.compile(r'\s+https?://\S+\s*$')
 REVISION_RE = re.compile(r'^([A-Z]\d{4})(R(\d+))?$')
@@ -71,6 +75,7 @@ class RefEntry:
     text: str
     line_idx: int
     format: str  # 'A' or 'B'
+    subsection: str = ''
 
 
 @dataclass
@@ -314,6 +319,22 @@ def extract_body_citations(
             if n not in seen:
                 seen.add(n)
                 first_appearance.append(n)
+        for m in CITE_LINK_RE.finditer(lines[i]):
+            n = int(m.group(1))
+            body_cites.append((i, n))
+            if n not in seen:
+                seen.add(n)
+                first_appearance.append(n)
+        for m in COMPOUND_CITE_RE.finditer(lines[i]):
+            inner = m.group(0)
+            if CITE_RE.match(inner):
+                continue
+            for num_m in re.finditer(r'\d+', inner):
+                n = int(num_m.group(0))
+                body_cites.append((i, n))
+                if n not in seen:
+                    seen.add(n)
+                    first_appearance.append(n)
 
     old_to_new = {}
     for new_num, old_num in enumerate(first_appearance, start=1):
@@ -331,9 +352,18 @@ def parse_references(
 
     Format A: `[N] description text` or `- [N] description text`
     Format B: `N. description text`
+
+    Tracks subsection membership: each entry records the heading text
+    of the most recent subsection heading (deeper than the References
+    heading level), or '' if before any subsection.
     """
     refs = {}
     has_subsections = False
+    current_subsection = ''
+
+    hdr = lines[refs_start].strip()
+    refs_level = hdr.count(
+        '#', 0, hdr.index(' ') if ' ' in hdr else len(hdr))
 
     for i in range(refs_start + 1, refs_end):
         stripped = lines[i].strip()
@@ -342,7 +372,10 @@ def parse_references(
 
         sub_m = HEADING_RE.match(stripped)
         if sub_m:
-            has_subsections = True
+            heading_level = len(sub_m.group(1))
+            if heading_level > refs_level:
+                has_subsections = True
+                current_subsection = sub_m.group(2).strip()
             continue
 
         m_a = REF_FORMAT_A_RE.match(stripped)
@@ -351,6 +384,7 @@ def parse_references(
             refs[num] = RefEntry(
                 number=num, text=m_a.group(2),
                 line_idx=i, format='A',
+                subsection=current_subsection,
             )
             continue
 
@@ -360,6 +394,7 @@ def parse_references(
             refs[num] = RefEntry(
                 number=num, text=m_b.group(2),
                 line_idx=i, format='B',
+                subsection=current_subsection,
             )
             continue
 
@@ -409,6 +444,19 @@ def find_uncited_links(
                 continue
             if (after.startswith(')')
                     and after[1:].lstrip().startswith('<sup>[')):
+                continue
+
+            before = line[:m.start()]
+            if '(' in before:
+                open_paren = before.rfind('(')
+                if open_paren >= 0 and open_paren > before.rfind(')'):
+                    close_paren_pos = after.find(')')
+                    if close_paren_pos >= 0:
+                        after_paren = after[close_paren_pos + 1:].lstrip()
+                        if after_paren.startswith('<sup>['):
+                            continue
+
+            if re.match(r'\s*\([^)]*\)\s*<sup>\[', after):
                 continue
 
             uncited.append(UncitedLink(i, text, url))
@@ -472,14 +520,21 @@ def check_unversioned_refs(
             continue
         if stripped.startswith('#'):
             continue
-        if stripped.startswith('|') and '|' in stripped[1:]:
-            continue
+        is_table_row = (stripped.startswith('|') and '|' in stripped[1:])
         for m in PAPER_NUM_RE.finditer(line):
             start_pos = m.start()
+            if is_table_row:
+                in_link = any(
+                    lm.start() <= start_pos < lm.end()
+                    for lm in LINK_RE.finditer(line))
+                if not in_link:
+                    continue
             before = line[:start_pos]
             if before.endswith('wg21.link/'):
                 continue
             if before.endswith('/papers/'):
+                continue
+            if before.endswith('files/papers/'):
                 continue
             if _in_inline_code(line, start_pos):
                 continue
@@ -491,15 +546,20 @@ def check_unversioned_refs(
 
 
 def extract_paper_id_from_url(url: str) -> Optional[tuple[str, Optional[int]]]:
-    """Extract paper ID and year from an open-std.org or wg21.link URL.
+    """Extract paper ID and year from an open-std.org, wg21.link, or isocpp.org URL.
 
-    Returns (paper_id, year) or None. Year may be None for wg21.link URLs.
+    Returns (paper_id, year) or None. Year may be None for wg21.link
+    and isocpp.org URLs.
     """
     m = OPEN_STD_PAPER_RE.search(url)
     if m:
         return m.group(2).upper(), int(m.group(1))
 
     m = WG21_LINK_RE.search(url)
+    if m:
+        return m.group(1).upper(), None
+
+    m = ISOCPP_PAPER_RE.search(url)
     if m:
         return m.group(1).upper(), None
 
@@ -780,6 +840,12 @@ def resolve(
                     pid, _year = info
                     all_paper_ids.add(pid)
 
+        for _line_idx, _text, url in r.uncited_links:
+            info = extract_paper_id_from_url(url)
+            if info:
+                pid, _year = info
+                all_paper_ids.add(pid)
+
     for slug in sorted(all_wg21_slugs):
         wg21_url = f"https://wg21.link/{slug}"
         slug_upper = slug.upper()
@@ -854,7 +920,7 @@ def renumber_content(
     excluded_line_set: set[int],
     lines: list[str],
 ) -> str:
-    """Renumber all <sup>[N]</sup> citations.
+    """Renumber all <sup>[N]</sup> and <sup>[[N]](url)</sup> citations.
 
     Uses a sentinel strategy to avoid collisions:
     Pass 1: all [N] -> [__N__] (every citation, not just those in old_to_new)
@@ -869,6 +935,15 @@ def renumber_content(
             lambda m: f'<sup>[__{m.group(1)}__]</sup>',
             line,
         )
+        def _link_sentinel(lm):
+            num = lm.group(1)
+            full = lm.group(0)
+            url_start = full.index('](') + 2
+            url_end = full.rindex(')</sup>')
+            url = full[url_start:url_end]
+            return f'<sup>[[__{num}__]]({url})</sup>'
+        working_lines[i] = CITE_LINK_RE.sub(
+            _link_sentinel, working_lines[i])
 
     result_lines = []
     for i, line in enumerate(working_lines):
@@ -881,9 +956,20 @@ def renumber_content(
             new_n = old_to_new.get(old_n, old_n)
             return f'<sup>[{new_n}]</sup>'
 
-        result_lines.append(
-            re.sub(r'<sup>\[__(\d+)__\]</sup>', replace_sentinel, line)
-        )
+        line = re.sub(
+            r'<sup>\[__(\d+)__\]</sup>', replace_sentinel, line)
+
+        def replace_link_sentinel(m):
+            old_n = int(m.group(1))
+            new_n = old_to_new.get(old_n, old_n)
+            url = m.group(2)
+            return f'<sup>[[{new_n}]]({url})</sup>'
+
+        line = re.sub(
+            r'<sup>\[\[__(\d+)__\]\]\(([^)]*)\)</sup>',
+            replace_link_sentinel, line)
+
+        result_lines.append(line)
 
     return ''.join(result_lines)
 
@@ -896,27 +982,81 @@ def reorder_refs(
     """Reorder reference entries by their new citation number.
 
     Preserves non-entry lines (blank lines, subsection headings).
+    Assigns orphan entries (not in old_to_new) unique numbers above
+    the highest active number. Entries stay within their original
+    subsection when the References section has subsection headings.
     """
     result = list(lines)
 
-    entries_by_new = {}
+    max_active = max(old_to_new.values()) if old_to_new else 0
+
+    active_entries = {}
     for old_num, entry in refs.items():
         new_num = old_to_new.get(old_num)
-        if new_num is None:
+        if new_num is not None:
+            active_entries[new_num] = entry
+
+    next_orphan = max_active + 1
+    orphan_entries = {}
+    for old_num in sorted(refs.keys()):
+        if old_num in old_to_new:
             continue
-        entries_by_new[new_num] = f'[{new_num}] {entry.text}\n'
+        orphan_entries[next_orphan] = refs[old_num]
+        next_orphan += 1
 
-    entry_positions = sorted(
-        [e.line_idx for e in refs.values() if e.number in old_to_new]
-    )
+    all_numbered = {}
+    all_numbered.update(
+        {n: (entry, n) for n, entry in active_entries.items()})
+    all_numbered.update(
+        {n: (entry, n) for n, entry in orphan_entries.items()})
 
-    sorted_entries = [
-        entries_by_new[k] for k in sorted(entries_by_new.keys())]
+    has_subsections = any(e.subsection for e in refs.values())
 
-    for pos, new_line in zip(entry_positions, sorted_entries):
-        result[pos] = new_line
+    if has_subsections:
+        subsection_order = []
+        seen_subs = set()
+        for old_num in sorted(refs.keys(), key=lambda n: refs[n].line_idx):
+            sub = refs[old_num].subsection
+            if sub not in seen_subs:
+                seen_subs.add(sub)
+                subsection_order.append(sub)
+
+        for sub in subsection_order:
+            sub_positions = sorted(
+                e.line_idx for e in refs.values() if e.subsection == sub)
+            sub_active = sorted(
+                n for n, entry in active_entries.items()
+                if entry.subsection == sub)
+            sub_orphans = sorted(
+                n for n, entry in orphan_entries.items()
+                if entry.subsection == sub)
+            sub_nums = sub_active + sub_orphans
+
+            for pos, new_num in zip(sub_positions, sub_nums):
+                entry_obj = all_numbered[new_num][0]
+                result[pos] = f'[{new_num}] {entry_obj.text}\n'
+    else:
+        all_positions = sorted(e.line_idx for e in refs.values())
+        all_nums = sorted(active_entries.keys()) + sorted(orphan_entries.keys())
+
+        for pos, new_num in zip(all_positions, all_nums):
+            entry_obj = all_numbered[new_num][0]
+            result[pos] = f'[{new_num}] {entry_obj.text}\n'
 
     return result
+
+
+def _safe_insert_pos(refs: dict[int, RefEntry], refs_end: int) -> int:
+    """Return the line index where new ref entries should be inserted.
+
+    Uses one line after the last known ref entry, falling back to
+    refs_end when no entries exist.  This avoids inserting entries
+    after horizontal rules or other non-reference content that may
+    appear between the last entry and the section boundary.
+    """
+    if refs:
+        return max(e.line_idx for e in refs.values()) + 1
+    return refs_end
 
 
 def remove_orphan_refs(
@@ -938,6 +1078,7 @@ def add_missing_ref_entries(
     body_cites: list[tuple[int, int]],
     refs_end: int,
     resolved: ResolveResult,
+    refs: dict[int, RefEntry] | None = None,
 ) -> list[str]:
     """Create reference entries for citations that have no ref entry."""
     if not missing:
@@ -974,10 +1115,10 @@ def add_missing_ref_entries(
                             t = to_html_entities(meta.title)
                             a = to_html_entities(meta.authors)
                             entry_text = (
-                                f'{meta.paper_id}, "{t}," {a}, '
-                                f'{meta.url}')
+                                f'[{meta.paper_id}]({meta.url}) - '
+                                f'"{t}" ({a})')
                             break
-                    entry_text = f'{text}, {resolved_url}'
+                    entry_text = f'[{text}]({resolved_url})'
                     break
 
         if entry_text is None:
@@ -990,7 +1131,7 @@ def add_missing_ref_entries(
         new_entries.append(f'[{num}] {entry_text}\n')
 
     if new_entries:
-        insert_pos = refs_end
+        insert_pos = _safe_insert_pos(refs or {}, refs_end)
         for entry_line in new_entries:
             result.insert(insert_pos, '\n')
             result.insert(insert_pos + 1, entry_line)
@@ -1013,12 +1154,21 @@ def add_citations_to_links(
 
     url_to_ref = {}
     for num, entry in refs.items():
-        for m in re.finditer(r'https?://[^\s,]+', entry.text):
+        for m in re.finditer(r'https?://[^\s,)]+', entry.text):
             url_to_ref[m.group(0)] = num
 
     inserts = []
 
     for line_idx, text, url in uncited_links:
+        link_pattern = f'[{text}]({url})'
+        line = result[line_idx]
+        pos = line.find(link_pattern)
+        if pos >= 0:
+            insert_at = pos + len(link_pattern)
+            after = line[insert_at:]
+            if after.lstrip().startswith('<sup>['):
+                continue
+
         resolved_url = (
             resolved.url_map.get(url)
             or resolved.url_map.get(url.lower())
@@ -1039,9 +1189,10 @@ def add_citations_to_links(
                 t = to_html_entities(meta.title)
                 a = to_html_entities(meta.authors)
                 entry_text = (
-                    f'{meta.paper_id}, "{t}," {a}, {meta.url}')
+                    f'[{meta.paper_id}]({meta.url}) - '
+                    f'"{t}" ({a})')
             else:
-                entry_text = f'{text}, {resolved_url}'
+                entry_text = f'[{text}]({resolved_url})'
 
             new_refs[ref_num] = RefEntry(
                 number=ref_num, text=entry_text,
@@ -1053,9 +1204,6 @@ def add_citations_to_links(
 
             print(f"  Created: [{ref_num}] {entry_text}", file=sys.stderr)
 
-        link_pattern = f'[{text}]({url})'
-        line = result[line_idx]
-        pos = line.find(link_pattern)
         if pos >= 0:
             insert_at = pos + len(link_pattern)
             result[line_idx] = (
@@ -1064,7 +1212,7 @@ def add_citations_to_links(
                 + line[insert_at:])
 
     if inserts:
-        insert_pos = refs_end
+        insert_pos = _safe_insert_pos(refs, refs_end)
         for entry_line in inserts:
             result.insert(insert_pos, '\n')
             result.insert(insert_pos + 1, entry_line)
@@ -1073,28 +1221,139 @@ def add_citations_to_links(
     return result, new_refs
 
 
+def _resolve_paper_version(
+    paper: str,
+    url: Optional[str],
+    ref_entry: Optional[RefEntry],
+    resolved: ResolveResult,
+) -> tuple[Optional[str], Optional[str]]:
+    """Return (versioned_id, diagnostic) for a bare paper number.
+
+    Sources version from URL and ref entry, checking for agreement.
+    Falls back to resolved.metadata when both are unversioned.
+    """
+    url_version = None
+    if url:
+        info = extract_paper_id_from_url(url)
+        if info:
+            pid, _year = info
+            m = REVISION_RE.match(pid)
+            if m and m.group(2):
+                url_version = pid
+
+    ref_version = None
+    if ref_entry:
+        for m in VERSIONED_PAPER_RE.finditer(ref_entry.text):
+            if m.group(0)[:5] == paper[:5]:
+                ref_version = m.group(0)
+                break
+        if ref_version is None:
+            for url_m in re.finditer(r'https?://[^\s,)]+', ref_entry.text):
+                info = extract_paper_id_from_url(url_m.group(0))
+                if info:
+                    pid, _ = info
+                    rev_m = REVISION_RE.match(pid)
+                    if rev_m and rev_m.group(2) and pid[:5] == paper[:5]:
+                        ref_version = pid
+                        break
+
+    if url_version and ref_version:
+        if url_version == ref_version:
+            return url_version, None
+        return None, (
+            f"URL version {url_version} disagrees with "
+            f"ref version {ref_version} for {paper}")
+
+    if url_version:
+        return url_version, None
+    if ref_version:
+        return ref_version, None
+
+    for pid, meta in resolved.metadata.items():
+        if pid.startswith(paper):
+            return meta.paper_id, None
+
+    return None, (f"no version source for {paper} "
+                  f"(no versioned URL, ref text, or metadata)")
+
+
+def _in_quoted_string(line: str, pos: int) -> bool:
+    """Check if a position in a line is inside double quotes."""
+    quote_count = 0
+    for i in range(pos):
+        if line[i] == '"':
+            quote_count += 1
+    return quote_count % 2 == 1
+
+
 def fix_unversioned_refs(
     lines: list[str],
     unversioned: list[tuple[int, str]],
     refs: dict[int, RefEntry],
     resolved: ResolveResult,
 ) -> list[str]:
-    """Replace bare paper numbers with versioned equivalents."""
+    """Replace bare paper numbers with versioned equivalents.
+
+    Sources version from the URL and reference entry, checking for
+    agreement.  Skips bare numbers inside quoted strings (paper titles).
+    """
     result = list(lines)
 
-    ref_versions = {}
-    for _num, entry in refs.items():
-        for m in VERSIONED_PAPER_RE.finditer(entry.text):
-            base = m.group(0)[:5]
-            ref_versions[base] = m.group(0)
-
     for line_idx, paper in unversioned:
-        versioned = ref_versions.get(paper)
-        if versioned is None:
-            for pid, meta in resolved.metadata.items():
-                if pid.startswith(paper):
-                    versioned = meta.paper_id
+        line = result[line_idx]
+        m = re.search(rf'\b{re.escape(paper)}\b(?!R\d)', line)
+        if not m:
+            continue
+
+        if _in_quoted_string(line, m.start()):
+            continue
+
+        url_ctx = None
+        for link_m in LINK_RE.finditer(line):
+            if link_m.start() <= m.start() < link_m.end():
+                url_ctx = link_m.group(2)
+                break
+
+        ref_ctx = None
+        fwd_m = re.search(r'<sup>\[(\d+)\]</sup>', line[m.end():])
+        bwd_matches = list(
+            re.finditer(r'<sup>\[(\d+)\]</sup>', line[:m.start()]))
+        bwd_m = bwd_matches[-1] if bwd_matches else None
+
+        sup_m = None
+        if fwd_m and bwd_m:
+            fwd_dist = fwd_m.start()
+            bwd_dist = m.start() - bwd_m.end()
+            sup_m = fwd_m if fwd_dist <= bwd_dist else bwd_m
+        elif fwd_m:
+            sup_m = fwd_m
+        elif bwd_m:
+            sup_m = bwd_m
+
+        if sup_m:
+            cite_num = int(sup_m.group(1))
+            ref_ctx = refs.get(cite_num)
+
+        used_fallback = False
+        if ref_ctx is None:
+            for _num, entry in refs.items():
+                for vm in VERSIONED_PAPER_RE.finditer(entry.text):
+                    if vm.group(0)[:5] == paper[:5]:
+                        ref_ctx = entry
+                        break
+                if ref_ctx:
                     break
+            if ref_ctx is not None:
+                used_fallback = True
+
+        if used_fallback and url_ctx is None:
+            print(f"  Skipping: {paper} in prose without citation "
+                  f"context (line {line_idx + 1})", file=sys.stderr)
+            continue
+
+        versioned, diag = _resolve_paper_version(
+            paper, url_ctx, ref_ctx, resolved)
+
         if versioned:
             result[line_idx] = re.sub(
                 rf'\b{re.escape(paper)}\b(?!R\d)',
@@ -1103,6 +1362,9 @@ def fix_unversioned_refs(
                 count=1)
             print(f"  Versioned: {paper} -> {versioned} "
                   f"(line {line_idx + 1})", file=sys.stderr)
+        elif diag:
+            print(f"  Warning: {diag} (line {line_idx + 1})",
+                  file=sys.stderr)
 
     return result
 
@@ -1115,12 +1377,38 @@ def normalize_title(text: str) -> str:
     return text.lower()
 
 
+def _edit_distance(a: str, b: str) -> int:
+    """Levenshtein edit distance between two strings."""
+    if len(a) < len(b):
+        return _edit_distance(b, a)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a):
+        curr = [i + 1]
+        for j, cb in enumerate(b):
+            cost = 0 if ca == cb else 1
+            curr.append(min(
+                curr[j] + 1, prev[j + 1] + 1, prev[j] + cost))
+        prev = curr
+    return prev[len(b)]
+
+
 def fix_title_mismatches(
     lines: list[str],
     refs: dict[int, RefEntry],
     resolved: ResolveResult,
 ) -> list[str]:
-    """Update reference titles from mailing index metadata."""
+    """Update reference titles from mailing index metadata.
+
+    Applies confidence checks before replacing:
+    - Skips if SequenceMatcher ratio < 0.3 (titles too different,
+      index data likely wrong).
+    - Skips if edit distance <= 2 (author's deliberate minor
+      correction, e.g. fixing a typo in the published title).
+    """
+    from difflib import SequenceMatcher
+
     result = list(lines)
 
     for num, entry in refs.items():
@@ -1148,6 +1436,43 @@ def fix_title_mismatches(
 
             if (normalize_title(ref_title)
                     != normalize_title(meta.title)):
+                body_text = ''.join(result[:entry.line_idx])
+                if ref_title in body_text:
+                    print(
+                        f"  Title SKIP [{num}] {pid} "
+                        f"(title appears in body text, "
+                        f"preserving consistency):\n"
+                        f"    Reference: \"{ref_title}\"\n"
+                        f"    Index:     \"{meta.title}\"",
+                        file=sys.stderr)
+                    break
+
+                ratio = SequenceMatcher(
+                    None,
+                    normalize_title(ref_title),
+                    normalize_title(meta.title),
+                ).ratio()
+                if ratio < 0.3:
+                    print(
+                        f"  Title SKIP [{num}] {pid} "
+                        f"(ratio {ratio:.2f}, likely wrong index data):\n"
+                        f"    Reference: \"{ref_title}\"\n"
+                        f"    Index:     \"{meta.title}\"",
+                        file=sys.stderr)
+                    break
+
+                dist = _edit_distance(
+                    normalize_title(ref_title),
+                    normalize_title(meta.title))
+                if dist <= 2:
+                    print(
+                        f"  Title SKIP [{num}] {pid} "
+                        f"(edit distance {dist}, preserving author correction):\n"
+                        f"    Reference: \"{ref_title}\"\n"
+                        f"    Index:     \"{meta.title}\"",
+                        file=sys.stderr)
+                    break
+
                 print(
                     f"  Title mismatch [{num}] {pid}:\n"
                     f"    Reference: \"{ref_title}\"\n"
@@ -1238,7 +1563,7 @@ def strip_trailing_urls(
                     text = ref_m.group(2)
                     url_pos = text.find(url)
                     if url_pos > 0:
-                        desc = text[:url_pos].rstrip(', ')
+                        desc = text[:url_pos].rstrip(', .')
                         if desc:
                             num = ref_m.group(1)
                             result[i] = (
@@ -1268,6 +1593,126 @@ def space_ref_entries(
         result.insert(pos + offset, '\n')
 
     return result
+
+
+def unify_duplicate_refs(lines: list[str], refs_start: int, refs_end: int) -> list[str]:
+    """Merge reference entries that point to the same paper URL.
+
+    When two entries share the same paper identifier (via
+    extract_paper_id_from_url), the entry with the longer text
+    (more metadata) is kept and the other's body citations are
+    rewritten to the kept number.
+    """
+    refs = parse_references(lines, refs_start, refs_end)
+    pid_to_nums: dict[str, list[int]] = {}
+    for num, entry in refs.items():
+        for url_m in re.finditer(r'https?://[^\s,)]+', entry.text):
+            info = extract_paper_id_from_url(url_m.group(0))
+            if info:
+                pid, _ = info
+                pid_to_nums.setdefault(pid, []).append(num)
+                break
+
+    remap: dict[int, int] = {}
+    remove_lines: set[int] = set()
+    for pid, nums in pid_to_nums.items():
+        if len(nums) < 2:
+            continue
+        keep = max(nums, key=lambda n: len(refs[n].text))
+        for n in nums:
+            if n != keep:
+                remap[n] = keep
+                remove_lines.add(refs[n].line_idx)
+
+    if not remap:
+        return list(lines)
+
+    result = list(lines)
+    excluded = build_exclusion_ranges(result)
+    for i, line in enumerate(result):
+        if i in excluded:
+            continue
+        for old, new in sorted(remap.items()):
+            result[i] = result[i].replace(
+                f'<sup>[{old}]</sup>', f'<sup>[{new}]</sup>')
+    for idx in remove_lines:
+        result[idx] = '\n'
+
+    return result
+
+
+def remove_empty_subsection_headings(
+    lines: list[str],
+    refs_start: int,
+    refs_end: int,
+) -> list[str]:
+    """Remove subsection headings that have no ref entries beneath them."""
+    result = list(lines)
+
+    hdr = result[refs_start].strip()
+    refs_level = hdr.count(
+        '#', 0, hdr.index(' ') if ' ' in hdr else len(hdr))
+
+    heading_indices = []
+    for i in range(refs_start + 1, min(refs_end, len(result))):
+        stripped = result[i].strip()
+        sub_m = HEADING_RE.match(stripped)
+        if sub_m and len(sub_m.group(1)) > refs_level:
+            heading_indices.append(i)
+
+    to_blank = set()
+    for idx, h_line in enumerate(heading_indices):
+        next_boundary = heading_indices[idx + 1] if idx + 1 < len(heading_indices) else min(refs_end, len(result))
+        has_entry = False
+        for j in range(h_line + 1, next_boundary):
+            if REF_FORMAT_A_RE.match(result[j].strip()):
+                has_entry = True
+                break
+        if not has_entry:
+            to_blank.add(h_line)
+
+    for i in to_blank:
+        result[i] = '\n'
+
+    return result
+
+
+def collapse_ref_blanks(
+    lines: list[str],
+    refs_start: int,
+    refs_end: int,
+) -> list[str]:
+    """Reduce runs of 2+ consecutive blank lines to one in refs section."""
+    result = list(lines)
+    i = refs_start + 1
+    limit = min(refs_end, len(result))
+    while i < limit:
+        if (result[i].strip() == ''
+                and i + 1 < limit
+                and result[i + 1].strip() == ''):
+            result.pop(i)
+            limit -= 1
+        else:
+            i += 1
+    return result
+
+
+def _verify_citation_integrity(lines: list[str], filepath: str) -> None:
+    """Post-write safety check: every body citation must have a ref entry."""
+    excluded = build_exclusion_ranges(lines)
+    refs_start, refs_end = find_refs_section(lines)
+    if refs_start < 0:
+        return
+    _, _, cite_map = extract_body_citations(lines, excluded, refs_start)
+    out_refs = parse_references(lines, refs_start, refs_end)
+    ref_nums = set(out_refs.keys())
+    for cite_num in cite_map:
+        if cite_num not in ref_nums:
+            name = os.path.basename(filepath) if filepath else '<unknown>'
+            print(
+                f"CRITICAL: {name}: body cites [{cite_num}] "
+                f"but no reference entry exists in output",
+                file=sys.stderr)
 
 
 def write(
@@ -1304,14 +1749,46 @@ def write(
             refs = parse_references(lines, refs_start, refs_end)
 
         if result.orphans:
-            lines = remove_orphan_refs(lines, result.orphans, refs)
-            for num in result.orphans:
+            orphans_to_remove = list(result.orphans)
+            body_link_urls = set()
+            if result.uncited_links:
+                for _, _, url in result.uncited_links:
+                    body_link_urls.add(url)
+                    r_url = (resolved.url_map.get(url)
+                             or resolved.url_map.get(url.lower()))
+                    if r_url:
+                        body_link_urls.add(r_url)
+            body_end = refs_start if refs_start >= 0 else len(lines)
+            for i in range(body_end):
+                for lm in LINK_RE.finditer(lines[i]):
+                    url = lm.group(2)
+                    body_link_urls.add(url)
+                    r_url = (resolved.url_map.get(url)
+                             or resolved.url_map.get(url.lower()))
+                    if r_url:
+                        body_link_urls.add(r_url)
+            if body_link_urls:
+                safe = []
+                for num in orphans_to_remove:
+                    entry = refs.get(num)
+                    if entry:
+                        entry_urls = set(
+                            re.findall(r'https?://[^\s,)]+', entry.text))
+                        if entry_urls & body_link_urls:
+                            continue
+                    safe.append(num)
+                orphans_to_remove = safe
+            lines = remove_orphan_refs(lines, orphans_to_remove, refs)
+            for num in orphans_to_remove:
                 refs.pop(num, None)
+            if refs_start >= 0:
+                lines = remove_empty_subsection_headings(
+                    lines, refs_start, refs_end)
 
         if result.missing:
             lines = add_missing_ref_entries(
                 lines, result.missing, result.body_cites,
-                refs_end, resolved)
+                refs_end, resolved, refs=refs)
             refs_end = len(lines)
             _, new_refs_end = find_refs_section(lines)
             if new_refs_end > 0:
@@ -1343,9 +1820,15 @@ def write(
         if refs_start >= 0:
             lines = space_ref_entries(lines, refs_start, refs_end)
 
+        refs_start, refs_end = find_refs_section(lines)
+        if refs_start >= 0:
+            lines = collapse_ref_blanks(lines, refs_start, refs_end)
+
     refs_start, refs_end = find_refs_section(lines)
     if refs_start >= 0:
         refs = parse_references(lines, refs_start, refs_end)
+
+    has_subsections = any(e.subsection for e in refs.values()) if refs else False
 
     excluded = build_exclusion_ranges(lines)
     _body_cites, _first_app, old_to_new = extract_body_citations(
@@ -1353,12 +1836,94 @@ def write(
 
     needs_renumber = any(old != new for old, new in old_to_new.items())
 
+    if needs_renumber and old_to_new and has_subsections:
+        current_refs = parse_references(lines, refs_start, refs_end)
+        current_nums = sorted(current_refs.keys())
+        if current_nums == list(range(1, len(current_nums) + 1)):
+            sub_sequential = True
+            seen_sub = set()
+            sub_order = []
+            for n in sorted(current_refs.keys(),
+                            key=lambda k: current_refs[k].line_idx):
+                s = current_refs[n].subsection
+                if s not in seen_sub:
+                    seen_sub.add(s)
+                    sub_order.append(s)
+            prev_max = 0
+            for s in sub_order:
+                s_nums = sorted(
+                    n for n, e in current_refs.items()
+                    if e.subsection == s)
+                if s_nums and s_nums[0] <= prev_max:
+                    sub_sequential = False
+                    break
+                if s_nums != list(range(s_nums[0],
+                                        s_nums[0] + len(s_nums))):
+                    sub_sequential = False
+                    break
+                prev_max = s_nums[-1] if s_nums else prev_max
+            if sub_sequential:
+                needs_renumber = False
+
     if needs_renumber and old_to_new:
         content = renumber_content(old_to_new, excluded, lines)
         lines = content.splitlines(keepends=True)
 
         if refs_start >= 0 and refs:
             lines = reorder_refs(lines, refs, old_to_new)
+
+    refs_start, refs_end = find_refs_section(lines)
+    if refs_start >= 0:
+        lines = unify_duplicate_refs(lines, refs_start, refs_end)
+
+        refs_start, refs_end = find_refs_section(lines)
+        if refs_start >= 0:
+            refs = parse_references(lines, refs_start, refs_end)
+            excluded = build_exclusion_ranges(lines)
+            _, _, post_map = extract_body_citations(
+                lines, excluded, refs_start)
+            if any(o != n for o, n in post_map.items()):
+                content = renumber_content(post_map, excluded, lines)
+                lines = content.splitlines(keepends=True)
+                if refs:
+                    lines = reorder_refs(lines, refs, post_map)
+
+        refs_start, refs_end = find_refs_section(lines)
+        if refs_start >= 0:
+            lines = collapse_ref_blanks(lines, refs_start, refs_end)
+
+        refs_start, refs_end = find_refs_section(lines)
+        if refs_start >= 0:
+            final_refs = parse_references(lines, refs_start, refs_end)
+            sub_order = []
+            seen_s = set()
+            for n in sorted(final_refs.keys(),
+                            key=lambda k: final_refs[k].line_idx):
+                s = final_refs[n].subsection
+                if s not in seen_s:
+                    seen_s.add(s)
+                    sub_order.append(s)
+            seq_map = {}
+            next_seq = 1
+            for s in sub_order:
+                s_nums = sorted(
+                    n for n, e in final_refs.items()
+                    if e.subsection == s)
+                for n in s_nums:
+                    if n != next_seq:
+                        seq_map[n] = next_seq
+                    next_seq += 1
+            if seq_map:
+                excluded2 = build_exclusion_ranges(lines)
+                full_map = {n: seq_map.get(n, n)
+                            for n in final_refs}
+                content = renumber_content(
+                    full_map, excluded2, lines)
+                lines = content.splitlines(keepends=True)
+                lines = reorder_refs(
+                    lines, final_refs, full_map)
+
+    _verify_citation_integrity(lines, result.filepath)
 
     return ''.join(lines)
 
@@ -1548,7 +2113,8 @@ def main() -> int:
             suffix='.tmp',
         )
         try:
-            with os.fdopen(tmp_fd, 'w', encoding='utf-8') as f:
+            with os.fdopen(tmp_fd, 'w', encoding='utf-8',
+                           newline='\n') as f:
                 f.write(output)
             os.replace(tmp_path, r.filepath)
         except Exception:
