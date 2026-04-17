@@ -1,7 +1,7 @@
 ---
 title: "The Basis Operation and P1525"
 document: P4095R0
-date: 2026-03-16
+date: 2026-04-17
 intent: info
 audience: SG1, LEWG
 reply-to:
@@ -19,7 +19,7 @@ This paper documents what [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

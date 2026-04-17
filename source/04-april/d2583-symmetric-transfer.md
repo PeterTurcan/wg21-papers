@@ -1,7 +1,7 @@
 ---
 title: "Symmetric Transfer and Sender Composition"
 document: P2583R3
-date: 2026-03-10
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -17,7 +17,7 @@ C++20 provides symmetric transfer ([P0913R1](http://www.open-std.org/jtc1/sc22/w
 
 ## Revision History
 
-### R3: March 2026 (Croydon)
+### R3: April 2026 (post-Croydon mailing)
 
 * Added Section 15: Draft Proposed Wording for the protocol-level fix, motivated by NB comment US 246-373 (#948, LWG4348).
 * Updated Disclosure (Section 1) to note AI assistance in wording generation and two open questions requiring LWG expertise.

@@ -1,7 +1,7 @@
 ---
 title: "Open Issues in `std::execution::task`"
 document: P4007R2
-date: 2026-04-08
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -17,12 +17,13 @@ reply-to:
 
 ## Revision History
 
-### R1: April 2026 (post-Croydon)
+### R2: April 2026 (post-Croydon mailing)
 
 * Updated classification to reflect Croydon motions 28-29, 33, 35-38.
   Acknowledged issues resolved by P3941R4, P3927R2, P3980R1, and P4151R1.
   Rewrote allocator descriptions to credit P3980R1 while preserving
   residual frame-allocator concerns.
+* Reference corrections.
 
 ### R1: March 2026 (prior to Croydon meeting)
 

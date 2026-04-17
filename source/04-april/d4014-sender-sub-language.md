@@ -1,7 +1,7 @@
 ---
 title: "The Sender Sub-Language For Beginners"
 document: P4014R1
-date: 2026-04-08
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -21,7 +21,7 @@ The author dedicates all original content in this paper to the public domain und
 
 ## Revision History
 
-### R1: April 2026
+### R1: April 2026 (post-Croydon mailing)
 
 - Complete rewrite as a progressive tutorial.
 - Covers all thirty sender algorithms in the C++26 working draft.

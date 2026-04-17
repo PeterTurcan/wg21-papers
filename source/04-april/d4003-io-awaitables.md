@@ -1,7 +1,7 @@
 ---
 title: "A Minimal Coroutine Execution Model"
 document: P4003R2
-date: 2026-04-05
+date: 2026-04-17
 intent: ask
 audience: LEWG
 reply-to:
@@ -30,16 +30,29 @@ Everything in this paper comes from a complete implementation on three platforms
 
 ## Revision History
 
-### R1: April 2026 (post-Croydon mailing)
+### R2: April 2026 (post-Croydon mailing)
 
+* Title changed from "Coroutines for I/O" to "A Minimal Coroutine Execution Model".
 * Reframed as a coroutine execution model. Networking is one consumer, not the identity.
 * Motivating example changed from `socket.read_some(buf)` to `co_await f()`.
-* Section 2 replaced with "What We Get" table showing protocol vocabulary and what users can build on it.
-* Introduction section removed. Companion relationship with `std::execution` stated in Section 2.
-* Five straw polls replaced with one.
+* Introduction replaced with Disclosure. Paper repositioned within the Network Endeavor.
+* Sections 2-7 (Networking's Essentials, The Protocol, Executor concept, The Frame Allocator, Ergonomics of Type Erasure, io_awaitable_promise_base Mixin) replaced with new Sections 2-6 (What We Get, What Coroutines Need, The IoAwaitable Protocol, IoAwaitable Is Structured Concurrency, Why Not `exec::as_awaitable`?).
+* Evidence Framework (Section 9), example wording (Section 11), and Appendices A-B removed. Design choices, rationale, and post-adoption retrospectives moved to companion paper [P4172R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4172r0.pdf)<sup>[1]</sup>.
 * Networking quotes, Kona poll context, and SG14 position moved to [P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf)<sup>[5]</sup>.
-* Example wording removed. Design choices, rationale, post-adoption retrospectives moved to companion paper [P4172R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4172r0.pdf)<sup>[1]</sup>.
+* Five straw polls replaced with one.
 * References pruned and renumbered.
+
+### R1: March 2026 (pre-Croydon mailing)
+
+* Added "Why Standardize" subsection to Section 1: committee record, tower of abstraction argument, P4133 cost/benefit analysis.
+* Expanded implementation evidence in Section 3.
+* Added Section 9 "Evidence Framework" addressing P4133 requirements: competing designs, case against standardization, decision record, domain coverage, post-adoption metrics, retrospective commitment, prediction registry.
+* Expanded sequence diagram with explicit `set_environment`, `set_continuation`, and `handle.resume()` steps.
+* Renamed "Boost.Http" to "Http" in body and references.
+* Closed TLS spoilage gap in Section 5.4: intervening code between resume and child creation can overwrite the thread-local frame allocator. Introduced `safe_resume` save/restore protocol.
+* Added non-normative note to executor concept (Section 11.3.3) requiring event loop pump sites to save and restore TLS around `.resume()` calls.
+* Replaced `std::coroutine_handle<>` with `continuation` in the executor interface. The `continuation` struct embeds an intrusive list pointer, eliminating per-post heap allocation.
+* Editorial: fixed list formatting, code line wrapping, acknowledgements.
 
 ### R0: March 2026 (pre-Croydon mailing)
 

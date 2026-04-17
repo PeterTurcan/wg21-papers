@@ -1,7 +1,7 @@
 ---
 title: "The Need for Escape Hatches"
 document: P4035R0
-date: 2026-03-20
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -19,7 +19,7 @@ C++ should make the safe thing easy, and the unsafe thing possible.
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 * Initial version.
 

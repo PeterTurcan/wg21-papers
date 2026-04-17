@@ -1,7 +1,7 @@
 ---
 title: "Consuming Senders from Coroutine-Native Code"
 document: P4092R0
-date: 2026-04-10
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -20,7 +20,7 @@ An `IoAwaitable` bridge ([P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

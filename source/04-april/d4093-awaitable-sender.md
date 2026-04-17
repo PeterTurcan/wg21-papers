@@ -1,7 +1,7 @@
 ---
 title: "Producing Senders from Coroutine-Native Code"
 document: P4093R0
-date: 2026-03-13
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -20,7 +20,7 @@ An `IoAwaitable` ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

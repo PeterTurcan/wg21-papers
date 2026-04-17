@@ -1,7 +1,7 @@
 ---
 title: "The Twenty-One Year Networking Arc"
 document: P4099R0
-date: 2026-03-16
+date: 2026-04-17
 intent: info
 audience: WG21
 reply-to:
@@ -19,7 +19,7 @@ This paper assembles the findings of five companion papers into a single causal 
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

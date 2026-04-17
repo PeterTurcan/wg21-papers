@@ -1,7 +1,7 @@
 ---
 title: "The Networking Claim and P2453R0"
 document: P4097R0
-date: 2026-03-16
+date: 2026-04-17
 intent: info
 audience: WG21
 reply-to:
@@ -19,7 +19,7 @@ In October 2021, LEWG polled: "The sender/receiver model (P2300) is a good basis
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

@@ -1,7 +1,7 @@
 ---
 title: "The Unification of Executors and P0443"
 document: P4094R0
-date: 2026-03-16
+date: 2026-04-17
 intent: info
 audience: WG21
 reply-to:
@@ -19,7 +19,7 @@ In 2014, three deployed executor models - networking, GPU dispatch, and thread p
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

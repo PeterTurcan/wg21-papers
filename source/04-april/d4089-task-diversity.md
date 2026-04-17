@@ -1,7 +1,7 @@
 ---
 title: "On the Diversity of Coroutine Task Types"
 document: P4089R0
-date: 2026-03-15
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -19,7 +19,7 @@ The Environment parameter in `std::execution::task` makes cross-library coroutin
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

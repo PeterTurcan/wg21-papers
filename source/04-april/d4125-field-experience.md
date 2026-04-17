@@ -1,7 +1,7 @@
 ---
 title: "Coroutine-Native I/O at a Derivatives Exchange"
 document: P4125R0
-date: 2026-03-17
+date: 2026-04-17
 intent: info
 audience: SG14, LEWG
 reply-to:
@@ -19,7 +19,7 @@ The paper reports qualitative findings from three structured interviews with the
 
 ## Revision History
 
-### R0: March 2026
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version. Early-stage qualitative findings only.
 

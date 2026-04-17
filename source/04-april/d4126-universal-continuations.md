@@ -1,7 +1,7 @@
 ---
 title: "A Universal Continuation Model"
 document: P4126R0
-date: 2026-03-18
+date: 2026-04-17
 intent: info
 audience: EWG, SG1, LEWG
 reply-to:
@@ -24,7 +24,7 @@ This paper traces the history of alternative coroutine designs that explored the
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

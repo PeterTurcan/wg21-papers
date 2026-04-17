@@ -1,7 +1,7 @@
 ---
 title: "Coroutine-Native I/O for C++29 (The Network Endeavor)"
 document: P4100R0
-date: 2026-03-09
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -23,7 +23,7 @@ Two libraries - Capy and Corosio - use those mechanisms directly to deliver type
 
 ## Revision History
 
-### R0: March 2026
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

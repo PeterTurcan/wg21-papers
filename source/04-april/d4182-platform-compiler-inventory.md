@@ -1,7 +1,7 @@
 ---
 title: "A Citable Inventory of Platforms, Operating Systems, and Compiler Toolchains"
 document: P4182R0
-date: 2026-04-10
+date: 2026-04-17
 intent: info
 audience: SG14, EWG, LEWG
 reply-to:
@@ -18,7 +18,7 @@ It consolidates platform categories, operating-system and runtime context, and r
 
 ## Revision History
 
-### R0: April 2026
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

@@ -1,7 +1,7 @@
 ---
 title: "What C++20 Coroutines Already Buy The Standard"
 document: P4088R0
-date: 2026-03-29
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -19,7 +19,7 @@ The programmer writes `for`, `if`, structured bindings, and `co_await` - the idi
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 

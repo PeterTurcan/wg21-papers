@@ -1,7 +1,7 @@
 ---
 title: "Sender I/O: A Constructed Comparison"
 document: P4090R0
-date: 2026-03-15
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -20,7 +20,7 @@ Four sender-based TCP echo servers are constructed from [P2300R10](https://www.o
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 - Revised prior to publication to incorporate reflector discussion with Petersen and Voutilainen. Renamed approaches A1/A2/B/C to "just use `set_value`" / "just split the result" / "just use `set_error`" / "just decompose it." Reframed Section 5 to acknowledge that "just use `set_value`" is the sender equivalent of the coroutine idiom. Added Section 5.1 (the equal-footing observation), Q11, Q12, Q13. Restructured the trade-off table with composition algebra rows and compile-time work graph row. Reframed the invitation to ask whether the composition algebra applies to compound I/O results. Expanded structured concurrency guarantees in Section 11. Added Disclosure paragraph on `std::execution` support. Added direct quotations from Petersen and Voutilainen with permission.

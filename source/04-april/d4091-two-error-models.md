@@ -1,7 +1,7 @@
 ---
 title: "Error Models of Regular C++ and the Sender Sub-Language"
 document: P4091R0
-date: 2026-03-15
+date: 2026-04-17
 intent: info
 audience: LEWG
 reply-to:
@@ -25,7 +25,7 @@ The finding: both coroutines and senders have an abstraction floor - a boundary 
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 - Reframed in response to reflector discussion with Voutilainen, Petersen, Maurer, Sutter, and Krzemie&nacute;ski.

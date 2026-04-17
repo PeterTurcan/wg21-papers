@@ -1,7 +1,7 @@
 ---
 title: "Profile Analysis and Verification Evidence (PAVE)"
 document: P4137R0
-date: 2026-03-15
+date: 2026-04-17
 intent: info
 audience: SG12, SG23, EWG
 reply-to:
@@ -18,7 +18,7 @@ The paper offers a way to measure what the type-safety profile actually covers.
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: April 2026 (post-Croydon mailing)
 
 - Initial version.
 
