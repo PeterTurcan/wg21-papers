@@ -188,7 +188,7 @@ The following papers are authored or co-authored by the author of this paper. Th
 
 | Paper                                                           | Title                                                | What it documents                                                                   |
 | --------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[14]</sup>            | Coroutines for I/O                                   | The coroutine executor concept for networking                                       |
+| [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[14]</sup>            | A Minimal Coroutine Execution Model                  | The coroutine executor concept for networking                                       |
 | [P4007R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r1.pdf)<sup>[15]</sup>            | Open Issues in `std::execution::task`                | `AS-EXCEPT-PTR` converts routine `error_code` to `exception_ptr`                   |
 | [P4090R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4090r0.pdf)<sup>[16]</sup>            | Sender I/O: A Constructed Comparison                 | Side-by-side sender vs. coroutine networking code                                   |
 | [P4091R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4091r0.pdf)<sup>[17]</sup>            | Two Error Models                                     | The sender error channel vs. `error_code` for I/O                                  |
@@ -263,7 +263,7 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 
 [13] [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html) - "Coroutine Task Issues" (Dietmar K&uuml;hl, 2025).
 
-[14] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[14] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [15] [P4007R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r1.pdf) - "Open Issues in std::execution::task" (Vinnie Falco, 2026).
 

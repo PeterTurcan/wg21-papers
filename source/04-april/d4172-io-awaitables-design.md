@@ -1081,9 +1081,9 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [6] [P0592R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html) - "To boldly suggest an overall plan for C++26" (Ville Voutilainen, 2022).
 
-[7] [P2452R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2452r0.html) - "2021 October Library Evolution and Concurrency Polls on Networking and Executors" (Lelbach, Fracassi, Craig).
+[7] [P2452R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2452r0.html) - "2021 October Library Evolution and Concurrency Polls on Networking and Executors" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2021).
 
-[8] [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Lelbach, Fracassi, Craig, 2022).
+[8] [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
 
 [9] [P3185R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3185r0.html) - "A proposed direction for C++ Standard Networking based on IETF TAPS" (Thomas Rodgers, 2024).
 
@@ -1091,7 +1091,7 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [11] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
-[12] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "`std::execution`" (Dominiak, Baker, Howes, Shoop, Garland, Niebler, Lelbach, 2024).
+[12] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "`std::execution`" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
 [13] [P4099R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4099r0.pdf) - "History: The Twenty-One Year Networking Arc" (Vinnie Falco, 2026).
 
@@ -1101,11 +1101,11 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [16] [P2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf) - "Symmetric Transfer" (Mungo Gill, Vinnie Falco, 2026).
 
-[17] [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Hoberock, Garland, Kohlhoff, et al., 2020).
+[17] [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, Gordon Brown, Michael Wong, 2020).
 
 [18] [P1738R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1738r0.pdf) - "The Executor Concept Hierarchy Needs a Single Root" (Eric Niebler, 2019).
 
-[19] [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html) - "Evolution of the P0443 Unified Executors Proposal to accommodate new requirements" (2019).
+[19] [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html) - "Evolution of the P0443 Unified Executors Proposal to accommodate new requirements" (Christopher Kohlhoff, Jamie Allsop, 2019).
 
 [20] [P4096R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4096r0.pdf) - "History: Coroutine Executors and P2464R0" (Vinnie Falco, 2026).
 
@@ -1127,7 +1127,7 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [29] [P0054R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0054r0.html) - "Coroutines: reports from the fields" (Gor Nishanov, 2015).
 
-[30] [P2006R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2006r0.pdf) - "Eliminating heap-allocations in sender/receiver with connect()/start() as basis operations" (Baker, Niebler, Shoop, Howes, 2020).
+[30] [P2006R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2006r0.pdf) - "Eliminating heap-allocations in sender/receiver with connect()/start() as basis operations" (Lewis Baker, Eric Niebler, Kirk Shoop, Lee Howes, 2020).
 
 [31] [P4095R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4095r0.pdf) - "History: The Basis Operation and P1525" (Vinnie Falco, 2026).
 
@@ -1149,9 +1149,9 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [40] [P4133R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4133r0.pdf) - "What Every Proposal Must Contain" (Vinnie Falco, 2026).
 
-[41] [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - Senders and Coroutines (Vinnie Falco, Mungo Gill).
+[41] [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
 
-[42] [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf) - The Sender Sub-Language (Vinnie Falco, Mungo Gill).
+[42] [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf) - "The Sender Sub-Language" (Vinnie Falco, Mungo Gill, 2026).
 
 [43] [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf) - "Report: Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).
 

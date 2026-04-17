@@ -401,7 +401,7 @@ The author thanks Gor Nishanov for the C++20 coroutine model and its explicit su
 
 ## References
 
-[1] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[1] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [2] [P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) - "The Network Endeavor: Coroutine-Native I/O for C++29" (Vinnie Falco, Steve Gerbino, Michael Vandeberg, Mungo Gill, Mohammad Nejati, 2026).
 

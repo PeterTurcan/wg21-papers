@@ -595,7 +595,7 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 
 [7] [Herb Sutter, "Trip report: Summer ISO C++ standards meeting (St Louis, MO, USA)," 2024](https://herbsutter.com/2024/07/02/trip-report-summer-iso-c-standards-meeting-st-louis-mo-usa/)
 
-[8] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
+[8] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Chris Kohlhoff, 2005).
 
 [9] [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, Gordon Brown, Michael Wong, 2020).
 
@@ -625,7 +625,7 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 
 [22] [P4089](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4089r0.pdf) - "On the Diversity of Coroutine Task Types" (Vinnie Falco, 2026).
 
-[23] [P4007](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, 2026).
+[23] [P4007](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
 
 [24] [P4003](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 

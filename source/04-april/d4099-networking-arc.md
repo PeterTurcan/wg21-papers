@@ -61,7 +61,7 @@ Each decision was locally reasonable, made by experienced practitioners under re
 
 The people who built this - Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, Micha&lstrok; Dominiak, and their collaborators - perceived structural problems in the executor concept and proposed a design that solved them. [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[10]</sup> documented gaps in `execute(F&&)` under the work framing. The sender/receiver model adopted by the committee addressed all four. It shipped.
 
-The unification effort that preceded P2300R0 - [P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[11]</sup>, more than 100 papers, organizations spanning Google, NVIDIA, Sandia, Codeplay, Facebook, Microsoft, and RedHat - was a sustained effort to find common ground. The breadth of participation was extraordinary. The compromise was real.
+The unification effort that preceded P2300R0 - [P0443R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0443r0.html)<sup>[11]</sup>, more than 100 papers, organizations spanning Google, NVIDIA, Sandia, Codeplay, Facebook, Microsoft, and RedHat - was a sustained effort to find common ground. The breadth of participation was extraordinary. The compromise was real.
 
 These are facts. This series documents them alongside what was not examined.
 

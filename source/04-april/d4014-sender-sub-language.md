@@ -1528,9 +1528,9 @@ The authors thank the P2300R0 authors - Micha&lstrok; Dominiak, Georgy Evtushenk
 
 [15] Philip Wadler. ["The Essence of Functional Programming"](https://doi.org/10.1145/143165.143169). *POPL*, 1992.
 
-[16] [P3941R4](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r4.pdf)
+[16] [P3941R4](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r4.pdf) - "Scheduler Affinity" (Dietmar K&uuml;hl, 2026).
 
-[17] [P4151R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4151r1.pdf)
+[17] [P4151R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4151r1.pdf) - "Rename affine_on" (Robert Leahy, 2026).
 
 [18] Robin Milner. *Communication and Concurrency*. Prentice Hall, 1989. ISBN 0-13-114984-9.
 
@@ -1544,7 +1544,7 @@ The authors thank the P2300R0 authors - Micha&lstrok; Dominiak, Georgy Evtushenk
 
 [23] [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html). Dietmar K&uuml;hl. "Coroutine Task Issues." 2025.
 
-[24] [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.pdf)
+[24] [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.pdf) - "Task's Allocator Use" (Dietmar K&uuml;hl, 2026).
 
 [25] [stdexec](https://github.com/NVIDIA/stdexec). NVIDIA's reference implementation of `std::execution`.
 

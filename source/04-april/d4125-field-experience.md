@@ -223,4 +223,4 @@ Thanks to Vinnie Falco for developing Capy and Corosio and for supporting this e
 
 [2] [Corosio](https://github.com/cppalliance/corosio) - Coroutine-native networking library.
 
-[3] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, 2026).
+[3] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
