@@ -576,6 +576,7 @@ def scan(filepath: str, config: dict) -> AuditResult:
 
     with open(filepath, encoding='utf-8') as f:
         content = f.read()
+    content = content.replace('\r\n', '\n')
     r.lines = content.splitlines(keepends=True)
 
     r.excluded = build_exclusion_ranges(r.lines)
@@ -1114,9 +1115,15 @@ def add_missing_ref_entries(
                         if meta:
                             t = to_html_entities(meta.title)
                             a = to_html_entities(meta.authors)
-                            entry_text = (
-                                f'[{meta.paper_id}]({meta.url}) - '
-                                f'"{t}" ({a})')
+                            year = meta.date[:4] if meta.date else ''
+                            if year:
+                                entry_text = (
+                                    f'[{meta.paper_id}]({meta.url}) - '
+                                    f'"{t}" ({a}, {year}).')
+                            else:
+                                entry_text = (
+                                    f'[{meta.paper_id}]({meta.url}) - '
+                                    f'"{t}" ({a}).')
                             break
                     entry_text = f'[{text}]({resolved_url})'
                     break
@@ -1188,9 +1195,15 @@ def add_citations_to_links(
             if meta:
                 t = to_html_entities(meta.title)
                 a = to_html_entities(meta.authors)
-                entry_text = (
-                    f'[{meta.paper_id}]({meta.url}) - '
-                    f'"{t}" ({a})')
+                year = meta.date[:4] if meta.date else ''
+                if year:
+                    entry_text = (
+                        f'[{meta.paper_id}]({meta.url}) - '
+                        f'"{t}" ({a}, {year}).')
+                else:
+                    entry_text = (
+                        f'[{meta.paper_id}]({meta.url}) - '
+                        f'"{t}" ({a}).')
             else:
                 entry_text = f'[{text}]({resolved_url})'
 
@@ -1486,6 +1499,81 @@ def fix_title_mismatches(
                     new_line = old_line.replace(
                         ref_title, new_title, 1)
                 result[entry.line_idx] = new_line
+            break
+
+    for num, entry in refs.items():
+        urls_in_text = re.findall(r'https?://[^\s,]+', entry.text)
+        for url in urls_in_text:
+            info = extract_paper_id_from_url(url)
+            if not info:
+                continue
+            pid, _year = info
+            meta = resolved.metadata.get(pid.upper())
+            if not meta or not meta.authors:
+                continue
+
+            paren_m = re.search(r'\(([^)]+)\)\s*\.?\s*$', entry.text)
+            if not paren_m:
+                continue
+            paren_content = paren_m.group(1)
+
+            if 'ed.' in paren_content:
+                break
+            if 'et al' in paren_content:
+                break
+
+            year_m = re.search(r',?\s*(\d{4})\s*$', paren_content)
+            if year_m:
+                ref_author = paren_content[:year_m.start()].strip()
+            else:
+                ref_author = paren_content.strip()
+
+            if not ref_author or ref_author.startswith('http'):
+                break
+
+            index_author = to_html_entities(meta.authors)
+
+            ref_parts = set(
+                p.strip().split()[-1].lower()
+                for p in ref_author.split(',')
+                if p.strip() and not re.match(r'^\d{4}$', p.strip()))
+            idx_parts = set(
+                p.strip().split()[-1].lower()
+                for p in index_author.split(',')
+                if p.strip())
+
+            if ref_parts and idx_parts and ref_parts & idx_parts:
+                break
+
+            if ref_author == index_author:
+                break
+
+            body_text = ''.join(result[:entry.line_idx])
+            if ref_author in body_text:
+                print(
+                    f"  Author SKIP [{num}] {pid} "
+                    f"(author appears in body text):\n"
+                    f"    Reference: \"{ref_author}\"\n"
+                    f"    Index:     \"{index_author}\"",
+                    file=sys.stderr)
+                break
+
+            year_suffix = year_m.group(0) if year_m else ''
+            new_paren = f'({index_author}{year_suffix})'
+            old_paren = paren_m.group(0)
+            old_line = result[entry.line_idx]
+            new_line = old_line.replace(old_paren, new_paren + '.', 1)
+            if old_paren.endswith('.'):
+                new_line = old_line.replace(old_paren, new_paren + '.', 1)
+            else:
+                new_line = old_line.replace(old_paren, new_paren, 1)
+            if new_line != old_line:
+                result[entry.line_idx] = new_line
+                print(
+                    f"  Author fix [{num}] {pid}:\n"
+                    f"    Was:  \"{ref_author}\"\n"
+                    f"    Now:  \"{index_author}\"",
+                    file=sys.stderr)
             break
 
     return result
