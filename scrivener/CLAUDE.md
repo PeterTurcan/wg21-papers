@@ -45,6 +45,10 @@ Prefer `bs`, `cfg`, `fm`, `lh`, `cb`, `bq`, `s`, `r`, `w`, `h`. Spell out only w
 - `lib/highlight.py` - Syntax highlighting via Pygments. Single `highlight()` function returns ReportLab XML markup.
 - `lib/renderer.py` - `ASTRenderer`. AST-to-flowable conversion. The largest module.
 
+## keepWithNext Is Broken
+
+ReportLab's `keepWithNext` silently fails when `KeepTogether` splits across pages — see `KEEPWITHNEXT-BUG.md` for the full explanation. Use `CondPageBreak` before headings instead of relying on `keepWithNext` alone.
+
 ## Flowable Split Correctness
 
 When a flowable's `split()` constructs continuation fragments, it must forward every constructor parameter that affects drawing. If a parameter is intentionally dropped on split (e.g. `radius` for geometric reasons), add a comment explaining why.

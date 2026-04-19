@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import (
+    CondPageBreak,
     HRFlowable,
     Image as RLImage,
     ListFlowable,
@@ -334,7 +335,12 @@ class ASTRenderer:
             anchor = f"h_{len(self.headings)}"
             self.headings.append((level, text, anchor))
 
-        flows.append(Paragraph(f'<a name="{anchor}"/>{text}', self.ps[style_key]))
+        hs = self.ps[style_key]
+        body_lines = self.style["body_size"] * self.style["line_height"] * 2
+        cpb_h = hs.fontSize + hs.leading + hs.spaceBefore + body_lines
+        flows.append(CondPageBreak(cpb_h))
+
+        flows.append(Paragraph(f'<a name="{anchor}"/>{text}', hs))
 
         headings_cfg = self.style.get("headings", {})
         hcfg = headings_cfg.get(style_key, {})

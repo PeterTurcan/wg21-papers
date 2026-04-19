@@ -21,17 +21,19 @@ Rules that must fire during writing, not just during audit. For mechanical verif
    title: "Paper Title"
    document: D0000R0
    date: YYYY-MM-DD
+   intent: info
+   audience: SG1, LEWG
    reply-to:
      - "Author Name <author@example.com>"
-   audience: SG1, LEWG
    ---
    ```
 
    - `title` - required, double-quoted string
    - `document` - required, unquoted paper number (e.g. D4007R0)
    - `date` - required, unquoted ISO 8601 date
-   - `reply-to` - required, YAML list of double-quoted strings in the form `"Name <email>"`
+   - `intent` - required, unquoted, either `info` or `ask`
    - `audience` - required, unquoted comma-separated target audience (e.g. SG1, LEWG)
+   - `reply-to` - required, YAML list of double-quoted strings in the form `"Name <email>"`
 9. Do not add front matter fields that the Pandoc template (`tools/wg21.html5`) does not consume
 
 ## Language and Grammar
