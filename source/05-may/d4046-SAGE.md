@@ -9,6 +9,18 @@ reply-to:
   - "C++ Alliance Proposal Team"
 ---
 
+## Abstract
+
+We interviewed five experts, had AI distill their wisdom into 11 principles, built a scoring rubric, and graded our own paper first.
+
+WG21's most valuable knowledge is not in any document. It is the judgment that experienced participants apply when evaluating whether a proposal belongs in the standard - judgment built through decades of seeing what works, what fails, and why. [P4023R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4023r0.pdf)<sup>[18]</sup> (Directions Group, "Strategic Direction for AI in C++") identifies a critical gap in AI training data and calls on the ecosystem to build an "ImageNet for C++." That paper focuses on code quality. This paper addresses a complementary dimension: institutional judgment.
+
+The technology exists. The methodology is demonstrated. Participation is voluntary.
+
+**Call to action**: Join the paper authors by volunteering to be interviewed.
+
+---
+
 ## Revision History
 
 ### R0: January 2026 (Post-Croydon)

@@ -814,14 +814,17 @@ class ASTRenderer:
         flex = [(i, w) for i, w in enumerate(natural) if w > threshold]
 
         fixed_total = sum(w for _, w in fixed)
-        flex_total = sum(w for _, w in flex)
         remaining = self.content_width - fixed_total
+
+        cap = self.content_width * 2
+        capped = [(i, min(w, cap)) for i, w in flex]
+        capped_total = sum(w for _, w in capped)
 
         result = [0.0] * ncols
         for i, w in fixed:
             result[i] = w
-        for i, w in flex:
-            result[i] = remaining * (w / flex_total) if flex_total > 0 else remaining / len(flex)
+        for i, w in capped:
+            result[i] = remaining * (w / capped_total) if capped_total > 0 else remaining / len(capped)
 
         for i in range(ncols):
             if result[i] < min_w:
@@ -879,6 +882,51 @@ class ASTRenderer:
 
         return self._build_table_flowable(headers, rows)
 
+    @staticmethod
+    def _cell_word_count(cell):
+        if hasattr(cell, 'text'):
+            plain = re.sub(r'<[^>]+>', '', cell.text)
+        else:
+            plain = str(cell)
+        return len(plain.split())
+
+    def _shrink_dense_cells(self, all_rows, ncols, nhead):
+        """In wide tables with a mix of short labels and long prose,
+        rebuild long cells with a 25% smaller font so columns stay
+        readable."""
+        if ncols <= 2:
+            return
+        body_rows = all_rows[nhead:]
+        if not body_rows:
+            return
+
+        has_short = False
+        has_long = False
+        threshold = 15
+        for row in body_rows:
+            for cell in row:
+                wc = self._cell_word_count(cell)
+                if wc <= 3:
+                    has_short = True
+                if wc >= threshold:
+                    has_long = True
+        if not (has_short and has_long):
+            return
+
+        if "body_dense" not in self.ps:
+            bs = self.style["body_size"]
+            scale = 0.75
+            self.ps["body_dense"] = ParagraphStyle(
+                "body_dense", parent=self.ps["body"],
+                fontSize=bs * scale,
+                leading=bs * self.style["line_height"] * scale)
+        dense = self.ps["body_dense"]
+
+        for row in body_rows:
+            for j, cell in enumerate(row):
+                if self._cell_word_count(cell) >= threshold and hasattr(cell, 'text'):
+                    row[j] = Paragraph(cell.text, dense)
+
     def _build_table_flowable(self, headers, rows):
         """Build a styled ReportLab Table from lists of header and body row
         flowables. Shared by markdown table and HTML table rendering."""
@@ -893,6 +941,9 @@ class ASTRenderer:
         for r in all_rows:
             while len(r) < ncols:
                 r.append(Paragraph("", self.ps["body"]))
+
+        nhead = len(headers)
+        self._shrink_dense_cells(all_rows, ncols, nhead)
 
         if tbl_cfg.get("smart_columns", True):
             col_widths = self._smart_col_widths(all_rows, ncols)
