@@ -61,11 +61,11 @@ The Sender Sub-Language is not merely a fluent API. It is continuation-passing s
 
 The [Lambda Papers](https://en.wikisource.org/wiki/Lambda_Papers)<sup>[5]</sup> (Steele and Sussman, 1975-1980) formalized continuation-passing style: every function receives an explicit continuation representing "what happens next." Instead of returning a value to its caller, a function passes its result forward into the continuation. The sender protocol works the same way. `connect(sndr, rcvr)` reifies the continuation - it binds a sender to its receiver, producing an operation state that holds the entire work graph as a concrete type. `start(op)` evaluates it.
 
-Gordon Plotkin's 1975 paper on [call-by-value lambda calculus](https://doi.org/10.1016/0304-3975(75)90017-1)<sup>[7]</sup> established that CPS makes evaluation order explicit in the term structure. This is why optimizing compilers - [SML/NJ](https://www.smlnj.org/)<sup>[8]</sup>, [Chicken Scheme](https://www.call-cc.org/)<sup>[9]</sup> - use CPS as their intermediate representation, why [GHC](https://www.haskell.org/ghc/)<sup>[10]</sup> uses a closely related continuation-based model in its STG machine, and why the Sender Sub-Language can build zero-allocation pipelines and compile-time work graphs.
+Gordon Plotkin's 1975 paper on [call-by-value lambda calculus](<https://doi.org/10.1016/0304-3975(75)90017-1>)<sup>[7]</sup> established that CPS makes evaluation order explicit in the term structure. This is why optimizing compilers - [SML/NJ](https://www.smlnj.org/)<sup>[8]</sup>, [Chicken Scheme](https://www.call-cc.org/)<sup>[9]</sup> - use CPS as their intermediate representation, why [GHC](https://www.haskell.org/ghc/)<sup>[10]</sup> uses a closely related continuation-based model in its STG machine, and why the Sender Sub-Language can build zero-allocation pipelines and compile-time work graphs.
 
 ### 2.2 Monads
 
-Eugenio Moggi's 1991 paper ["Notions of Computation and Monads"](https://doi.org/10.1016/0890-5401(91)90052-4)<sup>[6]</sup> showed that monads structure computation with effects (see also Milewski<sup>[11]</sup> for an accessible treatment). Two operations are sufficient: `return` (lift a value into the computational context) and `bind` (sequence one computation into the next). In the Sender Sub-Language, `just(x)` is monadic return and `let_value(f)` is monadic bind. `then(f)` is the functor lift - `fmap` - a specialization where the function returns a plain value rather than a new sender.
+Eugenio Moggi's 1991 paper ["Notions of Computation and Monads"](<https://doi.org/10.1016/0890-5401(91)90052-4>)<sup>[6]</sup> showed that monads structure computation with effects (see also Milewski<sup>[11]</sup> for an accessible treatment). Two operations are sufficient: `return` (lift a value into the computational context) and `bind` (sequence one computation into the next). In the Sender Sub-Language, `just(x)` is monadic return and `let_value(f)` is monadic bind. `then(f)` is the functor lift - `fmap` - a specialization where the function returns a plain value rather than a new sender.
 
 ### 2.3 Delimited Continuations and Algebraic Effects
 
@@ -1508,9 +1508,9 @@ The authors thank the P2300R0 authors - Micha&lstrok; Dominiak, Georgy Evtushenk
 
 [5] Guy Steele and Gerald Sussman. [*The Lambda Papers*](https://en.wikisource.org/wiki/Lambda_Papers). MIT AI Memo series, 1975-1980.
 
-[6] Eugenio Moggi. ["Notions of Computation and Monads"](https://doi.org/10.1016/0890-5401(91)90052-4). *Information and Computation*, 1991.
+[6] Eugenio Moggi. ["Notions of Computation and Monads"](<https://doi.org/10.1016/0890-5401(91)90052-4>). *Information and Computation*, 1991.
 
-[7] Gordon Plotkin. ["Call-by-name, call-by-value and the lambda-calculus"](https://doi.org/10.1016/0304-3975(75)90017-1). *Theoretical Computer Science*, 1(2):125-159, 1975.
+[7] Gordon Plotkin. ["Call-by-name, call-by-value and the lambda-calculus"](<https://doi.org/10.1016/0304-3975(75)90017-1>). *Theoretical Computer Science*, 1(2):125-159, 1975.
 
 [8] [SML/NJ](https://www.smlnj.org/). Standard ML of New Jersey.
 
@@ -1534,7 +1534,7 @@ The authors thank the P2300R0 authors - Micha&lstrok; Dominiak, Georgy Evtushenk
 
 [18] Robin Milner. *Communication and Concurrency*. Prentice Hall, 1989. ISBN 0-13-114984-9.
 
-[19] Jean-Yves Girard. ["Linear Logic"](https://doi.org/10.1016/0304-3975(87)90045-4). *Theoretical Computer Science*, 50(1):1-102, 1987.
+[19] Jean-Yves Girard. ["Linear Logic"](<https://doi.org/10.1016/0304-3975(87)90045-4>). *Theoretical Computer Science*, 50(1):1-102, 1987.
 
 [20] W. Daniel Hillis and Guy L. Steele Jr. ["Data Parallel Algorithms"](https://doi.org/10.1145/7902.7903). *Communications of the ACM*, 29(12):1170-1183, 1986.
 
