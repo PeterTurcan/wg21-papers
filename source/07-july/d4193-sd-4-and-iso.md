@@ -38,7 +38,9 @@ The author asks for nothing.
 
 WG21 participants follow SD-4<sup>[1]</sup>. SD-4 describes itself as the "How We Work Cheat Sheet" and states that "everyone who participates in WG21 is expected to be familiar with this information."
 
-All JTC 1 working groups, including WG21, are bound by the ISO/IEC Directives Part 1<sup>[2]</sup>. The Directives are maintained by the ISO/IEC Joint Directives Maintenance Team and approved by the ISO Technical Management Board and IEC Standardization Management Board. SD-4 describes itself as supplementing the Directives: it "summarizes some of WG21's current practices and procedures, in addition to the requirements of the ISO/IEC Directives and JTC 1 Supplement."
+All JTC 1 working groups, including WG21, are bound by the ISO/IEC Directives Part 1<sup>[2]</sup><sup>[15]</sup>. The Directives are maintained by the ISO/IEC Joint Directives Maintenance Team and approved by the ISO Technical Management Board and IEC Standardization Management Board. The Directives exist to safeguard six WTO principles: Transparency, Openness, Impartiality and consensus, Effectiveness and relevance, Coherence, and Development dimension<sup>[15]</sup>. SD-4 describes itself as supplementing the Directives: it "summarizes some of WG21's current practices and procedures, in addition to the requirements of the ISO/IEC Directives and JTC 1 Supplement."
+
+The Directives provide for this arrangement. The Foreword states that "additional documents may require referencing, such as Standing Documents (SD) for JTC 1 to complement the ISO/IEC Directives and the Consolidated JTC 1 Supplement"<sup>[15]</sup>. Other WG21 standing documents fit this description: SD-3 organizes study groups, SD-5 contains meeting information, SD-7 describes mailing procedures. Each complements the Directives with logistics and reference information consistent with them. SD-4 is the only standing document that interprets the ISO consensus definition, creates voting thresholds, restricts National Body ballot comments, establishes escalation deadlines, and penalizes repeated objection.
 
 Both documents are publicly available. The comparison below is systematic.
 
@@ -131,7 +133,7 @@ SD-4<sup>[1]</sup> replaces this qualitative standard with a numeric threshold:
 
 The "after discussion" clause reflects Guide 2's principle of seeking to take into account all views. But the numeric rule permits advancement over sustained opposition from up to a third of the room - which Guide 2 defines as the absence of consensus, not its presence. Section 2.1 establishes that WG21's subgroups function as working groups. If they are working groups, 1.12.1 requires them to operate by consensus as the Directives define it.
 
-Separately, SD-4 allows "each person in the room" to vote in subgroup polls<sup>[1]</sup>. The Directives require working group participants to be "Experts individually appointed by the P-members" and registered in the ISO Global Directory (1.12.1, 1.12.2)<sup>[2]</sup>. SD-4 itself distinguishes these levels: plenary polls require ISO directory registration, but subgroup polls do not.
+Separately, SD-4 allows "each person in the room" to vote in subgroup polls<sup>[1]</sup>. The Directives require working group participants to be "Experts individually appointed by the P-members" and registered in the ISO Global Directory (1.12.1, 1.12.2)<sup>[2]</sup>. SD-4 itself distinguishes these levels: plenary polls require ISO directory registration, but subgroup polls do not. The 2024 edition of the Directives<sup>[15]</sup> elevates voting principles to the main Part 1 text at 1.7.5: a simple majority of P-members voting is required for approval, proxy voting is not permitted, and formal discussion during ballot periods is prohibited. SD-4's subgroup polls operate outside this framework entirely.
 
 ### 3.3 Priority Allocation
 
@@ -185,10 +187,13 @@ SD-4 describes itself as a comprehensive procedural guide: "everyone who partici
 | 5.1.1 | NB right of appeal to parent committee, TMB, and council board | |
 | 5.1.2 | P-member may appeal any action "not in accordance with the ISO/IEC Directives" | |
 | 5.3.4 | TMB Chair "shall form a conciliation panel" to hear appeals | |
+| 1.13.2 | Advisory groups require committee approval of convenor, membership type, and terms of reference prior to establishment<sup>[15]</sup> | |
 
 The right column is empty because SD-4 is silent on each of these provisions.
 
 The "purely international capacity" requirement (1.12.1) applies directly to the WG21 Convenor, and via the functional equivalence established in Section 2.1, to subgroup chairs who exercise working-group-level authority.
+
+The advisory group requirement (1.13.2) applies to the Direction Group. The 2024 edition of the Directives<sup>[15]</sup> specifies that committee advisory groups require committee approval of the convenor, the type of membership, and the terms of reference - all prior to establishment. The Direction Group has none of these.
 
 The appeal provisions (5.1.1, 5.1.2, 5.3.4) exist regardless of whether SD-4 restates them - NB rights under the Directives do not depend on being echoed in a WG procedural guide. But a guide that is comprehensive about how the process works and silent about what happens when participants believe the process has failed is incomplete in a way that matters. A participant who reads only SD-4 would not learn that these mechanisms exist.
 
@@ -200,7 +205,7 @@ SD-1 is the official WG21 document list, maintained continuously since the commi
 
 SD-4 does not appear in SD-1 for any year examined: 2009<sup>[3]</sup>, 2012<sup>[4]</sup>, 2016<sup>[5]</sup>, 2019<sup>[6]</sup>, 2023<sup>[7]</sup>, or 2024<sup>[8]</sup>. Other standing documents - SD-3, SD-5, SD-6, SD-7, SD-8, SD-9, SD-10 - appear in these lists. SD-4 alone is absent.
 
-SD-4 is published on isocpp.org, the website of the Standard C++ Foundation. It is not published on open-std.org, the official WG21 document archive.
+WG21's document pipeline hosts pre-publication drafts (D-papers) on isocpp.org and formally published papers (P-papers) on open-std.org. Published standing documents - SD-3, SD-5, SD-7 - appear on open-std.org and in SD-1. SD-4 appears on isocpp.org alongside pre-publication drafts and does not appear in SD-1.
 
 ---
 
@@ -280,6 +285,7 @@ A committee that knows when to exercise either mechanism is in control of its ow
 12. WG14 (C) Standing Document 1: Joint Mailing and Meeting Information, N1829. [https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1829.htm](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1829.htm)
 13. ISO/TC 211, "Roles in Committee Work," Good Practices. [https://committee.iso.org/sites/tc211/home/resolutions/isotc-211-good-practices/--roles-in-committee-work.html](https://committee.iso.org/sites/tc211/home/resolutions/isotc-211-good-practices/--roles-in-committee-work.html)
 14. Herb Sutter, WG21 trip reports, 2024-2026. [https://herbsutter.com/](https://herbsutter.com/)
+15. ISO/IEC, "ISO/IEC Directives, Part 1 - Consolidated ISO Supplement," Edition 2024. [https://www.iso.org/sites/directives/current/consolidated/index.html](https://www.iso.org/sites/directives/current/consolidated/index.html)
 
 \newpage
 
