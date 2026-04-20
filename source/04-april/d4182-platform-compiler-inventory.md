@@ -46,19 +46,21 @@ The platform half of the inventory extends the capability survey used in [P4127R
 
 ### 3.1 Platform schema
 
-The table states baseline capabilities from [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1, plus additional columns for SG14 readers.
+The schema below states baseline capabilities from [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1, plus additional columns for SG14 readers. It is presented as two tables sharing the **Category** index so each table has room to read clearly.
 
-| Category | Coro | TLS | PMR | Heap | Hosted | Exc | Alloc | RT | TLSctx |
-| -------- | ---- | --- | --- | ---- | ------ | --- | ----- | -- | ------ |
-| Desktop (Linux, Windows, macOS) | Yes | Yes | Yes | Yes | Full | Typically on | Heap + PMR | Best effort | Static TLS |
-| Mobile (iOS, Android) | Yes | Yes | Yes | Yes | Full | Typically on | Heap + PMR | Best effort | Static TLS |
-| Game consoles (Xbox, PS5) | Yes | Yes | Yes | Yes | Full | Often off | Arenas common | Best effort | Static or vendor |
-| Full RTOS (QNX, Zephyr, VxWorks) | Yes | Yes | Hosted PMR | Yes | Partial to full | Varies | Pools common | Soft to hard RT | Static TLS |
-| Lightweight RTOS (FreeRTOS, Pico) | Partial | No | No | Yes | Freestanding | Typically off | Static pools | Soft RT | N/A |
-| Bare metal (Cortex-M, RISC-V) | Partial | No | No | Rare | Freestanding | Typically off | Static only | Hard or none | N/A |
-| GPU device code (CUDA, SYCL) | No | No | No | No | N/A | N/A | Device heaps differ | SIMT | N/A |
+**Table A - Language and library support.** What C++ facilities apply on each platform.
 
-Legend:
+| Category | Coro | TLS | PMR | Heap | Hosted |
+| -------- | ---- | --- | --- | ---- | ------ |
+| Desktop (Linux, Windows, macOS) | Yes | Yes | Yes | Yes | Full |
+| Mobile (iOS, Android) | Yes | Yes | Yes | Yes | Full |
+| Game consoles (Xbox, PS5) | Yes | Yes | Yes | Yes | Full |
+| Full RTOS (QNX, Zephyr, VxWorks) | Yes | Yes | Hosted PMR | Yes | Partial to full |
+| Lightweight RTOS (FreeRTOS, Pico) | Partial | No | No | Yes | Freestanding |
+| Bare metal (Cortex-M, RISC-V) | Partial | No | No | Rare | Freestanding |
+| GPU device code (CUDA, SYCL) | No | No | No | No | N/A |
+
+Legend for Table A:
 
 - **Category** - Row label from the Section 9.1 survey.
 - **Coro** - Whether C++20 coroutines apply in practice for that category.
@@ -66,6 +68,22 @@ Legend:
 - **PMR** - Whether the hosted `<memory_resource>` facility applies where relevant<sup>[3]</sup>.
 - **Heap** - Whether a general-purpose heap worth customising exists for that category.
 - **Hosted** - Usual standard-library profile (full, partial to full, freestanding, or N/A).
+
+**Table B - Runtime context.** How code actually runs on each platform.
+
+| Category | Exc | Alloc | RT | TLSctx |
+| -------- | --- | ----- | -- | ------ |
+| Desktop (Linux, Windows, macOS) | Typically on | Heap + PMR | Best effort | Static TLS |
+| Mobile (iOS, Android) | Typically on | Heap + PMR | Best effort | Static TLS |
+| Game consoles (Xbox, PS5) | Often off | Arenas common | Best effort | Static or vendor |
+| Full RTOS (QNX, Zephyr, VxWorks) | Varies | Pools common | Soft to hard RT | Static TLS |
+| Lightweight RTOS (FreeRTOS, Pico) | Typically off | Static pools | Soft RT | N/A |
+| Bare metal (Cortex-M, RISC-V) | Typically off | Static only | Hard or none | N/A |
+| GPU device code (CUDA, SYCL) | N/A | Device heaps differ | SIMT | N/A |
+
+Legend for Table B:
+
+- **Category** - Row label from the Section 9.1 survey.
 - **Exc** - Exception default in typical shipping builds. Labels are **Typically on**, **Often off**, **Varies**, **Typically off**, or **N/A** when the column does not apply.
 - **Alloc** - Dominant hot-path allocation style.
 - **RT** - Scheduling class (best effort, soft or hard real-time, SIMT, or none).
