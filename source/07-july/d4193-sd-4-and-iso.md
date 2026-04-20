@@ -175,6 +175,20 @@ SD-4 also imposes a deadline for raising objections. Serious concerns must be po
 
 The Directives contain no comparable cutoff after which objections lose standing.
 
+### 3.6 Meeting Record Transparency
+
+SD-4<sup>[1]</sup> states:
+
+> "Meeting records of subgroup discussion, meeting wikis, and non-public committee email lists (aka reflectors)... often include personal positions and discussion. It is not allowed to quote from these publicly."
+
+The Directives require transparency at multiple levels. Directive 1.8.2(e)<sup>[2]</sup> requires the Chair to "ensure at meetings that all decisions are clearly formulated and made available in written form." Directive 1.9.2(c)<sup>[2]</sup> requires decisions to be "posted within 48 hours after the meeting" and minutes to be "circulated within 4 weeks." Directive 1.12.6<sup>[2]</sup> requires working groups to use the electronic platform provided by the Office of the CEO "for transparency and traceability." The Directives' Foreword lists Transparency as the first of six WTO principles the procedures exist to safeguard<sup>[15]</sup>.
+
+The Directives do not require that working group records be world-readable. But they do not authorize a prohibition on public quotation either. In fact, Directive SF.10<sup>[15]</sup> explicitly provides a framework for meeting recordings: recording by the Secretary/Committee Manager is acceptable if participants are informed at the start and no one objects, any participant may require recording be turned off during their intervention, and recordings are to help prepare minutes and may be used to resolve disputes. In March 2025, ISO published guidance explicitly permitting the use of AI tools for meeting transcription under SF.10<sup>[16]</sup>.
+
+WG21's opening meeting guidelines state: "Meetings are not public, we want everyone to be able to speak freely. Please refrain from live tweeting, blogging, taking photos or videos"<sup>[17]</sup>. This goes beyond what the Directives restrict. SF.10 provides a consent-based framework for recording. WG21's guidelines prohibit it outright.
+
+WG21's practice is unusual among comparable bodies. WG21's sibling working groups in SC 22 publish their meeting minutes as public documents: WG14 (C) publishes minutes as N-numbered documents on open-std.org; WG5 (Fortran) publishes minutes on its official site; WG9 (Ada) lists draft minutes in its public Electronic Documents Log. Outside ISO, ECMA TC39 (JavaScript) publishes full meeting transcripts on a public GitHub repository; the IETF publishes working group minutes and recordings on its Datatracker; W3C publishes working group minutes on w3.org. No other JTC 1 working group examined maintains a comparable prohibition on recording or public quotation of meeting discussions. Appendix B documents this comparison. Appendix C documents the recording and transcription practices.
+
 ---
 
 ## 4. What SD-4 Does Not Mention
@@ -286,6 +300,8 @@ A committee that knows when to exercise either mechanism is in control of its ow
 13. ISO/TC 211, "Roles in Committee Work," Good Practices. [https://committee.iso.org/sites/tc211/home/resolutions/isotc-211-good-practices/--roles-in-committee-work.html](https://committee.iso.org/sites/tc211/home/resolutions/isotc-211-good-practices/--roles-in-committee-work.html)
 14. Herb Sutter, WG21 trip reports, 2024-2026. [https://herbsutter.com/](https://herbsutter.com/)
 15. ISO/IEC, "ISO/IEC Directives, Part 1 - Consolidated ISO Supplement," Edition 2024. [https://www.iso.org/sites/directives/current/consolidated/index.html](https://www.iso.org/sites/directives/current/consolidated/index.html)
+16. ISO, "Guidance on use of artificial intelligence (AI) for ISO committees," Version 1.1, March 2025. [https://www.iso.org/files/live/sites/isoorg/files/developing_standards/who_develops_standards/docs/use%20of%20AI.pdf](https://www.iso.org/files/live/sites/isoorg/files/developing_standards/who_develops_standards/docs/use%20of%20AI.pdf)
+17. N4916, "WG21 2022-07 Virtual Meeting Minutes of Meeting," Section 1.2 Meeting guidelines. [https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/n4916.pdf](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/n4916.pdf). See also N4933 (November 2022, Kona), same section.
 
 \newpage
 
@@ -374,3 +390,82 @@ No other JTC 1 working group maintains a procedural supplement comparable to SD-
 | **WG21 (C++)** | **SD-4: 47KB procedural supplement** | **Consensus interpretation, escalation, ballot comments, subgroup structure, direction group, TS lifecycle** | **Unique** |
 
 SD-4 interprets the ISO consensus definition, creates escalation deadlines, pre-categorizes NB ballot comments, names a Direction Group roster, defines subgroup chair appointment procedures, and prescribes the entire proposal lifecycle. No other WG or SC standing document in JTC 1 attempts any of this.
+
+\newpage
+
+## Appendix B: Meeting Record Transparency Across Standards Bodies
+
+This appendix provides the evidence summarized in Section 3.6. For each body, it documents what meeting records are publicly available, where they are published, and whether any prohibition on public quotation exists.
+
+### B.1 JTC 1 / SC 22 Working Groups
+
+- **WG14 (C):** Meeting minutes published as N-numbered documents in the WG14 document log on open-std.org. Publicly accessible. No prohibition on quoting found. [https://www.open-std.org/jtc1/sc22/wg14/www/wg14_document_log.htm](https://www.open-std.org/jtc1/sc22/wg14/www/wg14_document_log.htm)
+
+- **WG5 (Fortran):** Meeting minutes published on the official WG5 site under documents. Publicly accessible. [https://wg5-fortran.org/documents.html](https://wg5-fortran.org/documents.html)
+
+- **WG9 (Ada):** Draft and final minutes listed in the WG9 Electronic Documents Log on open-std.org. Publicly accessible. [https://open-std.org/JTC1/SC22/WG9/documents.htm](https://open-std.org/JTC1/SC22/WG9/documents.htm)
+
+- **WG21 (C++):** Formal Minutes of Meeting papers (N-series) are public on open-std.org. Subgroup discussion, meeting wikis, and non-public reflectors are sealed. SD-4 states: "It is not allowed to quote from these publicly" except straw poll questions/results or attributed quotes with prior consent.
+
+### B.2 Other JTC 1 Bodies
+
+- **SC 29/MPEG:** Public meeting reports and outcome summaries published on mpeg.org. No SD-4-style quoting prohibition found in public-facing documents. [https://www.mpeg.org/](https://www.mpeg.org/)
+
+### B.3 Non-ISO Standards Bodies
+
+- **ECMA TC39 (JavaScript/ECMAScript):** Full verbatim meeting transcripts published on a public GitHub repository. Publicly quotable. [https://github.com/tc39/notes](https://github.com/tc39/notes)
+
+- **W3C:** Working group minutes published on w3.org as dated HTML documents. Publicly quotable. Minutes are the durable public record of decisions and actions.
+
+- **WHATWG (HTML):** Meeting discussions documented in public GitHub issues and joint session minutes published via W3C. Publicly quotable. [https://github.com/whatwg/html](https://github.com/whatwg/html)
+
+- **IETF:** Working group and plenary minutes published on Datatracker. Recordings and materials also commonly linked. The IETF Note Well governs IPR and contribution licensing, not confidentiality of meeting content. [https://datatracker.ietf.org](https://datatracker.ietf.org)
+
+- **Rust Leadership Council:** Meeting minutes published in a public GitHub repository. Explicit private carve-outs for moderation and conflicts; default is transparency. [https://github.com/rust-lang/leadership-council/tree/main/minutes](https://github.com/rust-lang/leadership-council/tree/main/minutes)
+
+- **Python Steering Council:** High-level activity updates published on public GitHub. PEP discussions conducted on public forums. [https://github.com/python/steering-council](https://github.com/python/steering-council)
+
+### B.4 Summary
+
+Every body examined defaults to making meeting records a public artifact. WG21 is the only body that combines public formal minutes with a prohibition on quoting subgroup discussions. WG21's three sibling working groups in SC 22 - the C, Fortran, and Ada committees - all publish their minutes without restriction.
+
+\newpage
+
+## Appendix C: Meeting Recording and Transcription Practices
+
+This appendix provides the evidence for the recording and transcription comparison in Section 3.6.
+
+### C.1 The ISO Framework
+
+Directive SF.10<sup>[15]</sup> provides a consent-based framework for meeting recordings:
+
+- Recording by the Secretary/Committee Manager is acceptable if all participants are informed at the start and no one objects
+- Any participant may require recording be turned off during their intervention
+- Recordings are to help prepare minutes/reports and may be used to resolve disputes
+- Recordings are property of the Secretary, must respect confidentiality, must not be shared with third parties, and should preferably be destroyed once minutes are approved
+
+In March 2025, ISO published guidance explicitly permitting the use of AI tools (including generative AI) for meeting transcription under SF.10<sup>[16]</sup>. The guidance states that Committee Managers/Secretaries may use AI tools to record a meeting for the purpose of writing meeting minutes.
+
+### C.2 WG21's Practice
+
+WG21 meeting guidelines (N4916<sup>[17]</sup>, N4933) state: "Meetings are not public, we want everyone to be able to speak freely. Please refrain from live tweeting, blogging, taking photos or videos."
+
+This is stricter than SF.10. The Directive provides a framework that balances transparency with participant comfort (consent, per-intervention opt-out, secretary custody, destruction after approval). WG21 skips the framework and defaults to prohibition.
+
+### C.3 Recording Practices Across Standards Bodies
+
+- **IETF:** Meetings routinely recorded via Meetecho. Recordings published on YouTube and Datatracker. Community AI-assisted minutes projects operate on top of official transcripts (e.g. ietfminutes.org). [https://www.ietf.org/meeting/technology/](https://www.ietf.org/meeting/technology/)
+
+- **W3C:** Recording optional per working group if consent process is followed. W3C Process (2021+) requires that recording intent be announced at the start, required details given (access, purpose, retention), and no participant withholds consent. If anyone objects, recording must not occur. Some groups use automated transcripts as a minutes aid.
+
+- **ECMA TC39:** Primary artifact is human-written collaborative notes (not A/V recording). Notes are drafted in Google Docs during the meeting, reviewed for accuracy, then published to the public tc39/notes GitHub repository. [https://github.com/tc39/notes](https://github.com/tc39/notes)
+
+- **Rust (lang team):** Default is no recording for triage and design meetings "to encourage engagement." Certain design meetings may be recorded with agreement of all participants, decided when scheduled. A YouTube playlist exists with some past recorded meetings and auto-generated subtitles. [https://lang-team.rust-lang.org/meetings.html](https://lang-team.rust-lang.org/meetings.html)
+
+- **Python Steering Council:** Regular internal meetings are not published as full A/V. High-level written updates published on public GitHub. PyCon panels with the Steering Council are recorded and published on YouTube. [https://github.com/python/steering-council](https://github.com/python/steering-council)
+
+### C.4 Summary
+
+The ISO Directives provide a consent-based framework (SF.10) that allows recording with safeguards. ISO's own 2025 AI guidance explicitly permits AI transcription under this framework. The IETF records routinely and publishes recordings. W3C provides an opt-in recording process with participant consent. WG21 prohibits recording outright, going beyond what the Directives restrict.
+
+ISO's direction of travel is toward AI-assisted documentation. WG21's practice moves in the opposite direction.
