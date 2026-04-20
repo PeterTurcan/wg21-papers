@@ -149,10 +149,6 @@ Engineer B's primary friction point was error handling. Corosio throws exception
 
 > "We don't use exceptions at all. In some very non-intensive bits of code we'll maybe use exception handling, but overall we don't use that. Having a consistent way to report errors would be a worthwhile set of updates." - Engineer B
 
-The Capy/Corosio author proposed a boundary during the interview: exceptions for programmer errors (logic errors, misconfiguration) and error codes for runtime conditions. Engineer B found this reasonable in principle but probed the boundary:
-
-> "Should setting the no-delay flag fail? Is that an exceptional circumstance, or is it fine to continue on with the socket open and not having set that?" - Engineer B
-
 The exception-vs-error-code boundary is a recurring design question in C++ I/O libraries. This question is directly relevant to financial markets infrastructure, where exception-free code paths are a standard requirement.
 
 ---

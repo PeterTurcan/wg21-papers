@@ -47,7 +47,7 @@ This paper asks for nothing.
 
 ## 2. The Evidence
 
-Every claim in this document is backed by published code. Every paper in the series is accompanied by a published library that implements it, a test suite, benchmarks where performance claims are made, and cross-platform CI. The committee can clone the repo and run the tests and examples.
+Technical and performance claims in this document are backed by published code. Every paper in the series is accompanied by a published library that implements it, a test suite, benchmarks where performance claims are made, and cross-platform CI. The committee can clone the repo and run the tests and examples.
 
 ### 2.1 What We Built
 
