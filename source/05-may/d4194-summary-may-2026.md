@@ -1,5 +1,5 @@
 ---
-title: "A Reader's Guide to the May 2026 Mailing"
+title: "A Reader's Guide to My May 2026 Papers"
 document: D4194R0
 date: 2026-05-31
 intent: info
