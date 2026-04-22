@@ -3,7 +3,7 @@ title: "A Reader's Guide to My July 2026 Papers"
 document: D4195R0
 date: 2026-07-31
 intent: info
-audience: LEWG
+audience: WG21
 reply-to:
   - "Vinnie Falco <vinnie.falco@gmail.com>"
 ---
