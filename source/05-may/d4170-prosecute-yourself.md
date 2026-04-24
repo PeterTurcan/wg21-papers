@@ -76,22 +76,22 @@ The examiner is a structured prompt - a set of instructions that a frontier lang
 
 The tool takes a WG21 paper as input and subjects it to a formal five-phase adversarial examination:
 
-1. **Vocatio (The Summons)** - Classifies the paper (ask vs. inform), determines posture (defending your own paper vs. scouting an opponent's), and reads the paper to extract every claim it actually makes.
+1. **Citatio (The Summons)** - Classifies the paper (ask vs. inform), determines posture (defending your own paper vs. scouting an opponent's), and reads the paper to extract every claim it actually makes.
 
 2. **Inquisitio (The Investigation)** - Assembles a dossier via web searches, MCP queries, workspace intelligence, and stakeholder analysis. Verifies all citations. Delegates research to sub-agents to preserve the main context window for judgment.
 
-3. **Interrogatorium (The Interrogatory)** - Deposes the user (the "postulator") with structured questions to resolve assumptions the dossier could not confirm.
+3. **Interrogatio (The Interrogatory)** - Deposes the user (the "postulator") with structured questions to resolve assumptions the dossier could not confirm.
 
 4. **Examen (The Examination)** - Tests every claim against three criteria: factual accuracy (Veritas), logical soundness (Ratio), and citation support (Auctoritas). Candidate objections are then cross-examined by an internal "Advocatus Dei" (defender) through six challenges that filter out noise - confessions, phantom claims, things better asked than charged, non-human objections, self-defeating arguments, and trivial housekeeping.
 
-5. **Animadversiones (The Observations)** - Delivers the formal verdict: *nihil obstat* (nothing stands in the way), *cum obiectionibus* (with objections), or *suspendatur* (suspended pending testimony). Output includes imprimaturs for battle-hardened sections, surviving objections with named adversaries and damage assessments, minor notes, an audit trail, and a citation verification table.
+5. **Animadversiones (The Observations)** - Delivers the formal verdict: *nihil obstat* (nothing stands in the way), *cum obiectionibus* (with objections), or *suspendatur* (suspended pending testimony). Output includes approbationes for battle-hardened sections, surviving objections with named adversaries and damage assessments, minor notes, an audit trail, and a citation verification table.
 
 Key design principles:
 
 - **The Oath**: The tool is designed to *prefer* finding nothing wrong. An advocate that always produces findings is performing theater, not analysis. *Nihil obstat* is the highest outcome, not a failure state.
 - **Posture-aware**: If it is your paper, findings say "fix this." If it is someone else's, findings say "press here."
 - **Boundary discipline**: It only examines claims the paper actually makes - never attacks what the paper did not say.
-- **Token discipline**: Research is delegated to sub-agents; the main context window is reserved for judgment. While sub-agents work, the tool emits dispatches styled as reports from Roman-named medieval archivists.
+- **Token discipline**: Research is delegated to sub-agents; the main context window is reserved for judgment. While sub-agents work, the tool emits dispatches styled as reports from the offices of a canonical tribunal.
 - **Iterative convergence**: On re-examination after revision, prior findings carry forward and the scope narrows toward either resolution or accepted trade-offs.
 
 [The Advocatus Diaboli ("Devil's Advocate")](https://cppalliance.org/tools/advocatus.pdf)<sup>[10]</sup>
@@ -104,17 +104,17 @@ The tool takes a WG21 paper as input and subjects it to a formal five-phase insp
 
 1. **Einberufung (The Convocation)** - Classifies the paper (ask vs. inform), determines posture (hardening your own paper vs. scouting an opponent's), and reads the paper to extract every claim (Pr&uuml;fpunkte) it actually makes through four readings.
 
-2. **Ermittlung (The Investigation)** - Assembles an evidence file (Aktenmappe) via web searches, MCP queries, workspace intelligence, and stakeholder analysis. Verifies all citations through a three-pass cascade. Delegates research to sub-agents to preserve the main context window for judgment.
+2. **Ermittlung (The Investigation)** - Assembles an evidence file (Pr&uuml;fakte) via web searches, MCP queries, workspace intelligence, and stakeholder analysis. Verifies all citations through a three-pass cascade. Delegates research to sub-agents to preserve the main context window for judgment.
 
-3. **Befragung (The Interrogation)** - Deposes the user (the Geselle) with structured questions to resolve assumptions the Aktenmappe could not confirm. Each answer becomes established fact that shapes every subsequent finding.
+3. **Befragung (The Interrogation)** - Deposes the user (the Geselle) with structured questions to resolve assumptions the Pr&uuml;fakte could not confirm. Each answer becomes established fact that shapes every subsequent finding.
 
-4. **Pr&uuml;fung (The Examination)** - Tests every claim against three criteria: factual correctness (Sachrichtigkeit), logical coherence (Schl&uuml;ssigkeit), and citation support (Quellenbeleg). Candidate defects (M&auml;ngel) are then cross-examined by the Werkmeister (defender) through six challenges that filter out noise - concessions (Zugest&auml;ndnis), phantom claims (Grenz&uuml;berschreitung), things better asked than charged (R&uuml;ckfrage), non-human objections (Menschenma&szlig;), self-defeating arguments (Selbstschaden), and trivial housekeeping (Bagatelle). Survivors get a named adversary, forum, and damage assessment (Begr&uuml;ndung).
+4. **Pr&uuml;fung (The Examination)** - Tests every claim against three criteria: factual correctness (Richtigkeit), logical coherence (Schl&uuml;ssigkeit), and citation support (Quellenbeleg). Candidate defects (M&auml;ngel) are then cross-examined by the Werkmeister (defender) through six challenges that filter out noise - concessions (Eigeneingest&auml;ndnis), phantom claims (Anspruchsgrenze), things better asked than charged (Kl&auml;rungsbedarf), non-human objections (Praxisn&auml;he), self-defeating arguments (Eigensch&auml;digung), and trivial housekeeping (Bagatelle). Survivors get a named adversary, forum, and damage assessment (Entscheidungsgrund).
 
-5. **Pr&uuml;fbericht (The Report)** - Delivers the formal verdict (Pr&uuml;fsiegel): *Freigabe* (released for use), *Nachbesserung erforderlich* (rework required), or *Pr&uuml;fung ausgesetzt* (inspection suspended pending testimony). Output includes Freigabe certifications for battle-hardened sections, surviving defects with named adversaries and damage assessments, minor notes (Randnotizen), an audit trail (Aktenzusammenfassung), and a citation verification table (Quellenverzeichnis).
+5. **Pr&uuml;fbericht (The Report)** - Delivers the formal verdict (Pr&uuml;fsiegel): *Freigabe* (released for use), *Nachbesserung erforderlich* (rework required), or *Pr&uuml;fung ausgesetzt* (inspection suspended pending testimony). Output includes Freigabe certifications for battle-hardened sections, surviving defects with named adversaries and damage assessments, minor notes (Hinweise), an audit trail (Pr&uuml;fprotokoll), and a citation verification table (Quellenpr&uuml;fung).
 
 Key design principles:
 
-- **The Oath (Pr&uuml;fereid)**: The tool is designed to *prefer* finding nothing wrong. An inspector who always finds defects has already broken the instrument. *Freigabe* is the highest outcome, not a failure state.
+- **The Oath (Der Eid)**: The tool is designed to *prefer* finding nothing wrong. An inspector who always finds defects has already broken the instrument. *Freigabe* is the highest outcome, not a failure state.
 - **Posture-aware**: If it is your paper, the tool operates in *H&auml;rtung* (hardening) mode - findings say "correct this." If it is someone else's, the tool operates in *Erkundung* (reconnaissance) mode - findings say "press here."
 - **Boundary discipline**: It only examines claims the paper actually makes (the Pr&uuml;fpunkte) - never attacks what the paper did not say. The fourth reading explicitly maps what the paper disclaims, concedes, and leaves to the reader.
 - **Token discipline**: Research is delegated to sub-agents; the main context window is reserved for judgment. While sub-agents work, the tool emits dispatches styled as status updates from fictional German-named lab engineers in a Pr&uuml;flabor.
@@ -130,7 +130,7 @@ The tool takes a WG21 paper as input and subjects it to a formal five-phase adve
 
 1. **&#21484;&#38598; (The Convocation)** - Classifies the paper (ask vs. inform), determines posture (polishing your own paper vs. probing an opponent's), and reads the paper to extract every claim (&#35770;&#28857;) it actually makes through four readings.
 
-2. **&#25506;&#26597; (The Investigation)** - Assembles a case dossier (&#26696;&#21367;) via web searches, MCP queries, workspace intelligence (&#20869;&#37096;&#24773;&#25253;), and stakeholder analysis. Verifies all citations through a three-pass cascade. Delegates research to sub-agents to preserve the main context window for judgment.
+2. **&#25506;&#26597; (The Investigation)** - Assembles a case dossier (&#26696;&#21367;) via web searches, MCP queries, workspace intelligence (&#21442;&#38405;&#26448;&#26009;), and stakeholder analysis. Verifies all citations through a three-pass cascade. Delegates research to sub-agents to preserve the main context window for judgment.
 
 3. **&#38382;&#35810; (The Interrogation)** - Deposes the user (the &#21576;&#25991;&#20154;) with structured questions to resolve assumptions the &#26696;&#21367; could not confirm. Each answer becomes &#23450;&#35770; (established fact) that shapes every subsequent finding.
 
@@ -183,7 +183,7 @@ Sections that withstand opposition are certified. No generic red team tells the 
 
 ### 5.4 The Tool Is Deliberately Entertaining
 
-The medieval tribunal metaphor - the Vocatio (summons), the Inquisitio (investigation), the Animadversiones (formal observations), the seals in Latin - is not decoration. It is an adoption strategy.
+The medieval tribunal metaphor - the Citatio (summons), the Inquisitio (investigation), the Animadversiones (formal observations), the seals in Latin - is not decoration. It is an adoption strategy.
 
 AI analysis takes time. The author waits while the tool searches, cross-references, and deliberates. A tool that is boring during those minutes is a tool the author uses once and forgets. A tool that is interesting - that has a narrative arc, that renders judgment with ceremony, that feels like an event rather than a chore - is a tool the author runs on every revision. The entertainment value is load-bearing. Better papers are written by authors who actually use the tool, and authors use tools they enjoy.
 
@@ -193,7 +193,7 @@ After Croydon, I presented the Advocatus to a German colleague. He thought it wa
 
 I took this to heart. He was not wrong - he was German. His culture values directness, technical precision, and Ordnung. The ecclesiastical framing that I found motivating, he found obstructive. The Latin terminology that I thought added gravity, he thought added fluff. The same methodology, presented the same way, produced opposite reactions depending on which side of the Rhine the reader grew up on.
 
-So I translated it. Der Werkpr&uuml;fer - the workpiece inspector - is the same tool rewritten for a culture that prefers calipers to crucifixes. The paper becomes a Werkst&uuml;ck (workpiece). The author becomes a Geselle (journeyman). The tribunal becomes a Pr&uuml;fkammer (inspection chamber). The seals are Freigabe (released), Nachbesserung erforderlich (rework required), and Pr&uuml;fung ausgesetzt (inspection suspended). The dispatches come from German-named engineers in a Pr&uuml;flabor, not Roman-named archivists in a scriptorium. Every Latin term becomes German. The tone is terse, direct, and unapologetically technical.
+So I translated it. Der Werkpr&uuml;fer - the workpiece inspector - is the same tool rewritten for a culture that prefers calipers to crucifixes. The paper becomes a Werkst&uuml;ck (workpiece). The author becomes a Geselle (journeyman). The tribunal becomes a Pr&uuml;fstelle (inspection body). The seals are Freigabe (released), Nachbesserung erforderlich (rework required), and Pr&uuml;fung ausgesetzt (inspection suspended). The dispatches come from German-named engineers in a Pr&uuml;flabor, not Roman-named archivists in a scriptorium. Every Latin term becomes German. The tone is terse, direct, and unapologetically technical.
 
 The operational logic is identical. The same twenty rules. The same sub-agent delegation. The same six Werkmeister challenges (the Advocatus Dei, now speaking German). The same three tests per claim. The same output structure. The methodology did not change. The metaphor changed. The function survived the translation intact.
 
@@ -215,17 +215,17 @@ The Advocatus examines it not to diminish it but because the best papers deserve
 
 ***Cum obiectionibus.*** The cause proceeds with five objections.
 
-### 6.2 Sections Certified as Battle-Hardened (*Imprimatur*)
+### 6.2 Sections Certified as Battle-Hardened (*Approbatio*)
 
-**Design Principles (Section 3.1): *Imprimatur.*** The sixteen design principles are internally consistent, clearly stated, and well-grounded. The Prime Directive, the Redundancy Principle, and the Zero Overhead principle form a coherent foundation. The Advocatus Dei prevailed on the Humanitas challenge - no committee member would dispute these principles in isolation. Do not engage here; the defense holds.
+**Design Principles (Section 3.1): *Approbatio.*** The sixteen design principles are internally consistent, clearly stated, and well-grounded. The Prime Directive, the Redundancy Principle, and the Zero Overhead principle form a coherent foundation. The Advocatus Dei prevailed on the Humanitas challenge - no committee member would dispute these principles in isolation. Do not engage here; the defense holds.
 
-**Syntax (Section 3.2): *Imprimatur.*** The `pre`/`post`/`contract_assert` syntax is clean, already implemented in two compilers, and has survived multiple SG21 votes. The Advocatus Dei prevailed on the Confessio challenge - the rationale paper [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> documents the extensive alternative syntax exploration openly. No remaining attack surface on syntax. Do not engage here.
+**Syntax (Section 3.2): *Approbatio.*** The `pre`/`post`/`contract_assert` syntax is clean, already implemented in two compilers, and has survived multiple SG21 votes. The Advocatus Dei prevailed on the Confessio challenge - the rationale paper [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> documents the extensive alternative syntax exploration openly. No remaining attack surface on syntax. Do not engage here.
 
-**Semantic Restrictions on Constructors/Destructors (Section 3.3.4): *Imprimatur.*** The rule making direct nonstatic data member access ill-formed in constructor preconditions and destructor postconditions is a precise, defensible design choice. The Advocatus Dei prevailed on the Prudentia challenge - attacking this restriction would require arguing for either weaker safety or stronger restriction, neither of which an opponent would volunteer.
+**Semantic Restrictions on Constructors/Destructors (Section 3.3.4): *Approbatio.*** The rule making direct nonstatic data member access ill-formed in constructor preconditions and destructor postconditions is a precise, defensible design choice. The Advocatus Dei prevailed on the Prudentia challenge - attacking this restriction would require arguing for either weaker safety or stronger restriction, neither of which an opponent would volunteer.
 
-**Constant Evaluation Rules (Section 3.5.12): *Imprimatur.*** The trial evaluation mechanism is technically sound and respects Design Principle 4 (Zero Overhead). The Advocatus Dei prevailed on the Humanitas challenge - the constant evaluation rules are sufficiently arcane that no committee member would mount a floor attack here.
+**Constant Evaluation Rules (Section 3.5.12): *Approbatio.*** The trial evaluation mechanism is technically sound and respects Design Principle 4 (Zero Overhead). The Advocatus Dei prevailed on the Humanitas challenge - the constant evaluation rules are sufficiently arcane that no committee member would mount a floor attack here.
 
-**Standard Library API (Section 3.7): *Imprimatur.*** The `<contracts>` header design is conservative and extensible. The Advocatus Dei prevailed on the Dignitas challenge - any attack on library API details is editorial, not substantive.
+**Standard Library API (Section 3.7): *Approbatio.*** The `<contracts>` header design is conservative and extensible. The Advocatus Dei prevailed on the Dignitas challenge - any attack on library API details is editorial, not substantive.
 
 ### 6.3 Formal Objections
 
@@ -258,7 +258,7 @@ P4133R0<sup>[6]</sup> documented a generic gap: the committee does not require r
 
 The retrospective below exists to test the Advocatus's predictive value. Every prediction is a direct consequence of a specific finding from the case study in Section 6. Each prediction names its source. In one, two, or three years, the committee can return to this list and measure how many predictions materialized. If most did, the tool has predictive value and the case for pre-submission red-teaming strengthens. If most did not, the tool's judgment on P2900 was wrong, and that is worth knowing too. The retrospective is the accountability mechanism the tool provides for itself.
 
-Only predictions that trace directly to a finding are included. Predictions about vendor behavior, political dynamics, or feature evolution that go beyond the five objections and five imprimaturs have been removed. The retrospective tests the findings, not the author's speculation.
+Only predictions that trace directly to a finding are included. Predictions about vendor behavior, political dynamics, or feature evolution that go beyond the five objections and five approbationes have been removed. The retrospective tests the findings, not the author's speculation.
 
 ### 7.1 Failure-Mode Predictions
 
@@ -282,17 +282,17 @@ Only predictions that trace directly to a finding are included. Predictions abou
 
 ### 7.2 Success-Mode Predictions
 
-- **`contract_assert` replaces `assert` in at least five major codebases' coding standards** (2 years, Syntax imprimatur). Falsified by: fewer than five making the switch.
+- **`contract_assert` replaces `assert` in at least five major codebases' coding standards** (2 years, Syntax approbatio). Falsified by: fewer than five making the switch.
 
-- **At least one major static analysis tool consumes `pre`/`post` annotations for dataflow analysis, even when runtime checking is disabled** (3 years, Design principles imprimatur). Falsified by: no major tool consuming annotations by end of 2029.
+- **At least one major static analysis tool consumes `pre`/`post` annotations for dataflow analysis, even when runtime checking is disabled** (3 years, Design principles approbatio). Falsified by: no major tool consuming annotations by end of 2029.
 
-- **At least two large organizations publicly report integrating the replaceable violation handler with production crash-reporting infrastructure** (3 years, Library API imprimatur). Falsified by: no organization reporting such integration.
+- **At least two large organizations publicly report integrating the replaceable violation handler with production crash-reporting infrastructure** (3 years, Library API approbatio). Falsified by: no organization reporting such integration.
 
 - **At least one published report presents measured bug-density reduction attributable to adopting `pre` on public API functions** (3 years, Objection II inverse). Falsified by: no such report by end of 2029.
 
-- **At least one safety-related standards body or regulatory document cites C++26 Contracts as evidence of C++ addressing correctness** (2 years, Design principles imprimatur). Falsified by: no such citation by end of 2028.
+- **At least one safety-related standards body or regulatory document cites C++26 Contracts as evidence of C++ addressing correctness** (2 years, Design principles approbatio). Falsified by: no such citation by end of 2028.
 
-- **At least one major C++ textbook incorporates `pre`/`post` syntax as the primary way to express function contracts** (3 years, Syntax imprimatur). Falsified by: no such textbook adoption by end of 2029.
+- **At least one major C++ textbook incorporates `pre`/`post` syntax as the primary way to express function contracts** (3 years, Syntax approbatio). Falsified by: no such textbook adoption by end of 2029.
 
 ---
 
@@ -300,7 +300,7 @@ Only predictions that trace directly to a finding are included. Predictions abou
 
 The P2900 analysis produced:
 
-- 5 imprimaturs (sections certified as battle-hardened)
+- 5 approbationes (sections certified as battle-hardened)
 - 5 formal objections (from 9 candidates after Dei cross-examination)
 - 4 notae minores (editorial observations)
 - 15 falsifiable predictions with explicit timelines
