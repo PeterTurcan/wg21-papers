@@ -934,6 +934,8 @@ def serve_local_file():
         allowed.append(Path(cfg["output_dir"]).resolve())
     if cfg.get("render_output_dir"):
         allowed.append(Path(cfg["render_output_dir"]).resolve())
+    if p.parent.name.startswith("paperworks-preview-"):
+        allowed.append(p.parent.resolve())
     if not any(p.is_relative_to(root) for root in allowed if root.is_dir()):
         return jsonify({"error": "forbidden"}), 403
     if p.suffix.lower() in (".md", ".markdown", ".txt"):
