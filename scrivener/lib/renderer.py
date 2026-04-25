@@ -1218,6 +1218,9 @@ class ASTRenderer:
             return "</sub>"
         if raw.startswith("<br"):
             return "<br/>"
+        a_id_m = re.match(r'<a\s+id=["\']([^"\']+)["\']\s*/?>\s*$', raw)
+        if a_id_m:
+            return f'<a name="{escape_xml(a_id_m.group(1))}"/>'
         return ""
 
     def _render_image(self, tok):
