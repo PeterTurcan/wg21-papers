@@ -175,7 +175,11 @@ def _build_drawing(diagram, layout, content_width, page_h, style,
         _draw_subgraphs(drawing, layout.subgraphs, canvas_h, scale,
                         sg_fill, sg_stroke, body_font, fs, text_color)
 
-    # --- edges (behind nodes) ---
+    # --- edges in two passes so arrowheads and labels never get
+    # --- erased by node fills:
+    # ---   1. polylines under the nodes
+    # ---   2. nodes
+    # ---   3. arrowheads + labels over the nodes
     edge_ir_map = {}
     for edge in diagram.edges:
         edge_ir_map.setdefault((edge.source, edge.target), edge)
@@ -184,16 +188,22 @@ def _build_drawing(diagram, layout, content_width, page_h, style,
         ir_edge = edge_ir_map.get((el.source, el.target))
         if ir_edge is None:
             continue
-        _draw_edge(drawing, el, ir_edge, canvas_h, scale,
-                   stroke_color, body_font, fs * 0.85, text_color)
+        _draw_edge_line(drawing, el, ir_edge, canvas_h, scale,
+                        stroke_color)
 
-    # --- nodes (on top) ---
     for node_id, nl in layout.nodes.items():
         ir_node = node_map.get(node_id)
         if ir_node is None:
             continue
         _draw_node(drawing, ir_node, nl, canvas_h, scale,
                    node_fill, node_stroke, body_font, fs, text_color)
+
+    for el in layout.edges:
+        ir_edge = edge_ir_map.get((el.source, el.target))
+        if ir_edge is None:
+            continue
+        _draw_edge_overlay(drawing, el, ir_edge, canvas_h, scale,
+                           stroke_color, body_font, fs * 0.85, text_color)
 
     return drawing
 
@@ -408,9 +418,105 @@ def _draw_node_label(drawing, label, cx, cy, font, fs, text_color):
 # ---------------------------------------------------------------------------
 # Edge drawing
 # ---------------------------------------------------------------------------
+#
+# Edges render in two passes. ``_draw_edge_line`` lays the polyline down
+# before the nodes so node fills can clip the line cleanly at the box
+# boundary. ``_draw_edge_overlay`` then paints arrowheads and the edge
+# label *after* the nodes, which guarantees that:
+#
+#   * arrowheads can never be erased by an oversized node fill, and
+#   * a labelled line that is short enough to put the label near a node
+#     boundary still shows the label on top instead of underneath.
+#
+# The label is positioned at the polyline's true geometric midpoint
+# (by arc length); using ``points[len(points)//2]`` instead lands on
+# the *target* vertex for the common 2-point straight-edge case and
+# slams the label into the arrowhead.
 
-def _draw_edge(drawing, edge_layout, ir_edge, canvas_h, scale,
-               stroke_color, font, fs, text_color):
+def _polyline_midpoint(points):
+    """Return ``(x, y)`` at the geometric midpoint of *points* by arc length.
+
+    For 2-point polylines, this is the segment midpoint. For longer
+    polylines, walk segment lengths until half of the total length is
+    consumed, then linearly interpolate within the containing segment.
+    """
+    n = len(points)
+    if n == 0:
+        return (0.0, 0.0)
+    if n == 1:
+        return (points[0].x, points[0].y)
+    if n == 2:
+        return (0.5 * (points[0].x + points[1].x),
+                0.5 * (points[0].y + points[1].y))
+
+    seg_lens = []
+    total = 0.0
+    for i in range(n - 1):
+        d = math.hypot(points[i + 1].x - points[i].x,
+                       points[i + 1].y - points[i].y)
+        seg_lens.append(d)
+        total += d
+
+    target = total / 2
+    acc = 0.0
+    for i, d in enumerate(seg_lens):
+        if acc + d >= target:
+            t = (target - acc) / d if d > 0 else 0.0
+            return (points[i].x + t * (points[i + 1].x - points[i].x),
+                    points[i].y + t * (points[i + 1].y - points[i].y))
+        acc += d
+    return (points[-1].x, points[-1].y)
+
+
+def _strip_label_quotes(s):
+    """Mermaid's ``-- "label" -->`` syntax exists to escape characters that
+    would otherwise confuse the parser. ``merm`` keeps those surrounding
+    quotes in the parsed label, so the PDF would show ``"prepare(n)"``.
+    Strip a single matching pair of ASCII quotes if present.
+    """
+    if isinstance(s, str) and len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
+        return s[1:-1]
+    return s
+
+
+def _scaled_points(points, canvas_h, scale):
+    """Flatten *points* into a list of alternating x/y in ReportLab space."""
+    out = []
+    for p in points:
+        out.append(p.x * scale)
+        out.append(_flip_y(p.y, canvas_h) * scale)
+    return out
+
+
+def _draw_edge_line(drawing, edge_layout, ir_edge, canvas_h, scale,
+                    stroke_color):
+    """Pass 1: the polyline only. Drawn before the nodes."""
+    from merm.ir.enums import EdgeType
+
+    et = ir_edge.edge_type
+    if et == EdgeType.invisible:
+        return
+
+    points = edge_layout.points
+    if len(points) < 2:
+        return
+
+    scaled = _scaled_points(points, canvas_h, scale)
+
+    sw = 1.5 * scale
+    dash = None
+    if et in (EdgeType.thick, EdgeType.thick_arrow):
+        sw = 3 * scale
+    if et in (EdgeType.dotted, EdgeType.dotted_arrow):
+        dash = [4 * scale, 3 * scale]
+
+    drawing.add(PolyLine(scaled, strokeColor=stroke_color,
+                         strokeWidth=sw, strokeDashArray=dash))
+
+
+def _draw_edge_overlay(drawing, edge_layout, ir_edge, canvas_h, scale,
+                       stroke_color, font, fs, text_color):
+    """Pass 2: arrowheads and label. Drawn after the nodes."""
     from merm.ir.enums import EdgeType, ArrowType
 
     et = ir_edge.edge_type
@@ -421,23 +527,8 @@ def _draw_edge(drawing, edge_layout, ir_edge, canvas_h, scale,
     if len(points) < 2:
         return
 
-    scaled = []
-    for p in points:
-        scaled.append(p.x * scale)
-        scaled.append(_flip_y(p.y, canvas_h) * scale)
+    scaled = _scaled_points(points, canvas_h, scale)
 
-    sw = 1.5 * scale
-    dash = None
-
-    if et in (EdgeType.thick, EdgeType.thick_arrow):
-        sw = 3 * scale
-    if et in (EdgeType.dotted, EdgeType.dotted_arrow):
-        dash = [4 * scale, 3 * scale]
-
-    drawing.add(PolyLine(scaled, strokeColor=stroke_color,
-                         strokeWidth=sw, strokeDashArray=dash))
-
-    # Target arrow (at last point)
     has_target_arrow = et in (EdgeType.arrow, EdgeType.dotted_arrow,
                               EdgeType.thick_arrow)
     ta = ir_edge.target_arrow
@@ -448,7 +539,6 @@ def _draw_edge(drawing, edge_layout, ir_edge, canvas_h, scale,
         _draw_arrowhead(drawing, x1, y1, x2, y2, at, stroke_color,
                         6 * scale)
 
-    # Source arrow (at first point)
     sa = ir_edge.source_arrow
     if sa and sa != ArrowType.none:
         x1, y1 = scaled[2], scaled[3]
@@ -456,13 +546,24 @@ def _draw_edge(drawing, edge_layout, ir_edge, canvas_h, scale,
         _draw_arrowhead(drawing, x1, y1, x2, y2, sa, stroke_color,
                         6 * scale)
 
-    # Edge label
     if ir_edge.label:
-        mid_idx = len(points) // 2
-        mp = points[mid_idx]
-        lx = mp.x * scale
-        ly = _flip_y(mp.y, canvas_h) * scale
-        drawing.add(String(lx, ly + fs * 0.3, ir_edge.label,
+        label = _strip_label_quotes(ir_edge.label)
+        mx, my = _polyline_midpoint(points)
+        lx = mx * scale
+        ly = _flip_y(my, canvas_h) * scale
+
+        text_w = stringWidth(label, font, fs)
+        pad_x = fs * 0.35
+        pad_y = fs * 0.20
+        bg_w = text_w + pad_x * 2
+        bg_h = fs + pad_y * 2
+        # Mask the polyline behind the label. White matches the page
+        # background that ReportLab uses; if scrivener ever grows a
+        # configurable page background, this should follow it.
+        drawing.add(Rect(lx - bg_w / 2, ly - pad_y, bg_w, bg_h,
+                         fillColor=Color(1, 1, 1),
+                         strokeColor=None, strokeWidth=0))
+        drawing.add(String(lx, ly + fs * 0.25, label,
                            fontName=font, fontSize=fs,
                            fillColor=text_color,
                            textAnchor="middle"))

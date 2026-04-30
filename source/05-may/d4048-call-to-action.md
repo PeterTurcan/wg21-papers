@@ -110,36 +110,25 @@ This paper proposes a continuous workflow that operates between meetings and del
 
 Six teams. Four in a sequential production pipeline. Two cross-cutting review teams.
 
+The production pipeline runs left to right. Each team transforms the previous team's artifact and emits a public output:
+
+```mermaid
+flowchart LR
+    IMP["Implementation Team"] --> DES["Design Team"]
+    DES --> WRD["Wording Team"]
+    WRD --> TST["Testing Team"]
+    IMP -->|"feeds"| BEM["Beman Project"]
+    DES -->|"rationale"| SAG["SAGE Knowledge Base"]
+    WRD -->|"wording"| WD["C++ Working Draft"]
+```
+
+Two review teams cut across the entire pipeline:
+
 ```mermaid
 flowchart TD
-    subgraph crossCutting [Cross-Cutting Review]
-        VIT["Vision Integrity Team"]
-        SCT["std::execution Compatibility Team"]
-    end
-
-    subgraph pipeline [Production Pipeline]
-        IMP["Implementation Team\nCapy/Corosio --> Spec"]
-        DES["Design Team\nSpec --> Standard Shape"]
-        WRD["Wording Team\nStandard Shape --> Working Draft"]
-        TST["Testing Team\nWording --> Test Cases"]
-        IMP --> DES --> WRD --> TST
-    end
-
-    TST -->|fixes| WRD
-
-    VIT -.->|reviews| IMP
-    VIT -.->|reviews| DES
-    VIT -.->|reviews| WRD
-    VIT -.->|reviews| TST
-
-    SCT -.->|reviews| IMP
-    SCT -.->|reviews| DES
-    SCT -.->|reviews| WRD
-    SCT -.->|reviews| TST
-
-    IMP -->|feeds| BEM["Beman Project"]
-    DES -->|rationale| SAG["SAGE Knowledge Base"]
-    WRD -->|wording| WD["C++ Working Draft"]
+    PIPE["Production Pipeline (4 sequential teams)"]
+    VIT["Vision Integrity Team"] -.->|"reviews"| PIPE
+    SCT["std::execution Compatibility Team"] -.->|"reviews"| PIPE
 ```
 
 ### 5.1 Implementation Team
@@ -156,7 +145,7 @@ Takes the standard shape and produces formal wording for the C++ Working Draft. 
 
 ### 5.4 Testing Team
 
-Takes the wording and debugs it. Writes test cases against the wording - not the implementation. Finds ambiguities, contradictions, and missing edge cases. This team is open to non-WG21 members. Anyone who can read a specification and write a test is welcome.
+Takes the wording and debugs it. Writes test cases against the wording - not the implementation. Finds ambiguities, contradictions, and missing edge cases. This team is open to non-WG21 members. Anyone who can read a specification and write a test is welcome. Issues found here are returned to the Wording Team for revision.
 
 ### 5.5 Vision Integrity Team
 
