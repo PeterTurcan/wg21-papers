@@ -10,9 +10,9 @@ reply-to:
 
 ## Abstract
 
-Seventeen papers dissect the async design space against its own specification, ship five open-source AI tools for committee self-audit, and deliver the production pipeline to break a twenty-one-year C++ networking deadlock.
+Twenty-one papers dissect the async design space against its own specification, ship five open-source AI tools for committee self-audit, and deliver the production pipeline - including the four-paper buffer-vocabulary cluster - to break a twenty-one-year C++ networking deadlock.
 
-This paper summarizes 17 papers by the author published in the May 2026 mailing, including two revisions of April papers (P4096R1 and P4100R1). It is a reading guide: an executive summary that identifies the logical series within the collection, describes what each series delivers, and provides individual summaries of every paper. It asks for nothing.
+This paper summarizes 21 papers by the author published in the May 2026 mailing, including two revisions of April papers (P4096R1 and P4100R1) and a four-paper buffer-vocabulary cluster (ask + design pairs for I/O Buffer Ranges and Dynamic Buffer) split out from a single April-mailing draft per Vinnie's directive of 2026-04-28. It is a reading guide: an executive summary that identifies the logical series within the collection, describes what each series delivers, and provides individual summaries of every paper. It asks for nothing.
 
 ---
 
@@ -31,6 +31,8 @@ Seven papers construct a single auditable argument that C++20 coroutines and `st
 Five papers ship open-source, AI-powered tools that propose to transform committee work from memory-dependent craft into auditable process - and every tool is turned on its own creator first. SAGE (P4046R0) interviews veteran committee members and distills their tacit judgment into corroborated principles, yielding eleven that survived cross-validation across five interviews. CRYSTAL BALL (P4047R0) tracks twenty-seven dated, falsifiable predictions about `std::execution` and grades each against the public record - eighteen confirmed, five wrong - producing a concrete measure of which prediction classes the committee can trust as C++29 planning begins. The Advocatus Diaboli (P4207R0) delivers five-phase adversarial paper review for under a dollar in API tokens and fifteen minutes of wall-clock time. "Is This C++?" (P4183R0) distills Stroustrup's *Design and Evolution* into a twenty-one-question litmus test executable by any frontier language model. Read individually, each tool solves a narrow problem; read together, they outline a methodology in which institutional knowledge, predictive accuracy, and design-principle fidelity are all measured, versioned, and made publicly auditable under CC0 licensing.
 
 Two papers convert the async architecture argument from analysis into a staffed, version-controlled production line. P4036R0 demonstrates - through five escalating failure modes - why `span<byte>` breaks at every asynchronous boundary, and proposes the minimal buffer abstractions that twenty years of Boost.Asio field deployment have validated. P4048R0 lays out the organizational machinery to deliver C++29 networking: a six-team continuous pipeline, eleven companion papers feeding it, two shipping libraries with three independent adopters already in the field, and a two-stage delivery plan ensuring that partial delivery of standalone C++20 abstractions is still delivery even if the full networking stack slips. Where the async series establishes what the I/O architecture should look like, these two papers establish how it gets built and when it ships.
+
+Four papers complete the buffer-vocabulary formalization that P4036R0 motivated. *I/O Buffer Ranges* and *I/O Buffer Ranges: Design Rationale* split a single proposal into a proposal-only ask paper and a design-rationale companion, following the IoAwaitable pattern of P4003R1 paired with P4172R0. The ask paper proposes two byte-region types, two range concepts, and four customization point objects; the design paper carries the seven-ecosystem convergence record, the relationship to `std::ranges`, the anticipated objections, and the Capy header inventory. *Dynamic Buffer* and *Dynamic Buffer: Design Rationale* repeat the split for the growable buffer concept (prepare, commit, data, consume), with the design paper covering the two-phase model, the four-implementation tour from Capy, the three-ecosystem convergence (Asio, .NET, Go), and the deferrals (allocator-aware variants, owned-storage refinement, lifetime parameterization). The split was directed by Vinnie on 2026-04-28 and is reflected in the P4100R1 series renumbering published in this same mailing: Dynamic Buffer is now Paper 5 in the series, Stream Concepts is Paper 6, Combinators is Paper 7, and Stage Two papers shift from 7-13 to 8-14. The series count goes from thirteen to fourteen.
 
 P4184R0 applies the "Is This C++?" litmus test to P3874R1 - the proposal to make C++ a memory-safe language - and scores it seven out of twenty-one, with every verdict traceable to a specific quoted passage in the evaluated paper. The analysis finds failures on zero-overhead, on preferring compile-time checking, and on current usefulness, among twelve other counts. P4208R0 applies the Advocatus Diaboli to P2900R14 - "Contracts for C++" - in *defensio* posture, demonstrating how authors use the tool to harden their own work before committee presentation. The Advocatus certifies eleven sections as battle-hardened, files fifteen candidate charges, kills fourteen through internal cross-examination, and delivers one surviving objection with a named adversary, named forum, and specific hardening recommendation. Together, the two demonstration papers show what the tools cluster makes possible at scale: design-principle evaluation and adversarial review that are reproducible, auditable, and independent of the evaluator.
 
@@ -68,11 +70,11 @@ After twenty-one years without sockets, DNS, or TLS in the C++ standard, P4048R0
 
 ### 3.7. P4096R1 - Coroutine Executors and P2464R0
 
-This is R1 of a paper first published in the April 2026 mailing as P4096R0. The April reader's guide ([D4193R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/d4193r0.pdf)<sup>[18]</sup>) contains the full summary. R1 improves table layout for readability; no substantive changes to the analysis.
+This is R1 of a paper first published in the April 2026 mailing as P4096R0. The April reader's guide ([D4193R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/d4193r0.pdf)<sup>[22]</sup>) contains the full summary. R1 improves table layout for readability; no substantive changes to the analysis.
 
 ### 3.8. P4100R1 - Coroutine-Native I/O for C++29 (The Network Endeavor)
 
-This is R1 of a paper first published in the April 2026 mailing as P4100R0. The April reader's guide ([D4193R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/d4193r0.pdf)<sup>[18]</sup>) contains the full summary. Changes between R0 and R1 are forthcoming.
+This is R1 of a paper first published in the April 2026 mailing as P4100R0. The April reader's guide ([D4193R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/d4193r0.pdf)<sup>[22]</sup>) contains the original summary. R1 splits the buffer-concepts paper (Paper 4 in R0) into two pairs: a buffer-ranges pair (descriptors, sequence concepts, byte-granular algorithms) and a dynamic-buffer pair (the prepare/commit growable buffer concept). Each pair follows the IoAwaitable pattern of an ask paper paired with a design paper. Dynamic Buffer is promoted to its own series slot as Paper 5; Stream Concepts becomes Paper 6 (was 5); Combinators becomes Paper 7 (was 6); Stage Two papers (Timers, Signals, Files, TCP, DNS, UDP, TLS) shift from Papers 7-13 to Papers 8-14. The series is now fourteen papers (was thirteen). The four split papers are summarized individually in sections 3.18 through 3.21.
 
 ### 3.9. P4123R0 - The Cost of Senders for Coroutine I/O
 
@@ -110,11 +112,27 @@ For less than a dollar in API tokens and fifteen minutes of wall-clock time, eve
 
 P4208R0 is the full formal output of the Advocatus Diaboli (P4207R0) applied to P2900R14 "Contracts for C++." Where P4207R0 introduces the tool and summarizes the case study, P4208R0 is the complete Animadversiones - the tribunal's formal record. Operating in *defensio* posture (hardening the author's own work), the Advocatus examines P2900R14 across fourteen revisions, sixteen design principles, one hundred and nineteen pages of specification, and a public record spanning five years of committee deliberation. Eleven sections earn *approbatio* - certified as withstanding adversarial opposition - including the sixteen design principles, the `pre`/`post`/`contract_assert` syntax, the violation handler model, and the companion-paper architecture. Fifteen candidate charges are filed; twelve are killed by the Advocatus Dei under *Confessio* (the paper already concedes the point), one under *Articulus* (phantom claim), one under *Humanitas* (no real opponent would raise it), and three are relegated to *Notae Minores* (editorial observations). One charge survives: the gap between the paper's safety-motivated design narrative and the non-normative character of the recommended-practice default for the enforce semantic. The paper includes a full audit trail and citation verification table, demonstrating the Advocatus methodology as a complete, reproducible workflow.
 
+### 3.18. *I/O Buffer Ranges* (D0001R0)
+
+The proposal-only ask paper for the buffer descriptor and sequence vocabulary the entire Network Endeavor series rests on. The proposal is two byte-region types (`const_buffer`, `mutable_buffer`), two range concepts (`ConstBufferSequence`, `MutableBufferSequence`), and four customization point objects (`buffer_size`, `buffer_empty`, `buffer_length`, `buffer_copy`). The shape is the Networking TS shape, deployed for over twenty years in Boost.Asio, shipping today in Capy, consumed by every Boost library above Capy. The paper carries a single straw poll asking LEWG to advance the vocabulary as standard library vocabulary for I/O. Design rationale, the seven-ecosystem convergence record, anticipated objections, and the Capy header inventory live in the design-paper companion *I/O Buffer Ranges: Design Rationale*<sup>[19]</sup>. This paper is one of four split out at Vinnie's directive of 2026-04-28 from a single April-mailing draft.
+
+### 3.19. *I/O Buffer Ranges: Design Rationale* (D0002R0)
+
+The design-rationale companion to *I/O Buffer Ranges*<sup>[18]</sup>. The paper carries the full audit trail: the brutal summary that every C++ project that does I/O invents its own buffer types; the seven-ecosystem convergence table with the empty C++ row as the finding; the bidirectional-range concept choice and the structural cost of admitting a single buffer as a one-element sequence (the paper's stated limitation); the four-CPO algorithm set with its `O(1)`-override customization point; the relationship to `std::ranges` (element-granular versus byte-granular); and the four anticipated objections (`std::span<std::byte>`, `std::ranges`, the Networking TS, and `std::execution`). The paper is research-report mode in the same register as the IoAwaitable design paper P4172R0 - read this paper when the audit trail matters; read *I/O Buffer Ranges*<sup>[18]</sup> when the proposal is what matters.
+
+### 3.20. *Dynamic Buffer* (D0003R0)
+
+The proposal-only ask paper for the `DynamicBuffer` concept - a growable byte buffer with two-phase write (`prepare(n)` then `commit(m)`) and two-phase read (`data()` then `consume(k)`), with required associated typedefs `const_buffers_type` and `mutable_buffers_type` that satisfy the buffer-ranges concepts proposed in *I/O Buffer Ranges*<sup>[18]</sup>. The concept is the Asio `DynamicBuffer` named requirement, recovered as a C++20 concept, deployed for over twenty years, with four shipping implementations in Capy. The paper carries a single straw poll asking LEWG to advance the concept as standard library vocabulary. Design rationale, the four-implementation tour, the three-ecosystem convergence (Asio, .NET, Go), and the deferrals (allocator-aware variants, owned-storage refinement, lifetime parameterization) live in *Dynamic Buffer: Design Rationale*<sup>[21]</sup>.
+
+### 3.21. *Dynamic Buffer: Design Rationale* (D0004R0)
+
+The design-rationale companion to *Dynamic Buffer*<sup>[20]</sup>. The paper opens with the brutal summary that C++ has growable strings and growable vectors but no growable buffer for I/O. From there the paper carries the two-phase model rationale (writable and readable boundaries advancing independently in the same object), the required-associated-types rationale (a flat buffer returns a single `const_buffer`, a circular buffer returns a `const_buffer_pair` because the readable region may wrap), the four-implementation tour from Capy (`flat_dynamic_buffer`, `circular_dynamic_buffer`, `vector_dynamic_buffer`, `string_dynamic_buffer` - the first two caller-owned-storage, the latter two adapters over standard containers), the three-ecosystem convergence record, and four deferrals. The paper is research-report mode and matches the buffer-ranges design paper in voice and structure.
+
 ---
 
 ## 4. Conclusion
 
-This reading guide covers 17 papers from the May 2026 mailing. The author hopes it helps the reader find the papers most relevant to their work and interests.
+This reading guide covers 21 papers from the May 2026 mailing. The author hopes it helps the reader find the papers most relevant to their work and interests.
 
 ---
 
@@ -154,4 +172,12 @@ This reading guide covers 17 papers from the May 2026 mailing. The author hopes 
 
 [17] [P4100R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r1.pdf) - "Coroutine-Native I/O for C++29 (The Network Endeavor)" (Vinnie Falco, Steve Gerbino, Michael Vandeberg, Mungo Gill, Mohammad Nejati, 2026).
 
-[18] [D4193R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/d4193r0.pdf) - "A Reader's Guide to My April 2026 Papers" (Vinnie Falco, 2026).
+[18] *I/O Buffer Ranges* (Vinnie Falco, 2026). Companion ask paper for the buffer descriptor and sequence vocabulary. D0001R0.
+
+[19] *I/O Buffer Ranges: Design Rationale* (Vinnie Falco, 2026). Companion design paper for the buffer descriptor and sequence vocabulary. D0002R0.
+
+[20] *Dynamic Buffer* (Vinnie Falco, 2026). Companion ask paper for the growable buffer concept. D0003R0.
+
+[21] *Dynamic Buffer: Design Rationale* (Vinnie Falco, 2026). Companion design paper for the growable buffer concept. D0004R0.
+
+[22] [D4193R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/d4193r0.pdf) - "A Reader's Guide to My April 2026 Papers" (Vinnie Falco, 2026).

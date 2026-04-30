@@ -186,7 +186,7 @@ proposal exists."
 A composable proposal now exists.
 
 [P4100R0](https://wg21.link/p4100r0)<sup>[1]</sup>
-describes a thirteen-paper series built on two production
+describes a fourteen-paper series built on two production
 libraries (Capy and Corosio) with three independent adopters
 (Boost.MySQL, Boost.Redis, Boost.Postgres) and a production
 trading infrastructure company. Published code, not a design
