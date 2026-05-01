@@ -473,16 +473,16 @@ Target: all papers through LEWG by end of 2028. LWG wording through 2029H1.
 | ------- | ---------------------- | ---------------------------------- |
 | Q1 2026 | IoAwaitable Protocol   | P4003R1 published                  |
 | Q2 2026 | IoAwaitable Protocol   | First LEWG review at Brno          |
-| Q2 2026 | Coroutine Task         | Paper published                    |
-| Q2 2026 | I/O Buffer Ranges      | Paper published                    |
-| Q2 2026 | Dynamic Buffer         | Paper published                    |
+| Q3 2026 | Coroutine Task         | Paper published                    |
 | Q3 2026 | Executor Utilities     | Paper published                    |
-| Q3 2026 | Coroutine Task         | LEWG review                        |
-| Q3 2026 | I/O Buffer Ranges      | LEWG review                        |
-| Q3 2026 | Dynamic Buffer         | LEWG review                        |
+| Q3 2026 | I/O Buffer Ranges      | Paper published                    |
+| Q3 2026 | Dynamic Buffer         | Paper published                    |
+| Q4 2026 | Coroutine Task         | LEWG review                        |
 | Q4 2026 | Stream Concepts        | Paper published                    |
 | Q4 2026 | Combinators            | Paper published                    |
 | Q4 2026 | Executor Utilities     | LEWG review                        |
+| Q4 2026 | I/O Buffer Ranges      | LEWG review                        |
+| Q4 2026 | Dynamic Buffer         | LEWG review                        |
 
 ### 11.2 Phase 2: Stage One Completion + Stage Two Begins (2027 H1)
 

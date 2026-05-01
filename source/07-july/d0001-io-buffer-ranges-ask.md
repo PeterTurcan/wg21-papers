@@ -22,7 +22,7 @@ This paper is Paper 4 in the series defined by [P4100R1](https://www.open-std.or
 
 ## Revision History
 
-### R0: May 2026 (pre-Brno mailing)
+### R0: May 2026 (post-Brno mailing)
 
 * Initial Version.
 

@@ -22,7 +22,7 @@ This paper is the design-rationale companion to *Dynamic Buffer*<sup>[7]</sup>, 
 
 ## Revision History
 
-### R0: May 2026 (pre-Brno mailing)
+### R0: May 2026 (post-Brno mailing)
 
 * Initial Version.
 

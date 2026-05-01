@@ -10,9 +10,9 @@ reply-to:
 
 ## Abstract
 
-Thirteen papers, fourteen failure modes, twenty-seven voting exhibits, and nine discrepancies with ISO's own rules deliver the first published structural audit of how WG21 governs itself.
+Thirteen papers, fourteen failure modes, twenty-seven voting exhibits, and nine discrepancies with ISO's own rules deliver the first published structural audit of how WG21 governs itself. Four additional papers complete the buffer-vocabulary formalization for the Network Endeavor series.
 
-This paper summarizes 13 papers published in the
+This paper summarizes 17 papers published in the
 July 2026 mailing. It is a reading guide: an executive summary
 that identifies the logical series within the collection, describes
 what each series delivers, and provides individual summaries of every
@@ -38,6 +38,8 @@ Three papers import formal analytical frameworks from fisheries ecology, diploma
 Two papers translate the diagnostic record into concrete forward commitments - and examine why past commitments failed to hold. P4162R0 builds a C++29 release plan around the constraint that twenty-nine implementers from every major toolchain have publicly asked the committee to slow down: one new library - networking, twenty years overdue, backed by fourteen papers and two production implementations - a hard feature freeze in August 2028, and a blanket language-feature moratorium with safety profiles as the sole exception. P4163R0 asks the complementary question: the committee endorsed profiles by 47 to 2, then by 18 to 1, then by white paper, then by a co-signed letter from six senior members - and profiles are not in C++26. Drawing on evidence from evolutionary biology and comparative history, the paper traces a pattern in which an institution can repeatedly vote for a direction yet never execute on it, and connects that pattern to a regulatory clock that now includes CISA, the FBI, the White House, and Five Eyes allies. Together, the two papers frame the incoming convener's central challenge: the committee has the votes for the right direction and lacks the organizational machinery to follow through.
 
 Two papers expose specific, verifiable gaps between WG21's stated procedures and the rules that formally bind it. D4193R0 places SD-4 and the ISO/IEC Directives side by side on nine points - subgroup chair appointment, consensus thresholds, ballot comment scope, escalation rules, priority allocation, meeting record transparency - and finds SD-4 deviates on every one, noting that no other JTC 1 working group maintains a comparable procedural supplement and that the only body reaching similar scale - MPEG at 300 to 500 participants - was formally restructured by ISO rather than permitted to write its own governance document. P4169R0 tackles a narrower but equally consequential gap: at Croydon, multiple papers were revised during the meeting week and voted into the working draft in versions that never appeared in any pre-meeting mailing. The proposed bright-line amendment to SD-4 requires that any paper seeking a plenary motion with normative wording changes must have appeared, in the exact revision to be voted on, in a pre-meeting mailing - replacing subjective chair judgment with an objective test. These two papers ground the broader diagnostic findings in specific, actionable procedural corrections.
+
+Four papers complete the buffer-vocabulary formalization for the Network Endeavor series. *I/O Buffer Ranges* and *I/O Buffer Ranges: Design Rationale* split a single proposal into a proposal-only ask paper and a design-rationale companion, following the IoAwaitable pattern of P4003R1 paired with P4172R0. The ask paper proposes two byte-region types, two range concepts, and four customization point objects; the design paper carries the seven-ecosystem convergence record, the relationship to `std::ranges`, the anticipated objections, and the Capy header inventory. *Dynamic Buffer* and *Dynamic Buffer: Design Rationale* repeat the split for the growable buffer concept (prepare, commit, data, consume), with the design paper covering the two-phase model, the four-implementation tour from Capy, the three-ecosystem convergence (Asio, .NET, Go), and the deferrals (allocator-aware variants, owned-storage refinement, lifetime parameterization).
 
 The full collection gives the reader something qualitatively different from any subset. The diagnostic series describes the system; the institutional-theory papers explain why it behaves the way it does; the forward-direction papers show what it would take to change course; the procedural papers identify the specific rule gaps where change requires no new authority. No prior WG21 mailing has assembled a comparable body of evidence - published papers, meeting minutes, voting records, on-camera interviews, ISO clause comparisons, and peer-reviewed academic literature - into a single cross-referenced analysis of the committee's governance. Every claim is traceable to published N-numbered or P-numbered documents; the collection does not require agreement with every conclusion, but it makes engagement with the evidence unavoidable.
 
@@ -99,11 +101,27 @@ AI-assisted authorship has already triggered provenance debates in WG21 venues f
 
 SD-4, the document that governs WG21's day-to-day procedures, deviates from the binding ISO/IEC Directives on every one of the nine points this paper examines - and it does not appear in any WG21 document list. D4193R0 places SD-4 and the Directives side by side on subgroup chair appointment, consensus thresholds, ballot comment scope, escalation rules, priority allocation, and meeting record transparency, documenting that WG21's four main subgroups satisfy every functional criterion the Directives assign to a working group while operating under none of the corresponding governance requirements. The paper finds that no other JTC 1 working group maintains a comparable procedural supplement; the only body that reached similar scale - MPEG at 300-500 participants - was formally restructured by ISO rather than allowed to write its own governance document. The comparison is systematic, clause-by-clause, and entirely procedural, with three appendices surveying transparency and recording practices across IETF, W3C, TC39, and every SC 22 sibling committee.
 
+### 3.14. *I/O Buffer Ranges* (D0001R0)
+
+The proposal-only ask paper for the buffer descriptor and sequence vocabulary the entire Network Endeavor series rests on. The proposal is two byte-region types (`const_buffer`, `mutable_buffer`), two range concepts (`ConstBufferSequence`, `MutableBufferSequence`), and four customization point objects (`buffer_size`, `buffer_empty`, `buffer_length`, `buffer_copy`). The shape is the Networking TS shape, deployed for over twenty years in Boost.Asio, shipping today in Capy, consumed by every Boost library above Capy. The paper carries a single straw poll asking LEWG to advance the vocabulary as standard library vocabulary for I/O. Design rationale, the seven-ecosystem convergence record, anticipated objections, and the Capy header inventory live in the design-paper companion *I/O Buffer Ranges: Design Rationale*<sup>[15]</sup>.
+
+### 3.15. *I/O Buffer Ranges: Design Rationale* (D0002R0)
+
+The design-rationale companion to *I/O Buffer Ranges*<sup>[14]</sup>. The paper carries the full audit trail: the brutal summary that every C++ project that does I/O invents its own buffer types; the seven-ecosystem convergence table with the empty C++ row as the finding; the bidirectional-range concept choice and the structural cost of admitting a single buffer as a one-element sequence (the paper's stated limitation); the four-CPO algorithm set with its `O(1)`-override customization point; the relationship to `std::ranges` (element-granular versus byte-granular); and the four anticipated objections (`std::span<std::byte>`, `std::ranges`, the Networking TS, and `std::execution`). The paper is research-report mode in the same register as the IoAwaitable design paper P4172R0 - read this paper when the audit trail matters; read *I/O Buffer Ranges*<sup>[14]</sup> when the proposal is what matters.
+
+### 3.16. *Dynamic Buffer* (D0003R0)
+
+The proposal-only ask paper for the `DynamicBuffer` concept - a growable byte buffer with two-phase write (`prepare(n)` then `commit(m)`) and two-phase read (`data()` then `consume(k)`), with required associated typedefs `const_buffers_type` and `mutable_buffers_type` that satisfy the buffer-ranges concepts proposed in *I/O Buffer Ranges*<sup>[14]</sup>. The concept is the Asio `DynamicBuffer` named requirement, recovered as a C++20 concept, deployed for over twenty years, with four shipping implementations in Capy. The paper carries a single straw poll asking LEWG to advance the concept as standard library vocabulary. Design rationale, the four-implementation tour, the three-ecosystem convergence (Asio, .NET, Go), and the deferrals (allocator-aware variants, owned-storage refinement, lifetime parameterization) live in *Dynamic Buffer: Design Rationale*<sup>[17]</sup>.
+
+### 3.17. *Dynamic Buffer: Design Rationale* (D0004R0)
+
+The design-rationale companion to *Dynamic Buffer*<sup>[16]</sup>. The paper opens with the brutal summary that C++ has growable strings and growable vectors but no growable buffer for I/O. From there the paper carries the two-phase model rationale (writable and readable boundaries advancing independently in the same object), the required-associated-types rationale (a flat buffer returns a single `const_buffer`, a circular buffer returns a `const_buffer_pair` because the readable region may wrap), the four-implementation tour from Capy (`flat_dynamic_buffer`, `circular_dynamic_buffer`, `vector_dynamic_buffer`, `string_dynamic_buffer` - the first two caller-owned-storage, the latter two adapters over standard containers), the three-ecosystem convergence record, and four deferrals. The paper is research-report mode and matches the buffer-ranges design paper in voice and structure.
+
 ---
 
 ## 4. Conclusion
 
-This reading guide covers 13 papers from the July 2026 mailing.
+This reading guide covers 17 papers from the July 2026 mailing.
 The author hopes it helps the reader find the papers most relevant to
 their work and interests.
 
@@ -136,3 +154,11 @@ their work and interests.
 [12] [P4177R0](https://wg21.link/p4177r0) - "Generative Tools and the Social Contract of Consensus Standards" (Vinnie Falco, 2026).
 
 [13] D4193R0 - "Discrepancies Between SD-4 and the ISO Directives" (Vinnie Falco, 2026).
+
+[14] *I/O Buffer Ranges* (Vinnie Falco, 2026). Companion ask paper for the buffer descriptor and sequence vocabulary. D0001R0.
+
+[15] *I/O Buffer Ranges: Design Rationale* (Vinnie Falco, 2026). Companion design paper for the buffer descriptor and sequence vocabulary. D0002R0.
+
+[16] *Dynamic Buffer* (Vinnie Falco, 2026). Companion ask paper for the growable buffer concept. D0003R0.
+
+[17] *Dynamic Buffer: Design Rationale* (Vinnie Falco, 2026). Companion design paper for the growable buffer concept. D0004R0.
