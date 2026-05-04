@@ -187,7 +187,7 @@ Every finding in P4178R0 cites exactly two sources, and both of them are P2300R1
 
 Every WG21 mailing rehearses the same platform deployment facts, and this paper exists so no author ever has to write them again. P4182R1 consolidates seven platform categories - from full-hosted desktop through bare-metal Cortex-M and GPU device code - and six compiler families into structured tables covering coroutines, TLS, PMR, heap availability, exception defaults, allocation style, and scheduling class. It extends the capability survey from P4127R0 with additional SG14-relevant columns and adds matching compiler rows for GCC, Clang, MSVC, Arm GNU bare-metal, NVIDIA nvcc, and the EDG front end. The document is a living reference: future authors cite one paper number instead of writing three paragraphs of platform context that the next author will rewrite from scratch.
 
-### 3.35. P4183R0 - Is This C++?
+### 3.35. P4183R0 - Is This C++? Find Out With This Tool
 
 Twenty-four questions from Stroustrup's *The Design and Evolution of C++* have been distilled into a single checklist that scores any proposal, feature, or library on whether it belongs in the language. P4183R0 publishes the checklist as a structured prompt designed to be operated by a large language model: feed it a paper, answer yes, no, or not applicable to each question, divide, and read the verdict - from "This is C++" at 90 percent down to "This is another matter entirely" below 29. Twenty-three questions come from D&E, one from Howard Hinnant, and the execution protocol specifies a two-phase evidence-extraction-then-verification pipeline rigorous enough to catch a subagent's tagging errors. The entire tool is dedicated to the public domain under CC0, asks for nothing from the committee, and invites anyone to point it at the next proposal that lands in a mailing.
 
@@ -283,7 +283,7 @@ their work and interests.
 
 [34] P4182R1 - "A Citable Inventory of Platforms, Operating Systems, and Compiler Toolchains" (Vinnie Falco, 2026).
 
-[35] P4183R0 - "Is This C++?" (Vinnie Falco, 2026).
+[35] P4183R0 - "Is This C++? Find Out With This Tool" (Vinnie Falco, 2026).
 
 [36] P4184R0 - "Is P3874R1 C++?" (Vinnie Falco, 2026).
 

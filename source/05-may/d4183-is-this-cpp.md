@@ -1,5 +1,5 @@
 ---
-title: "Is This C++?"
+title: "Is This C++? Find Out With This Tool"
 document: P4183R0
 date: 2026-05-01
 intent: info
@@ -45,7 +45,7 @@ Everything that follows is a structured prompt for use in a Large Language Model
 
 Point this at any proposal, language, library, or blog post. Answer each question yes, no, or not applicable. Count the yeses as a fraction of applicable questions. Read the verdict.
 
-Questions 1-20 and 22-24 come from Bjarne Stroustrup, *The Design and Evolution of C++* (Addison-Wesley, 1994). Question 21 comes from Howard Hinnant.
+Questions 1-23 come from Bjarne Stroustrup, *The Design and Evolution of C++* (Addison-Wesley, 1994). Question 24 comes from Howard Hinnant.
 
 ---
 
@@ -129,21 +129,21 @@ Questions 1-20 and 22-24 come from Bjarne Stroustrup, *The Design and Evolution 
 
 > "The class concept allowed me to map my application concepts into the language constructs in a direct way that made my code more readable than I had seen in any other language." (S1.1)
 
-**21. Does this make the safe thing easy and the unsafe thing possible?**
-
-> "Any good tool is dangerous. I am a big fan of pocket knives and kitchen knives and all that sort of stuff, but they can really help in the kitchen or they can chop your fingers off. You just [have to] know how to use them." - Howard Hinnant
-
-**22. Does the subject avoid depending on or encouraging preprocessor macros?**
+**21. Does the subject avoid depending on or encouraging preprocessor macros?**
 
 > "Preprocessor usage should be eliminated." (S4.4)
 
-**23. Can the subject's properties be verified by local inspection?**
+**22. Can the subject's properties be verified by local inspection?**
 
 > "Locality is good. When writing a piece of code, one would prefer it to be self-contained except where it needs a service from elsewhere." (S4.4)
 
-**24. Does the subject integrate with existing C++ features rather than creating an isolated sub-language?**
+**23. Does the subject integrate with existing C++ features rather than creating an isolated sub-language?**
 
 > "Features accepted into C++ must work in combination, must support each other, must compensate for serious real problems in C++ as it stood without them, must fit syntactically and semantically into the language." (S6.4.4)
+
+**24. Does this make the safe thing easy and the unsafe thing possible?**
+
+> "Any good tool is dangerous. I am a big fan of pocket knives and kitchen knives and all that sort of stuff, but they can really help in the kitchen or they can chop your fingers off. You just [have to] know how to use them." - Howard Hinnant
 
 ---
 
