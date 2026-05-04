@@ -21,6 +21,7 @@ The Environment parameter in `std::execution::task` makes cross-library coroutin
 
 ### R1: May 2026 (pre-Brno mailing)
 
+- Corrected `write_env` argument order in Section 5.2 (environment first, sender second, per [exec.write.env]).
 - Formatting corrections.
 
 ### R0: April 2026 (post-Croydon mailing)
@@ -131,8 +132,8 @@ One custom query. Completely reasonable. Library B knows nothing about `get_tena
 
 ```cpp
 auto adapted = write_env(
-    compute(),
-    prop{get_tenant_id, my_tid});
+    prop{get_tenant_id, my_tid},
+    compute());
 ```
 
 It compiles. It works. But the moment Library B also defines a custom query - `get_connection_pool` - the caller must inject `get_tenant_id` into one side *and* `get_connection_pool` into the other. The caller must know every custom query from every library, by name, and inject them all manually. There is no discovery mechanism - no way to ask an environment "what queries do you need?" For two libraries with one custom query each, a determined caller can make it work. Tedious, but possible.

@@ -21,6 +21,8 @@ This paper assembles the findings of five companion papers into a single causal 
 
 ### R1: May 2026 (pre-Brno mailing)
 
+- Corrected claim about coroutines in 2014 ("no standard coroutine facility existed", not "did not exist in any form").
+- Corrected P0443 footnote mismatch in Acknowledgments.
 - Formatting corrections.
 
 ### R0: April 2026 (post-Croydon mailing)
@@ -67,7 +69,7 @@ Jonathan M&uuml;ller [reported](https://www.think-cell.com/en/career/devblog/tri
 
 The people who built this - Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, Micha&lstrok; Dominiak, and their collaborators - perceived structural problems in the executor concept and proposed a design that solved them. [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[10]</sup> documented gaps in `execute(F&&)` under the work framing. The sender/receiver model adopted by the committee addressed all four. It shipped.
 
-The unification effort that preceded P2300R0 - [P0443R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0443r0.html)<sup>[11]</sup>, more than 100 papers, organizations spanning Google, NVIDIA, Sandia, Codeplay, Facebook, Microsoft, and RedHat - was a sustained effort to find common ground. The breadth of participation was extraordinary. The compromise was real.
+The unification effort that preceded P2300R0 - [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[11]</sup>, more than 100 papers, organizations spanning Google, NVIDIA, Sandia, Codeplay, Facebook, Microsoft, and RedHat - was a sustained effort to find common ground. The breadth of participation was extraordinary. The compromise was real.
 
 These are facts. This series documents them alongside what was not examined.
 
@@ -77,7 +79,7 @@ These are facts. This series documents them alongside what was not examined.
 
 None of the following existed when the decisions in Section 2 were made.
 
-**C++20 coroutines** were ratified in 2020. The Coroutines TS was available from 2017 and compiler implementations existed by 2018, but the coroutine executor concept - which resolves the four deficiencies [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[10]</sup> identified - was not formulated until 2026. In 2014, when the unification decision was made, coroutines did not exist in any form. In 2019, when [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[10]</sup> diagnosed the basis operation, the specific two-framing analysis was not available. The coroutine executor concept constrains the handle type to `coroutine_handle<>`, restoring the type constraint that the rename from `dispatch`/`post`/`defer` to `execute(F&&)` removed.
+**C++20 coroutines** were ratified in 2020. The Coroutines TS was available from 2017 and compiler implementations existed by 2018, but the coroutine executor concept - which resolves the four deficiencies [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[10]</sup> identified - was not formulated until 2026. In 2014, when the unification decision was made, no standard coroutine facility existed. In 2019, when [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[10]</sup> diagnosed the basis operation, the specific two-framing analysis was not available. The coroutine executor concept constrains the handle type to `coroutine_handle<>`, restoring the type constraint that the rename from `dispatch`/`post`/`defer` to `execute(F&&)` removed.
 
 **The coroutine executor concept** ([P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[12]</sup>, 2026) provides `dispatch` and `post` - continuation-scheduling primitives with a typed handle. The four deficiencies [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[10]</sup> identified do not arise under this concept ([P4095R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4095r0.pdf)<sup>[2]</sup> Section 4).
 
@@ -175,7 +177,7 @@ The effort to bring async programming to C++ has been genuine, sustained, and co
 
 [10] [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf) - "One-Way execute is a Poor Basis Operation" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, 2019).
 
-[11] [P0443R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0443r0.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, 2016).
+[11] [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, 2020).
 
 [12] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 

@@ -19,6 +19,7 @@ C++20 provides symmetric transfer ([P0913R1](http://www.open-std.org/jtc1/sc22/w
 
 ### R4: May 2026 (pre-Brno mailing)
 
+* Removed `split` and `ensure_started` from affected algorithm lists (both removed from C++26).
 * Formatting corrections.
 
 ### R3: April 2026 (post-Croydon mailing)
@@ -593,7 +594,7 @@ Affected factories: `just`, `just_error`, `just_stopped`, `read_env`.
 
 Sender adaptors create internal receivers that forward completions to the next receiver. Every internal receiver's `set_value`, `set_error`, and `set_stopped` must change return type. Every operation state's `start()` must change return type.
 
-Affected adaptors: `then`, `upon_error`, `upon_stopped`, `let_value`, `let_error`, `let_stopped`, `bulk`, `split`, `ensure_started`, `into_variant`, `stopped_as_optional`, `stopped_as_error`.
+Affected adaptors: `then`, `upon_error`, `upon_stopped`, `let_value`, `let_error`, `let_stopped`, `bulk`, `into_variant`, `stopped_as_optional`, `stopped_as_error`.
 
 ### 12.4 Scheduler Algorithms
 
@@ -831,7 +832,7 @@ The following sections require changes that follow the pattern described in Sect
 
 **P2300R10 sender factories** ([exec.just]): `just`, `just_error`, `just_stopped`, `read_env`.
 
-**P2300R10 sender adaptors**: `then`, `upon_error`, `upon_stopped`, `let_value`, `let_error`, `let_stopped`, `bulk`, `split`, `into_variant`, `stopped_as_optional`, `stopped_as_error`.
+**P2300R10 sender adaptors**: `then`, `upon_error`, `upon_stopped`, `let_value`, `let_error`, `let_stopped`, `bulk`, `into_variant`, `stopped_as_optional`, `stopped_as_error`.
 
 **P2300R10 scheduler algorithms**: `starts_on`, `continues_on`, `on`, `schedule_from`.
 

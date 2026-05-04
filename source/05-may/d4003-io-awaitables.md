@@ -32,6 +32,7 @@ Everything in this paper comes from a complete implementation on three platforms
 
 ### R3: May 2026 (pre-Brno mailing)
 
+* Corrected internal section cross-reference in Acknowledgements (symmetric transfer is Section 4.3, not 4.2).
 * Formatting corrections.
 
 ### R2: April 2026 (post-Croydon mailing)
@@ -539,7 +540,7 @@ standard.
 
 **Lewis Baker** - The symmetric transfer technique, documented in the published
 [blog post](https://lewissbaker.github.io/2020/05/11/understanding_symmetric_transfer),
-is the mechanism that makes the zero-overhead coroutine resumption path in Section 4.2
+is the mechanism that makes the zero-overhead coroutine resumption path in Section 4.3
 possible.
 
 ---

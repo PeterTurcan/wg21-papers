@@ -173,7 +173,7 @@ New buffer types give us the principled option. Only what we need: `data()` and 
 
 ### `void*`, Not `byte*`
 
-`void*` is maximally accepting and minimally permissive. Any pointer converts to it implicitly. The user must perform an explicit cast to go back. The asymmetry is by design.
+`void*` is maximally accepting and minimally permissive. Any pointer to object type converts to it implicitly. The user must perform an explicit cast to go back. The asymmetry is by design.
 
 | Risk                        | `void*` | `byte*` | Cost                                       |
 | --------------------------- | ------- | ------- | ------------------------------------------ |

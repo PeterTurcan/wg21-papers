@@ -21,6 +21,8 @@ In 2014, three deployed executor models - networking, GPU dispatch, and thread p
 
 ### R1: May 2026 (pre-Brno mailing)
 
+- Corrected N1925 attribution (Gerhard Wesp, not Kohlhoff).
+- Corrected P0443 footnote references (R14 citations now use [3], not [1]).
 - Formatting corrections.
 
 ### R0: April 2026 (post-Croydon mailing)
@@ -41,7 +43,7 @@ Coroutine-native I/O and `std::execution` are complementary. Each serves the dom
 
 This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
 
-[P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup> was consequential. It was the vehicle for the committee's decision to unify three independent executor models into a single abstraction. That decision shaped the trajectory of executors, networking, and async programming in C++ for a decade. Decisions of that magnitude deserve periodic review. This paper provides one. Where the record shows that certain questions were not asked, the paper names the questions. The intent is to ensure the committee's record is complete, not to assign blame.
+[P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup> was consequential. It was the vehicle for the committee's decision to unify three independent executor models into a single abstraction. That decision shaped the trajectory of executors, networking, and async programming in C++ for a decade. Decisions of that magnitude deserve periodic review. This paper provides one. Where the record shows that certain questions were not asked, the paper names the questions. The intent is to ensure the committee's record is complete, not to assign blame.
 
 The author is a co-author of [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[6]</sup>, "Response to P2464: The Networking TS is baked, P2300 Sender/Receiver is not," which is cited in this paper. The reader should be aware that the author had a prior published position on the relationship between the Networking TS and [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>.
 
@@ -91,19 +93,19 @@ Kohlhoff and Allsop described the direction retrospectively in [P1791R0](http://
 
 [P0443R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0443r0.html)<sup>[1]</sup> (2016) was the result. It unified the three models into a single executor concept with multiple categories (`OneWayExecutor`, `TwoWayExecutor`, `BulkOneWayExecutor`, `BulkTwoWayExecutor`) and customization points. [P0285R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0285r0.html)<sup>[14]</sup> (Kohlhoff, 2016) proposed the mechanism: customization points to associate distinct executor types with each execution context. The idea was one execution context, multiple executor views, each satisfying different requirements.
 
-Over the next four years, [P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup> went through fourteen revisions. A property system (`require`/`prefer`) was added to express domain-specific requirements without burdening all executor types. Kohlhoff and Allsop wrote in [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup>:
+Over the next four years, [P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup> went through fourteen revisions. A property system (`require`/`prefer`) was added to express domain-specific requirements without burdening all executor types. Kohlhoff and Allsop wrote in [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup>:
 
 > "more than 100 papers and revisions have been produced that either directly or indirectly have significantly impacted the consensus position represented by P0443."
 
 ### 2.4 What Happened Next
 
-[P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> ("std::execution") emerged in 2021 as a successor to [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup>. [P2403R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[15]</sup>, the P2300R0 presentation, listed what it removed from P0443R0: polymorphic executor wrappers, the thread pool type, the generic property mechanism, and executor as a distinct concept. It replaced the property system with CPO-based queries and centered the design on senders and receivers.
+[P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> ("std::execution") emerged in 2021 as a successor to [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup>. [P2403R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[15]</sup>, the P2300R0 presentation, listed what it removed from P0443R0: polymorphic executor wrappers, the thread pool type, the generic property mechanism, and executor as a distinct concept. It replaced the property system with CPO-based queries and centered the design on senders and receivers.
 
 [P2400R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2400r2.html)<sup>[16]</sup>, the Library Evolution report for Summer 2021, stated: "we had consensus that we want to proceed with P2300 instead of P0443." [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> was adopted for C++26 at the St. Louis meeting in 2024<sup>[17]</sup>.
 
 ### 2.5 The Arc
 
-Three deployed models became one unified proposal ([P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup>). The unified proposal was never deployed as unified. It was replaced by a second proposal ([P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>). [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> was adopted. The entire arc - from SG1's direction to [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>'s adoption - spans roughly a decade. This paper examines the decision that started the arc.
+Three deployed models became one unified proposal ([P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup>). The unified proposal was never deployed as unified. It was replaced by a second proposal ([P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>). [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> was adopted. The entire arc - from SG1's direction to [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>'s adoption - spans roughly a decade. This paper examines the decision that started the arc.
 
 ---
 
@@ -157,7 +159,7 @@ The same paper documents Poll 2:
 
 ### 3.6 The P2300 Achievement
 
-[P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> addressed the deficiencies that [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup> identified in [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup>: no error channel, no lifecycle for submitted work, and no generic composition. The sender/receiver model provides structured concurrency, sender composition, completion signatures as type-level contracts, and a customization point model that enables heterogeneous dispatch.
+[P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> addressed the deficiencies that [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup> identified in [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup>: no error channel, no lifecycle for submitted work, and no generic composition. The sender/receiver model provides structured concurrency, sender composition, completion signatures as type-level contracts, and a customization point model that enables heterogeneous dispatch.
 
 [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup> documented deployments at Facebook ("monthly users number in the billions"), NVIDIA ("fully invested in P2300... we plan to ship in production"), and Bloomberg (experimentation). The unified model produced real value for real users in the domains it serves.
 
@@ -215,7 +217,7 @@ The coupling between networking and executors is documented in published papers.
 
 - [P0443R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0443r0.html)<sup>[1]</sup> (2016) through [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup> (2020): fourteen revisions over four years.
 - [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup>: "more than 100 papers and revisions."
-- [P2403R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[15]</sup> lists what [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> removed from [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup>: polymorphic executor wrappers, the thread pool type, the generic property mechanism, and executor as a distinct concept.
+- [P2403R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[15]</sup> lists what [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> removed from [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup>: polymorphic executor wrappers, the thread pool type, the generic property mechanism, and executor as a distinct concept.
 - [P1658R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1658r0.pdf)<sup>[25]</sup> (2019): documents the controversy around `require_concept` and interface-changing properties, recommends eliminating them.
 - The property system (`require`/`prefer`) was built across multiple revisions and then discarded entirely when [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> replaced it with CPO queries.
 
@@ -223,7 +225,7 @@ Is fourteen revisions and 100+ papers evidence of healthy design evolution, or i
 
 ### 5.3 Did Domain-Specific Semantics Survive?
 
-*Partially measurable.* [P2403R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[15]</sup> documents what [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> removed from [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup>. Section 6 of this paper documents the terminology shift from continuation-scheduling primitives (`dispatch`/`post`/`defer`) to work-submission (`execute`). [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[6]</sup> acknowledges "some reduction in usability, due to the increased complexity of the unified interface." [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup> states that "requirements that were not universal" were removed during unification.
+*Partially measurable.* [P2403R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[15]</sup> documents what [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> removed from [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup>. Section 6 of this paper documents the terminology shift from continuation-scheduling primitives (`dispatch`/`post`/`defer`) to work-submission (`execute`). [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[6]</sup> acknowledges "some reduction in usability, due to the increased complexity of the unified interface." [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup> states that "requirements that were not universal" were removed during unification.
 
 Was the removal a necessary simplification, or did it erase something the domains needed?
 
@@ -233,7 +235,7 @@ Was the removal a necessary simplification, or did it erase something the domain
 
 ### 5.5 Was the Unified Model Ever Deployed as Unified?
 
-*Measurable.* [P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup> was never deployed as a unified model. [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> replaced it. [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup> documents [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> deployments at Facebook, NVIDIA, and Bloomberg - primarily for sender/receiver composition, GPU dispatch, and infrastructure. No published paper documents a deployment where a single [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> scheduler serves networking, GPU dispatch, and thread pool use cases simultaneously in one application.
+*Measurable.* [P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup> was never deployed as a unified model. [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> replaced it. [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup> documents [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> deployments at Facebook, NVIDIA, and Bloomberg - primarily for sender/receiver composition, GPU dispatch, and infrastructure. No published paper documents a deployment where a single [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> scheduler serves networking, GPU dispatch, and thread pool use cases simultaneously in one application.
 
 Does the absence of a unified deployment mean the unification was unnecessary, or does it mean the deployment has not yet happened?
 
@@ -368,7 +370,7 @@ Three precedents. This paper does not inflate the list. The `task` precedent is 
 
 "Harder to teach" is frequently cited as a cost of multiple models. More surface area in the standard is a real concern.
 
-The published record contains no measurement of teachability for any executor design. Not for the unified model. Not for multiple models. Not for [P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup>. Not for [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>. No user survey. No classroom study. No measurement of time-to-productivity. No comparison of error rates between approaches.
+The published record contains no measurement of teachability for any executor design. Not for the unified model. Not for multiple models. Not for [P0443](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup>. Not for [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>. No user survey. No classroom study. No measurement of time-to-productivity. No comparison of error rates between approaches.
 
 The "harder to teach" argument is asserted in both directions - proponents of unification say one model is easier to teach; proponents of domain-specific models say a smaller model that matches the student's domain is easier to teach. Neither side has measured it.
 
@@ -432,7 +434,7 @@ Good stewardship of the standard means revisiting consequential decisions when n
 
 ## Acknowledgments
 
-The author thanks Chris Kohlhoff for the executor model that started the journey and for the candid retrospective in [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup>; Jared Hoberock, Michael Garland, and Chris Mysen for [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[1]</sup> and [P0761R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0761r2.pdf)<sup>[13]</sup>; Eric Niebler, Kirk Shoop, Lewis Baker, and their collaborators for [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>; Ville Voutilainen for [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup>; Bryce Adelstein Lelbach for the published poll outcomes in [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup> and [P2400R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2400r2.html)<sup>[16]</sup>; Detlef Vollmann for [P1256R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1256r0.html)<sup>[23]</sup>; Jamie Allsop, Richard Hodges, and Klemens Morgenstern for co-authoring [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[6]</sup>; and Steve Gerbino for feedback on this paper.
+The author thanks Chris Kohlhoff for the executor model that started the journey and for the candid retrospective in [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup>; Jared Hoberock, Michael Garland, and Chris Mysen for [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup> and [P0761R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0761r2.pdf)<sup>[13]</sup>; Eric Niebler, Kirk Shoop, Lewis Baker, and their collaborators for [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>; Ville Voutilainen for [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup>; Bryce Adelstein Lelbach for the published poll outcomes in [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup> and [P2400R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2400r2.html)<sup>[16]</sup>; Detlef Vollmann for [P1256R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1256r0.html)<sup>[23]</sup>; Jamie Allsop, Richard Hodges, and Klemens Morgenstern for co-authoring [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[6]</sup>; and Steve Gerbino for feedback on this paper.
 
 ---
 
@@ -478,7 +480,7 @@ The author thanks Chris Kohlhoff for the executor model that started the journey
 
 [20] [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf) - "Slides for presentation of P2300R2: std::execution (sender/receiver)" (Eric Niebler, 2021).
 
-[21] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Chris Kohlhoff, 2005).
+[21] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
 [22] [Herb Sutter, "Trip report: Fall ISO C++ standards meeting (San Diego)," 2018](https://herbsutter.com/2018/11/13/trip-report-fall-iso-c-standards-meeting-san-diego/)
 

@@ -24,6 +24,7 @@ Read [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.
 
 ### R1: May 2026 (pre-Brno mailing)
 
+* Corrected P4003 section cross-references in Section 11.2 (await_suspend is Section 4.2; execution_context is Section 4.4).
 * Formatting corrections.
 
 ### R0: April 2026 (post-Croydon mailing)
@@ -630,7 +631,7 @@ Four alternative approaches address the same problem space. Each is presented at
 
 Each major design decision is documented with rationale, trade-offs, and conditions for revisiting.
 
-**Two-argument `await_suspend(coroutine_handle<>, io_env const*)`** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.1). The only signature that makes protocol violations a compile error. *Trade-off:* the signature is non-standard; existing awaitables must be adapted. *Revisit if:* the language gains a mechanism for statically verifying awaitable-promise compatibility.
+**Two-argument `await_suspend(coroutine_handle<>, io_env const*)`** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.2). The only signature that makes protocol violations a compile error. *Trade-off:* the signature is non-standard; existing awaitables must be adapted. *Revisit if:* the language gains a mechanism for statically verifying awaitable-promise compatibility.
 
 **Out-of-band frame allocator propagation** (Section 8). Respects `operator new` timing without polluting application coroutine signatures. *Trade-off:* introduces a non-obvious propagation path. *Revisit if:* the language gains a mechanism to inject allocator context into `operator new` without function parameters.
 
@@ -638,7 +639,7 @@ Each major design decision is documented with rationale, trade-offs, and conditi
 
 **`io_env` passed by pointer** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.1). Pointer semantics make ownership explicit. *Trade-off:* nullable pointer. *Revisit if:* a reference-based alternative can enforce the same ownership semantics.
 
-**`execution_context` as a base class** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 5.3). I/O objects bind to contexts, not executors. *Trade-off:* virtual `shutdown()`; runtime polymorphism. *Revisit if:* a compile-time service mechanism provides the same guarantees.
+**`execution_context` as a base class** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.4). I/O objects bind to contexts, not executors. *Trade-off:* virtual `shutdown()`; runtime polymorphism. *Revisit if:* a compile-time service mechanism provides the same guarantees.
 
 ### 11.3 Domain Coverage
 

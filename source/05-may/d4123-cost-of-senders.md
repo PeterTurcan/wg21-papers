@@ -46,7 +46,7 @@ This paper grants `std::execution::task` every engineering fix that has been pro
 - **Case A (concession):** I/O operations return awaitables, not senders. The template operation state problem ([P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf)<sup>[4]</sup> Section 6.1) does not arise. This is the generous case.
 - **Case B (stated direction):** I/O operations return senders. LEWG polled in October 2021 that "the sender/receiver model (P2300) is a good basis for most asynchronous use cases, including networking" ([P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>); SG4 polled at Kona (November 2023) that networking must use the sender model. Under Case B, every `co_await` of an I/O sender inside a `task<T, IoEnv>` goes through `connect`/`start`/`state<Rcvr>`. The `state<Rcvr>` lives on the coroutine frame (no separate allocation), but the CPU cost of construction and environment extraction is per I/O operation. The narrow task-to-task fix (LWG4348) does not apply because the I/O operation is not a task.
 - Symmetric transfer works task-to-task. The stack overflow vulnerability ([P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup>) is resolved.
-- Frame allocator timing is fixed. The rework in [P3980R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r0.html)<sup>[7]</sup> ships. The allocator reaches `promise_type::operator new` before the frame is allocated.
+- Frame allocator timing is fixed. The rework in [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html)<sup>[7]</sup> ships. The allocator reaches `promise_type::operator new` before the frame is allocated.
 - `AS-EXCEPT-PTR` does not convert an `error_code` to `exception_ptr`. I/O errors do not become exceptions.
 - Compound results are handled inside the coroutine body via structured bindings. `auto [ec, n] = co_await sock.read_some(buf)` works.
 - `co_yield with_error` is unnecessary. Compound results stay in the coroutine body. The mechanism that [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup> identified as blocking symmetric transfer is not needed.
@@ -125,9 +125,9 @@ session(tcp_socket& sock)
 The user code is identical. The difference is underneath: `async_read_some` returns a sender. The `co_await` of the I/O sender goes through the same sender machinery as the `co_await` of the child task:
 
 1. `await_transform` ([task.promise] paragraph 9) intercepts the I/O sender.
-2. Wraps it in `affine_on(sender, SCHED(*this))` - produces a new sender type.
+2. Wraps it in `affine(sender, SCHED(*this))` - produces a new sender type.
 3. `as_awaitable` produces a `sender-awaitable`.
-4. `sender-awaitable` calls `connect(affine_on_sender, awaitable-receiver)` - constructs `state<awaitable-receiver>` on the coroutine frame.
+4. `sender-awaitable` calls `connect(affine_sender, awaitable-receiver)` - constructs `state<awaitable-receiver>` on the coroutine frame.
 5. `await_suspend` calls `start(state)` - scheduler extraction, stop token setup, then the actual I/O submission.
 6. I/O completes. The I/O sender calls `set_value` on `awaitable-receiver`.
 7. `awaitable-receiver` stores the result in a variant, calls `continuation.resume()` (no symmetric transfer - `set_value` is void-returning).
@@ -171,7 +171,7 @@ The table below shows the spec-mandated costs that exist in `task<T, IoEnv>` but
 | Sender concept instantiation per task        | 0                           | 1 per task type in chain                         | 1 per task type in chain                         |
 | Task-to-task `co_await` suspend              | 2 pointer stores            | `state<Rcvr>` construction + scheduler extraction | `state<Rcvr>` construction + scheduler extraction |
 | I/O `co_await` suspend                       | 2 pointer stores            | 2 pointer stores                                 | `state<Rcvr>` construction + scheduler extraction |
-| I/O `co_await` `affine_on` wrapping          | 0                           | 0                                                | 1 per I/O operation                              |
+| I/O `co_await` `affine` wrapping          | 0                           | 0                                                | 1 per I/O operation                              |
 | I/O `co_await` symmetric transfer            | Yes                         | Yes                                              | No (void-returning `set_value`)                  |
 | Type-erased stream I/O allocation            | 0                           | 0                                                | 1 heap allocation per I/O operation              |
 
@@ -217,7 +217,7 @@ In the coroutine-native model, when a child task completes, `final_suspend` retu
 
 In the sender model, `final_suspend` ([task.promise] paragraph 6) must invoke `set_value`, `set_error`, or `set_stopped` on `RCVR(*this)`. The receiver is the parent's awaiter. In the best case, the awaiter resumes the parent via symmetric transfer.
 
-[task.promise] paragraph 9 specifies that `await_transform` skips `affine_on` when the sender type is the same `task` type. For the common I/O case - a chain of `task<T, IoEnv>` coroutines all running on the same executor - no scheduler comparison is needed on the completion path.
+[task.promise] paragraph 9 specifies that `await_transform` skips `affine` when the sender type is the same `task` type. For the common I/O case - a chain of `task<T, IoEnv>` coroutines all running on the same executor - no scheduler comparison is needed on the completion path.
 
 The completion path cost is not analyzed further.
 
@@ -340,9 +340,9 @@ Sections 5.1 through 5.6 analyze the task-to-task path. Under Case A, I/O operat
 When `co_await sock.async_read_some(buf)` appears inside a `task<T, IoEnv>` and the I/O operation returns a sender, the `co_await` traverses the same sender machinery as a child task:
 
 1. `await_transform` ([task.promise] paragraph 9) intercepts the I/O sender.
-2. Wraps it in `affine_on(sender, SCHED(*this))`.
+2. Wraps it in `affine(sender, SCHED(*this))`.
 3. `as_awaitable` produces a `sender-awaitable`.
-4. `sender-awaitable` calls `connect(affine_on_sender, awaitable-receiver)` - constructs `state<awaitable-receiver>` on the coroutine frame.
+4. `sender-awaitable` calls `connect(affine_sender, awaitable-receiver)` - constructs `state<awaitable-receiver>` on the coroutine frame.
 5. `await_suspend` calls `start(state)` - scheduler extraction, stop token setup, then I/O submission to the OS.
 6. I/O completes. The sender calls `set_value` on `awaitable-receiver`.
 7. `awaitable-receiver` stores the result in a variant, calls `continuation.resume()`.
@@ -357,7 +357,7 @@ The coroutine-native path for the same I/O operation:
 
 Three properties of Case B deserve attention.
 
-**No separate allocation.** The `state<awaitable-receiver>` is a local variable inside `sender-awaitable`, which lives on the coroutine frame. No heap allocation occurs. This is the steelman: the "no dynamic memory allocation" property of the sender model holds for I/O operations co_awaited inside a coroutine. The cost is CPU overhead per I/O operation - `state<Rcvr>` construction, environment extraction, `affine_on` wrapping - not allocation.
+**No separate allocation.** The `state<awaitable-receiver>` is a local variable inside `sender-awaitable`, which lives on the coroutine frame. No heap allocation occurs. This is the steelman: the "no dynamic memory allocation" property of the sender model holds for I/O operations co_awaited inside a coroutine. The cost is CPU overhead per I/O operation - `state<Rcvr>` construction, environment extraction, `affine` wrapping - not allocation.
 
 The coroutine frame itself is already allocated. The sender machinery adds CPU overhead on top of the same allocation profile. The "no allocation" benefit does not materialize for the I/O user because the coroutine frame provides the storage regardless of whether the I/O operation is a sender or an awaitable.
 
@@ -367,7 +367,7 @@ The coroutine frame itself is already allocated. The sender machinery adds CPU o
 
 When the I/O operation is a sender, type-erasing the stream requires `any_sender<completion_signatures<...>>`. The `connect` call on `any_sender` must produce an operation state whose size depends on the concrete sender type that was erased - a size unknown at compile time. The coroutine frame layout is fixed before the `co_await`; it cannot absorb a dynamically-sized operation state. The operation state must be heap-allocated inside `any_sender::connect`. This is a per-I/O-operation allocation that does not exist in the coroutine-native model or under Case A.
 
-This is the allocator timing problem from [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf)<sup>[4]</sup> Section 6.1 manifesting in a form that cannot be resolved by frame allocator fixes. The frame allocator rework in [P3980R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r0.html)<sup>[7]</sup> ensures the allocator reaches `promise_type::operator new` before the frame is allocated. It does not help here because the allocation is not the coroutine frame - it is the type-erased operation state inside `any_sender::connect`, which occurs after the frame is already allocated. Note that, although a small-buffer optimisation in `any_sender` can avoid the heap allocation when the concrete operation state fits within the buffer, the buffer size is a compile-time guess about a runtime-determined type - too small and the allocation returns, too large and every coroutine frame pays for unused storage.
+This is the allocator timing problem from [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf)<sup>[4]</sup> Section 6.1 manifesting in a form that cannot be resolved by frame allocator fixes. The frame allocator rework in [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html)<sup>[7]</sup> ensures the allocator reaches `promise_type::operator new` before the frame is allocated. It does not help here because the allocation is not the coroutine frame - it is the type-erased operation state inside `any_sender::connect`, which occurs after the frame is already allocated. Note that, although a small-buffer optimisation in `any_sender` can avoid the heap allocation when the concrete operation state fits within the buffer, the buffer size is a compile-time guess about a runtime-determined type - too small and the allocation returns, too large and every coroutine frame pays for unused storage.
 
 **The multiplier.** Under Case A, the sender protocol overhead is per task-to-task transition. A five-coroutine session chain has five transitions. Under Case B, the overhead is per task-to-task transition plus per I/O operation. Every `co_await` of a socket read, a socket write, a timer wait, a DNS lookup, a TLS handshake step pays `state<Rcvr>` construction and scheduler extraction that the coroutine-native model does not pay. A minimal HTTP request-response - accept, TLS handshake (multiple round trips), read headers, read body, write headers, write body - is 6-15 I/O operations. A WebSocket session with streaming: hundreds. A long-lived connection with keep-alive: thousands over its lifetime. Per session. Multiplied by the number of concurrent sessions.
 
@@ -378,7 +378,7 @@ This is the allocator timing problem from [P4088R0](https://www.open-std.org/jtc
 The concessions in Section 2 assume several engineering fixes ship. [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[1]</sup> is the vehicle. The C++26 cycle is closing. The following fixes are not in [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[1]</sup> today:
 
 - Symmetric transfer: [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup> identified the vulnerability. Trampolines are being explored ([P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[15]</sup>). Not landed.
-- Frame allocator timing: [P3980R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r0.html)<sup>[7]</sup> is in progress. Not landed.
+- Frame allocator timing: [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html)<sup>[7]</sup> was adopted at Croydon.
 - `IoEnv`: does not exist in any proposal.
 - Error delivery: `AS-EXCEPT-PTR` is still in the specification.
 
@@ -434,7 +434,7 @@ The gap is spec-mandated and cannot be optimized away by a better implementation
 | ----------------------------- | ---------------: | --------------------: |
 | `state<Rcvr>` constructions   |                0 |                     5 |
 | Scheduler extractions         |                0 |                     5 |
-| `affine_on` wrappings         |                0 |                     0 |
+| `affine` wrappings         |                0 |                     0 |
 | Pointer stores                |               10 |                    10 |
 
 **Case B: I/O operations return senders (stated direction)**
@@ -443,12 +443,12 @@ The gap is spec-mandated and cannot be optimized away by a better implementation
 | ----------------------------- | ---------------: | --------------------: |
 | `state<Rcvr>` constructions   |                0 |                    15 |
 | Scheduler extractions         |                0 |                    15 |
-| `affine_on` wrappings         |                0 |                    10 |
+| `affine` wrappings         |                0 |                    10 |
 | Symmetric transfer on I/O     |              Yes |                    No |
 | Type-erased stream allocation |                0 |     1 per I/O operation |
 | Pointer stores                |               10 |                    10 |
 
-Under Case A, the coroutine-native model pays 10 pointer stores. The sender model pays the same 10 pointer stores plus 10 additional operations mandated by [exec.task]. Under Case B, the sender model pays 10 pointer stores plus 40 additional operations - because every I/O read, write, timer, and DNS lookup pays `state<Rcvr>` construction, scheduler extraction, and `affine_on` wrapping that the coroutine-native model does not pay. Symmetric transfer is unavailable on the I/O completion path because `set_value` is void-returning. Type-erased streams incur a heap allocation per I/O operation because `any_sender::connect` must allocate a dynamically-sized operation state that the coroutine frame cannot absorb (Section 5.7).
+Under Case A, the coroutine-native model pays 10 pointer stores. The sender model pays the same 10 pointer stores plus 10 additional operations mandated by [exec.task]. Under Case B, the sender model pays 10 pointer stores plus 40 additional operations - because every I/O read, write, timer, and DNS lookup pays `state<Rcvr>` construction, scheduler extraction, and `affine` wrapping that the coroutine-native model does not pay. Symmetric transfer is unavailable on the I/O completion path because `set_value` is void-returning. Type-erased streams incur a heap allocation per I/O operation because `any_sender::connect` must allocate a dynamically-sized operation state that the coroutine frame cannot absorb (Section 5.7).
 
 The operation counts above are theoretical. This paper does not claim to know the wall-clock cost of a `state<Rcvr>` construction or a scheduler extraction. The magnitude of each operation depends on the implementation, the optimizer, and the target architecture. What this paper does claim is that the cost is not zero. The operations are spec-mandated, they execute code that the coroutine-native model does not execute, and they scale with the number of I/O operations per session. Whether the per-operation cost is 5 nanoseconds or 50 is an empirical question. That it exists is a normative one.
 
@@ -472,11 +472,11 @@ The author thanks Bjarne Stroustrup for [P3406R0](https://www.open-std.org/jtc1/
 
 [4] [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf) - "Info: What C++20 Coroutines Already Buy The Standard" (Vinnie Falco, 2026).
 
-[5] [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "Outcomes from the LEWG 2021-09-28 telecon" (Bryce Adelstein Lelbach, 2021).
+[5] [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
 
 [6] [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html) - "Concerns about the design of `std::execution::task`" (Jonathan M&uuml;ller, 2025).
 
-[7] [P3980R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r0.html) - "Task's Allocator Use" (Dietmar K&uuml;hl, 2026).
+[7] [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html) - "Task's Allocator Use" (Dietmar K&uuml;hl, 2026).
 
 [8] [P4092R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4092r0.pdf) - "Info: Consuming Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026).
 

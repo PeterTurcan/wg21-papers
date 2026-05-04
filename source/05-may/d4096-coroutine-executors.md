@@ -25,6 +25,7 @@ Section 2 documents what [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/p
 
 ### R1: May 2026 (pre-Brno mailing)
 
+- Corrected P2469R0 author list (added Allsop, Hodges, Morgenstern).
 - Table layout improvements.
 
 ### R0: April 2026 (post-Croydon mailing)
@@ -329,7 +330,7 @@ The authors thank Peter Dimov for identifying that [P0443R14](http://www.open-st
 
 [8] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
-[9] [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf) - "Response to P2464 - Ruminations on networking and executors" (Vinnie Falco, Christopher Kohlhoff, 2021).
+[9] [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf) - "Response to P2464 - Ruminations on networking and executors" (Christopher Kohlhoff, Jamie Allsop, Vinnie Falco, Richard Hodges, Klemens Morgenstern, 2021).
 
 [10] [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf) - "What C++20 Coroutines Already Buy The Standard" (Vinnie Falco, 2026).
 

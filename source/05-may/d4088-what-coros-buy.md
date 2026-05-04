@@ -21,6 +21,9 @@ The programmer writes `for`, `if`, structured bindings, and `co_await` - the idi
 
 ### R1: May 2026 (pre-Brno mailing)
 
+- Corrected N1925 attribution (Gerhard Wesp, not Kohlhoff).
+- Corrected `when_all` description (concurrent joins, not sequential statements).
+- Corrected St. Louis meeting date (July 2024).
 - Formatting corrections.
 
 ### R0: April 2026 (post-Croydon mailing)
@@ -55,7 +58,7 @@ The coroutine "tutorial" is: write regular code, put `co_await` before async ope
 
 ### 2.2 Thirty Algorithms
 
-The sender model replaces these constructs with library equivalents: `let_value` for local variables, `then` for function calls, `upon_error` for `catch`, `when_all` for sequential statements, `repeat_effect_until` for `for`. [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> is a progressive tutorial of all thirty sender algorithms in C++26. The `retry` algorithm requires approximately 120 lines of template machinery as a sender; the coroutine equivalent is seven lines. The four-layer composition example in [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> Section 12 collapses from interleaved sender pipelines into a single coroutine.
+The sender model replaces these constructs with library equivalents: `let_value` for local variables, `then` for function calls, `upon_error` for `catch`, `when_all` for concurrent joins, `repeat_effect_until` for `for`. [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> is a progressive tutorial of all thirty sender algorithms in C++26. The `retry` algorithm requires approximately 120 lines of template machinery as a sender; the coroutine equivalent is seven lines. The four-layer composition example in [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> Section 12 collapses from interleaved sender pipelines into a single coroutine.
 
 | Model      | New vocabulary                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -80,7 +83,7 @@ The "one model" premise did not achieve consensus. C++26 now ships two.
 
 ### 2.4 The Chronology
 
-C++20 was ratified in 2020 with coroutines as a language feature. Every major compiler implements them. Production codebases have used them for six years. `std::execution` was adopted into the working draft at St. Louis in June 2024<sup>[7]</sup> and ships in C++26. Networking is not in the C++ standard. Twenty-one years from [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[8]</sup> "A Proposal to Add Networking Utilities to the C++ Standard Library."
+C++20 was ratified in 2020 with coroutines as a language feature. Every major compiler implements them. Production codebases have used them for six years. `std::execution` was adopted into the working draft at St. Louis in July 2024<sup>[7]</sup> and ships in C++26. Networking is not in the C++ standard. Twenty-one years from [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[8]</sup> "A Proposal to Add Networking Utilities to the C++ Standard Library."
 
 ### 2.5 The Incumbent
 
@@ -498,7 +501,7 @@ A: Correct. The five properties were designed for generality - async patterns, l
 
 **Q: The fragmentation argument is revisionist history.**
 
-A: The chronology is a fact. C++20 ratified 2020. `std::execution` adopted June 2024<sup>[7]</sup>. The paper documents which model shipped first.
+A: The chronology is a fact. C++20 ratified 2020. `std::execution` adopted July 2024<sup>[7]</sup>. The paper documents which model shipped first.
 
 **Q: `std::execution` is a library, not a second computation model.**
 
@@ -605,7 +608,7 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 
 [7] [Herb Sutter, "Trip report: Summer ISO C++ standards meeting (St Louis, MO, USA)," 2024](https://herbsutter.com/2024/07/02/trip-report-summer-iso-c-standards-meeting-st-louis-mo-usa/)
 
-[8] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Chris Kohlhoff, 2005).
+[8] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
 [9] [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, Gordon Brown, Michael Wong, 2020).
 

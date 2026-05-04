@@ -27,6 +27,7 @@ The finding: both coroutines and senders have an abstraction floor - a boundary 
 
 ### R1: May 2026 (pre-Brno mailing)
 
+- Corrected echo-server implementation count to match P4090 (five implementations: four sender-based, one coroutine-native).
 - Formatting corrections.
 
 ### R0: April 2026 (post-Croydon mailing)
@@ -307,7 +308,7 @@ When the discussion turned to whether the byte count could remain visible to gen
 
 The data can be preserved. The generic algorithms can participate. But the connection between them requires application-specific wiring - a lambda capture, shared state, or a function object that carries the byte count alongside the error code. The generic algorithms do not see the byte count through the channel. They see it through a side channel the programmer constructs.
 
-For compound-result I/O, the application-specific wiring point arrives at every operation. [P4090R0](https://isocpp.org/files/papers/P4090R0.pdf)<sup>[17]</sup> provides the concrete measurement. Four echo-server implementations - two sender-based, two coroutine-based - implement identical protocol logic. The sender constructions require between 2x and 3.5x the line count of the coroutine constructions, with the additional lines concentrated in channel-routing and type-erasure machinery.
+For compound-result I/O, the application-specific wiring point arrives at every operation. [P4090R0](https://isocpp.org/files/papers/P4090R0.pdf)<sup>[17]</sup> provides the concrete measurement. Five echo-server implementations - four sender-based constructions and one coroutine-native - implement identical protocol logic. The sender constructions require between 2x and 3.5x the line count of the coroutine construction, with the additional lines concentrated in channel-routing and type-erasure machinery.
 
 | Domain           | Sync/Async | Error model      | Three-channel model fits? |
 | ---------------- | ---------- | ---------------- | ------------------------- |

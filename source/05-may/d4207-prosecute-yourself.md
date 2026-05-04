@@ -12,7 +12,7 @@ reply-to:
 
 For less than a dollar, every paper in the mailing can know its own weaknesses before the committee does.
 
-AI-powered adversarial analysis of WG21 papers now costs under a dollar and takes minutes. This paper introduces the Advocatus Diaboli (Devil's Advocate), a purpose-built red-teaming methodology for committee papers, and demonstrates it on [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup>, "Contracts for C++." The case study produced five sections certified as battle-hardened, five formal objections from nine candidates after adversarial cross-examination, and sixteen falsifiable predictions with one-, two-, and three-year horizons. The predictions form a retrospective framework - the accountability mechanism the committee does not yet require and this tool provides for itself. The methodology, the case study, and the retrospective are presented here so the reader can judge the tool by its output.
+AI-powered adversarial analysis of WG21 papers now costs under a dollar and takes minutes. This paper introduces the Advocatus Diaboli (Devil's Advocate), a purpose-built red-teaming methodology for committee papers, and demonstrates it on [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup>, "Contracts for C++." The case study produced eleven sections certified as battle-hardened, one formal objection from approximately fifteen candidates after adversarial cross-examination, and falsifiable predictions with one-, two-, and three-year horizons. The predictions form a retrospective framework - the accountability mechanism the committee does not yet require and this tool provides for itself. The methodology, the case study, and the retrospective are presented here so the reader can judge the tool by its output.
 
 ---
 
@@ -167,7 +167,7 @@ The counter-examiner (the Advocatus Dei, the Werkmeister, the &#25252;&#25991;&#
 - **Prudentia.** Would making this argument be self-defeating for the actual opponent? If pressing the objection requires the named adversary to undermine their own published position, no rational adversary would volunteer it.
 - **Dignitas.** Is this objection beneath the dignity of the office? Typos, formatting, word-choice quibbles - these are housekeeping, not charges.
 
-In the P2900 case study, 4 of 9 candidate charges were killed by the counter-examiner. A generic red team would have reported all 9.
+In the P2900 case study, approximately fourteen of fifteen candidate charges were killed by the counter-examiner. A generic red team would have reported all fifteen.
 
 ### 5.2 The Tool Asks Instead of Guessing
 
@@ -213,42 +213,25 @@ The Advocatus examines it not to diminish it but because the best papers deserve
 
 ### 6.1 The Seal
 
-***Cum obiectionibus.*** The cause proceeds with five objections.
+***Cum obiectionibus.*** The cause proceeds with one objection.
 
 ### 6.2 Sections Certified as Battle-Hardened (*Approbatio*)
 
-**Design Principles (Section 3.1): *Approbatio.*** The sixteen design principles are internally consistent, clearly stated, and well-grounded. The Prime Directive, the Redundancy Principle, and the Zero Overhead principle form a coherent foundation. The Advocatus Dei prevailed on the Humanitas challenge - no committee member would dispute these principles in isolation. Do not engage here; the defense holds.
-
-**Syntax (Section 3.2): *Approbatio.*** The `pre`/`post`/`contract_assert` syntax is clean, already implemented in two compilers, and has survived multiple SG21 votes. The Advocatus Dei prevailed on the Confessio challenge - the rationale paper [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> documents the extensive alternative syntax exploration openly. No remaining attack surface on syntax. Do not engage here.
-
-**Semantic Restrictions on Constructors/Destructors (Section 3.3.4): *Approbatio.*** The rule making direct nonstatic data member access ill-formed in constructor preconditions and destructor postconditions is a precise, defensible design choice. The Advocatus Dei prevailed on the Prudentia challenge - attacking this restriction would require arguing for either weaker safety or stronger restriction, neither of which an opponent would volunteer.
-
-**Constant Evaluation Rules (Section 3.5.12): *Approbatio.*** The trial evaluation mechanism is technically sound and respects Design Principle 4 (Zero Overhead). The Advocatus Dei prevailed on the Humanitas challenge - the constant evaluation rules are sufficiently arcane that no committee member would mount a floor attack here.
-
-**Standard Library API (Section 3.7): *Approbatio.*** The `<contracts>` header design is conservative and extensible. The Advocatus Dei prevailed on the Dignitas challenge - any attack on library API details is editorial, not substantive.
+Eleven sections earned the *approbatio*. The full list appears in [P4208R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4208r0.pdf)<sup>[13]</sup>. Highlights include Design Principles (Section 3.1), Syntax (Section 3.2), the Four Evaluation Semantics (Section 3.5.4), Predicate Side-Effect and Elision Rules (Sections 3.5.7-3.5.8), Observable Checkpoints (Section 3.5.3), and Coroutines Treatment (Section 3.5.2).
 
 ### 6.3 Formal Objections
 
-**Objection I: The Implementation-Defined Evaluation Semantic Selection Is a Design Defect, Not a Feature.** (Severity: Critical. Test failed: Ratio.) [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup> delegates the most consequential runtime behavior decision - whether a contract assertion does nothing, observes, enforces, or crashes - entirely to implementation-defined mechanisms. The paper's own Principle 5 (Independence from Chosen Semantic) acknowledges the tension. The consequence is that the same source code compiled by different vendors produces programs with fundamentally different safety properties, and the programmer has no portable mechanism to express intent. [P3835R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3835r0.html)<sup>[14]</sup> (Spicer, Voutilainen, Garcia Sanchez) demonstrates the concrete consequence: when library headers compiled with one semantic are inlined into client code compiled with another, the effective semantic is determined by optimization decisions, not programmer intent.
-
-**Objection II: The Deployment Experience Claim Does Not Withstand Scrutiny.** (Severity: Critical. Test failed: Veritas.) The paper claims "deployment experience" but the evidence consists of two controlled experiments by Contracts proponents - replacing existing assertion macros in LLVM and libc++ with [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup> contract assertions. No production codebase has been reported as using [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup>'s novel features (`pre`/`post` on function declarations, the violation handler replacement mechanism, multiple evaluation semantics in a mixed TU environment) at scale. [P4020R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4020r0.html)<sup>[15]</sup> (Krzemienski - a [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup> co-author) states explicitly that the committee's experience is limited to assertion statements in function bodies, not declaration annotations.
-
-**Objection III: Predicate Side-Effect Elision Creates an Unspecified Behavior Surface.** (Severity: Significant. Test failed: Ratio.) The combined effect of predicate side-effect elision (Section 3.5.8) and evaluation repetition (Section 3.5.7) means that side effects in predicates may occur zero, one, or an implementation-defined number of times. For a feature marketed on safety and correctness, introducing a new class of unspecified-count-of-execution is a tension in the narrative.
-
-**Objection IV: The Mixed-Mode Compilation Model Is Novel, Untested, and Produces Semantic Non-Determinism.** (Severity: Significant. Test failed: Ratio and Veritas.) Section 3.5.11 acknowledges that when inline functions are compiled in different translation units with different evaluation semantics, the linker selects "effectively random" which definition survives. The paper's own text uses those words to describe the behavior of a safety feature.
-
-**Objection V: Six Instances of Implementation-Defined Behavior Exceed the Threshold for a First-Version Feature.** (Severity: Moderate. Test failed: Ratio.) [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> Section 2.10 lists six categories of implementation-defined behavior: semantic selection, evaluation count, termination mode, default handler behavior, handler replaceability, and `contract_violation` polymorphism. The defense characterizes these as "well-known cases for which no single answer is a viable solution." That characterization is precisely the argument for a TS rather than direct IS adoption.
+**Objection I: The Gap Between the Safety Narrative and the Normative Guarantees.** (Severity: Significant. Test failed: Ratio.) The paper's design motivation is grounded in safety and correctness. Sixteen design principles, beginning with the Prime Directive, build a narrative in which contract assertions are instruments for identifying bugs and improving program reliability. The paper's sole normative protection ensuring that any contract is actually checked in practice - the recommended practice for enforce-by-default - carries no normative weight in the ISO standard. A conforming implementation that provides only the ignore semantic, or that defaults to ignore without user action, is fully conforming. The gap between the paper's safety-motivated design narrative and the normative guarantees available to users is wider than the paper's framing suggests. This is not a charge that the design is wrong - the implementation-defined model serves the diversity of C++ platforms. The charge is narrower: the paper presents recommended practice as if it closes the gap between motivation and specification, but recommended practice is non-normative in ISO standards. The full analysis appears in [P4208R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4208r0.pdf)<sup>[13]</sup>.
 
 ### 6.4 Minor Observations (*Notae Minores*)
 
-1. Making `pre`/`post` on virtual functions ill-formed (Section 3.3.2) is a significant functional limitation that the paper concedes openly.
-2. The `contract_assert` keyword is unavoidably long and will resist adoption by developers accustomed to `assert`.
-3. [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> Section 4.1 documents an errata in [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup>'s Section 3.5.3 that "cannot be corrected directly in that paper because it has already been approved by WG21 plenary."
-4. Postconditions on coroutines cannot odr-use parameters - a consequence of the coroutine parameter copy model, not a Contracts design flaw.
+1. The `contract_assert` keyword is unavoidably long and will resist adoption by developers accustomed to `assert`. The paper acknowledges the choice was necessary to avoid collision with the `assert` macro.
+2. At 119 pages, the paper's length challenges reviewability. The companion paper [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> adds another 100+ pages.
+3. The paper cites [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> for essential context seven or more times. A reader of [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup> alone may lack sufficient justification for certain design decisions.
 
 ### 6.5 The Acta (Audit Trail)
 
-The Advocatus investigated the full text of [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup> (256KB, 4348 lines), the full text of [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> (419KB, 6256 lines), the public record (web search), indexed archives, and local workspace files. The author was deposed with three sets of multiple-choice questions establishing posture, strategic objective, and deployment experience weight. Nine candidate charges were filed. Four were killed by the Advocatus Dei (Confessio: 2, Articulus: 1, Humanitas: 1). Five survived to the formal observations. The analysis cost less than one dollar in API tokens and took approximately fifteen minutes of wall-clock time.
+The Advocatus investigated the full text of [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup> (256KB, 4348 lines), the full text of [P2899R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2899r1.pdf)<sup>[5]</sup> (419KB, 6256 lines), the public record (web search), indexed archives, and local workspace files. The postulator was not available for deposition. The Advocatus proceeded on the positio and public record only. Approximately fifteen candidate charges were filed. Twelve were killed under Confessio, one under Articulus, one under Humanitas. Three observations were relegated to Notae Minores under Dignitas. One charge survived all six challenges. The analysis cost less than one dollar in API tokens and took approximately fifteen minutes of wall-clock time.
 
 ---
 
@@ -258,27 +241,27 @@ The Advocatus investigated the full text of [P2900R14](https://www.open-std.org/
 
 The retrospective below exists to test the Advocatus's predictive value. Every prediction is a direct consequence of a specific finding from the case study in Section 6. Each prediction names its source. In one, two, or three years, the committee can return to this list and measure how many predictions materialized. If most did, the tool has predictive value and the case for pre-submission red-teaming strengthens. If most did not, the tool's judgment on P2900 was wrong, and that is worth knowing too. The retrospective is the accountability mechanism the tool provides for itself.
 
-Only predictions that trace directly to a finding are included. Predictions about vendor behavior, political dynamics, or feature evolution that go beyond the five objections and five approbationes have been removed. The retrospective tests the findings, not the author's speculation.
+Only predictions that trace directly to a finding are included. Some predictions below trace from the surviving objection or from approbationes. Others trace from candidate charges that were filed but did not survive the Advocatus Dei's cross-examination; these are included for completeness, not because the Advocatus sustained them. The retrospective tests the findings, not the author's speculation.
 
 ### 7.1 Failure-Mode Predictions
 
-- **No organization unaffiliated with P2900's co-authors reports production deployment of declaration-level annotations within two years** (Objection II). Falsified by: two or more unaffiliated organizations reporting production `pre`/`post` use.
+*From the surviving objection (the safety-narrative gap):*
 
-- **At least two compiler vendors ship incompatible default evaluation semantics** (1 year, Objection I). Falsified by: all three major compilers shipping identical defaults.
-
-- **A paper or DR addresses the mixed-mode "effectively random" inline function semantic selection** (1 year, Objection IV). Falsified by: no such paper filed through the 2027 mailing cycle.
-
-- **The predicate side-effect elision/repetition model produces at least one public bug report where a diagnostic side effect was unexpectedly elided or repeated** (1 year, Objection III). Falsified by: no such report filed against GCC or Clang.
-
-- **The P2899 errata (Section 4.1) produces a formal DR** (1 year, Nota Minor 3). Falsified by: no DR filed addressing the Observable Checkpoints errata.
-
-- **Header-only libraries avoid `pre`/`post` in public headers because authors cannot control the client's evaluation semantic** (2 years, Objection IV). Falsified by: three or more popular header-only libraries shipping `pre`/`post` in public headers.
+- **At least two compiler vendors ship incompatible default evaluation semantics** (1 year, Objection I). The recommended practice is non-normative; vendors may diverge. Falsified by: all three major compilers shipping identical defaults.
 
 - **A portable semantic-binding mechanism is proposed** (1 year) **and adopted** (3 years, Objection I). Falsified by: no such paper in 2027; no adoption by end of 2029.
 
-- **The Standard Library (libstdc++, libc++, MSVC STL) does not add `pre`/`post` annotations to any function declarations** (2 years, Objection II). Falsified by: any major stdlib shipping declaration annotations on a public header function.
+*From candidate charges that were filed but did not survive cross-examination. These are included for completeness.*
 
-- **The violation handler replacement mechanism produces at least one public report of unexpected behavior across shared library boundaries** (2 years, Objection V). Falsified by: no such report through end of 2028.
+- **No organization unaffiliated with P2900's co-authors reports production deployment of declaration-level annotations within two years** (candidate charge, deployment experience; killed under cross-examination). Falsified by: two or more unaffiliated organizations reporting production `pre`/`post` use.
+
+- **The predicate side-effect elision/repetition model produces at least one public bug report where a diagnostic side effect was unexpectedly elided or repeated** (1 year; candidate charge, killed under Confessio - the paper confesses the consequence with examples and warnings). Falsified by: no such report filed against GCC or Clang.
+
+- **Header-only libraries avoid `pre`/`post` in public headers because authors cannot control the client's evaluation semantic** (2 years; candidate charge, mixed-mode treatment - the section earned an approbatio in the full analysis). Falsified by: three or more popular header-only libraries shipping `pre`/`post` in public headers.
+
+- **The Standard Library (libstdc++, libc++, MSVC STL) does not add `pre`/`post` annotations to any function declarations** (2 years; candidate charge, deployment experience; killed under cross-examination). Falsified by: any major stdlib shipping declaration annotations on a public header function.
+
+- **The violation handler replacement mechanism produces at least one public report of unexpected behavior across shared library boundaries** (2 years; candidate charge, killed under cross-examination). Falsified by: no such report through end of 2028.
 
 ### 7.2 Success-Mode Predictions
 
@@ -286,9 +269,9 @@ Only predictions that trace directly to a finding are included. Predictions abou
 
 - **At least one major static analysis tool consumes `pre`/`post` annotations for dataflow analysis, even when runtime checking is disabled** (3 years, Design principles approbatio). Falsified by: no major tool consuming annotations by end of 2029.
 
-- **At least two large organizations publicly report integrating the replaceable violation handler with production crash-reporting infrastructure** (3 years, Library API approbatio). Falsified by: no organization reporting such integration.
+- **At least two large organizations publicly report integrating the replaceable violation handler with production crash-reporting infrastructure** (3 years; traces from general examination, not a specific approbatio). Falsified by: no organization reporting such integration.
 
-- **At least one published report presents measured bug-density reduction attributable to adopting `pre` on public API functions** (3 years, Objection II inverse). Falsified by: no such report by end of 2029.
+- **At least one published report presents measured bug-density reduction attributable to adopting `pre` on public API functions** (3 years; candidate charge on deployment experience did not survive, but the inverse prediction tests whether adoption produces measurable benefit). Falsified by: no such report by end of 2029.
 
 - **At least one safety-related standards body or regulatory document cites C++26 Contracts as evidence of C++ addressing correctness** (2 years, Design principles approbatio). Falsified by: no such citation by end of 2028.
 
@@ -300,16 +283,16 @@ Only predictions that trace directly to a finding are included. Predictions abou
 
 The P2900 analysis produced:
 
-- 5 approbationes (sections certified as battle-hardened)
-- 5 formal objections (from 9 candidates after Dei cross-examination)
-- 4 notae minores (editorial observations)
-- 15 falsifiable predictions with explicit timelines
+- 11 approbationes (sections certified as battle-hardened)
+- 1 formal objection (from approximately 15 candidates after Dei cross-examination)
+- 3 notae minores (editorial observations)
+- 13 falsifiable predictions with explicit timelines
 
 The cost:
 
 - API tokens: under $1
 - Wall-clock time: approximately 15 minutes
-- Human effort: answering 3 sets of multiple-choice questions
+- Human effort: none (postulator not available for deposition)
 
 Compare to the cost of not running the analysis. C++20 Contracts were adopted at Cologne in 2019 and removed at Prague in 2020<sup>[7]</sup>. The cost of that single cycle was years of committee time, implementation effort in two compilers, and community trust that has not fully recovered six years later. [P2900R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2900r14.pdf)<sup>[1]</sup>'s post-adoption NB comments<sup>[8]</sup> - each requiring committee time to process - raised objections the Advocatus identified in fifteen minutes.
 
@@ -367,9 +350,6 @@ Anthropic, for Claude - the model that powered the analysis.
 
 [13] [P4208R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4208r0.pdf) - "C++ Contracts on Trial - Does P2900 Survive Cross-Examination?" (Vinnie Falco, Claude Opus 4.6, 2026).
 
-[14] [P3835R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3835r0.html) - "Contracts make C++ less safe - full stop" (John Spicer, Ville Voutilainen, Jose Daniel Garcia Sanchez, 2025).
-
-[15] [P4020R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4020r0.html) - "Concerns about contract assertions" (Andrzej Krzemie&nacute;ski, 2026).
 
 \newpage
 

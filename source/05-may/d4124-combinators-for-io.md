@@ -217,8 +217,8 @@ Add a predicate parameter that inspects `set_value` arguments:
 
 ```cpp
 co_await when_all(
-    [](auto const&... args) {
-        return !std::get<0>(args...);
+    [](auto const& result) {
+        return !std::get<0>(result);
     },
     sock.async_read_some(buf1),
     sock.async_read_some(buf2));
@@ -263,6 +263,9 @@ io_adapt(IoAwaitable auto op)
         std::make_tuple(ec, n));
 }
 ```
+
+> [!NOTE]
+> `co_yield with_error(...)` is not part of `std::execution::task` as specified in [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html). It requires a language change to the mutual exclusion of `return_value` and `return_void` in coroutine promise types; see [P3950R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3950r0.pdf) and [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) Section 3.
 
 The call site:
 
@@ -333,8 +336,9 @@ The dispatch is compile-time, based on concepts:
 struct when_all_t {
     template <typename... Ts>
         requires (IoAwaitable<Ts> && ...)
-    auto operator()(Ts&&... children) const
-        -> io_result</* ... */>;
+    auto operator()(Ts&&... children) const;
+        // returns an IoAwaitable whose
+        // await_resume yields io_result<...>
 
     template <sender... Ts>
         requires (!(IoAwaitable<Ts> && ...))
