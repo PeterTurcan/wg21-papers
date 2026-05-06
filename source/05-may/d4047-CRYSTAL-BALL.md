@@ -51,27 +51,27 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 | #   | Prediction                                                                                     | Source                                                                                                           | Date    | Outcome   |
 |-----|------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|---------|-----------|
 | T1  | P2300 unlikely for C++23 given size of the proposal                                            | Adelstein Lelbach, CppCon 2021<sup>[2]</sup>                                                                    | 2021    | Confirmed |
-| T2  | "merge most of the foundational bits [P2300] early in the C++26 cycle"                         | Voutilainen [P0592R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)<sup>[3]</sup>                                                  | 2022    | Confirmed |
-| T3  | "not going to be in a timeframe conducive to inclusion in C++23" (re: language changes P2300 needs) | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                                                            | 2021-10 | Confirmed |
-| T4  | Networking TS should ship for C++23                                                            | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                                                                | 2021-10 | Unconfirmed - neither Net TS nor any networking shipped |
-| T5  | Stop Networking TS for C++23, focus on P2300                                                   | Voutilainen [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[5]</sup>                                                    | 2021    | Confirmed - Net TS stopped; P2300 proceeded |
+| T2  | "merge most of the foundational bits [P2300] early in the C++26 cycle"                         | Voutilainen [P0592R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)<sup>[3]</sup>                                                  | 2022    | Confirmed |
+| T3  | "not going to be in a timeframe conducive to inclusion in C++23" (re: language changes P2300 needs) | [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                                                            | 2021-10 | Confirmed |
+| T4  | Networking TS should ship for C++23                                                            | [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                                                                | 2021-10 | Unconfirmed - neither Net TS nor any networking shipped |
+| T5  | Stop Networking TS for C++23, focus on P2300                                                   | Voutilainen [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[5]</sup>                                                    | 2021    | Confirmed - Net TS stopped; P2300 proceeded |
 
 ### Safety and Correctness
 
 | #   | Prediction                                                                                             | Source                                                          | Date    | Outcome   |
 |-----|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|---------|-----------|
-| S1  | Stack overflow from reentrant completion without executors is "user-hostile default behaviour"          | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - M&uuml;ller [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup> (2025), K&uuml;hl [P3796R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[7]</sup> |
-| S2  | P2300 design "insufficiently paranoid to be suited to internet-facing software development"            | [P2480R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2480r0.pdf)<sup>[8]</sup>               | 2021-10 | Partially confirmed - networking deferred to C++29 |
-| S3  | `set_error` channel confusion - scheduling errors vs. I/O errors                                       | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - still unresolved |
-| S4  | "P2300 will likely require language changes to work effectively" - tail calls, trampolines              | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[9]</sup> documents symmetric transfer gap (2026) |
-| S5  | Tail call concerns documented before P2300                                                             | Nishanov [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[10]</sup>      | 2019    | Confirmed - still open |
+| S1  | Stack overflow from reentrant completion without executors is "user-hostile default behaviour"          | [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - M&uuml;ller [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup> (2025), K&uuml;hl [P3796R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[7]</sup> |
+| S2  | P2300 design "insufficiently paranoid to be suited to internet-facing software development"            | [P2480R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2480r0.pdf)<sup>[8]</sup>               | 2021-10 | Partially confirmed - networking deferred to C++29 |
+| S3  | `set_error` channel confusion - scheduling errors vs. I/O errors                                       | [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - still unresolved |
+| S4  | "P2300 will likely require language changes to work effectively" - tail calls, trampolines              | [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[9]</sup> documents symmetric transfer gap (2026) |
+| S5  | Tail call concerns documented before P2300                                                             | Nishanov [P1362R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[10]</sup>      | 2019    | Confirmed - still open |
 
 ### Customization Mechanism
 
 | #   | Prediction                                                                 | Source                                                              | Date      | Outcome   |
 |-----|----------------------------------------------------------------------------|---------------------------------------------------------------------|-----------|-----------|
-| C1  | `tag_invoke` as the customization mechanism for sender algorithms          | P2300R0-R5, [P2403R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[11]</sup> | 2020-2022 | Unconfirmed - abandoned; replaced by `transform_sender` ([P2999R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)<sup>[12]</sup>) |
-| C2  | `transform_sender` as the customization mechanism                          | [P2999R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)<sup>[12]</sup>                  | 2024      | Unconfirmed - [P3303R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3303r1.html)<sup>[13]</sup> "Fixing," [P3718R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html)<sup>[14]</sup> "Fixing Again," then [P3826R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r5.html)<sup>[15]</sup> proposes removal |
+| C1  | `tag_invoke` as the customization mechanism for sender algorithms          | P2300R0-R5, [P2403R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)<sup>[11]</sup> | 2020-2022 | Unconfirmed - abandoned; replaced by `transform_sender` ([P2999R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)<sup>[12]</sup>) |
+| C2  | `transform_sender` as the customization mechanism                          | [P2999R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)<sup>[12]</sup>                  | 2024      | Unconfirmed - [P3303R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3303r1.html)<sup>[13]</sup> "Fixing," [P3718R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html)<sup>[14]</sup> "Fixing Again," then [P3826R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r5.html)<sup>[15]</sup> proposes removal |
 | C3  | "the customization mechanism has seen a fair bit of recent churn" - remove for C++26, restore in C++29 | Niebler [P3826R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r5.html)<sup>[15]</sup>      | 2025-10   | Pending - proposed |
 
 ### Universality and Scope
@@ -80,8 +80,8 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 |-----|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------|-----------|
 | U1  | ">90% of all async code in the future should be coroutines"                       | Niebler, "Structured Concurrency"<sup>[16]</sup>                                   | 2020-11 | Shifted - by 2024: "returning a sender is a great choice"<sup>[17]</sup> |
 | U2  | "senders are like iterators when STL emerged" - universal adoption predicted       | K&uuml;hl, quoted in P2300R3-R10                        | 2021-25 | Unconfirmed - no equivalent adoption curve |
-| U3  | SG1 "no consensus" that one grand unified model is needed (4-9-5-5-1)             | [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup>                                  | 2021-09 | Confirmed - poll happened; direction proceeded regardless |
-| U4  | "Networking should be based on sender/receiver model" - weak consensus (17-11-10-4-6) | [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup>                              | 2021-10 | Unconfirmed - no sender-based networking exists; deferred to C++29 |
+| U3  | SG1 "no consensus" that one grand unified model is needed (4-9-5-5-1)             | [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup>                                  | 2021-09 | Confirmed - poll happened; direction proceeded regardless |
+| U4  | "Networking should be based on sender/receiver model" - weak consensus (17-11-10-4-6) | [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup>                              | 2021-10 | Unconfirmed - no sender-based networking exists; deferred to C++29 |
 | U5  | Production library chose awaitables over senders for usability                     | Prokoptsev, CppCon 2024<sup>[19]</sup>                                             | 2024    | Confirmed |
 | U6  | "C++26 will *still* not have a standard coroutine task type"                       | Niebler [P3826R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r5.html)<sup>[15]</sup>                          | 2025-10 | Pending   |
 
@@ -89,23 +89,23 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 
 | #   | Prediction                                                                                     | Source                                                              | Date    | Outcome   |
 |-----|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|---------|-----------|
-| D1  | Sender/receiver deployed in shipping Facebook products, "monthly users number in the billions"  | Niebler [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup>          | 2021    | Confirmed |
-| D2  | NVIDIA "fully invested in P2300... we plan to ship in production sometime next year"            | NVIDIA statement in [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup> | 2021 | Confirmed - nvexec shipped |
-| D3  | Bloomberg experimentation with sender/receiver                                                  | [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup>                  | 2021    | Confirmed |
+| D1  | Sender/receiver deployed in shipping Facebook products, "monthly users number in the billions"  | Niebler [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup>          | 2021    | Confirmed |
+| D2  | NVIDIA "fully invested in P2300... we plan to ship in production sometime next year"            | NVIDIA statement in [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup> | 2021 | Confirmed - nvexec shipped |
+| D3  | Bloomberg experimentation with sender/receiver                                                  | [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[20]</sup>                  | 2021    | Confirmed |
 
 ### Networking
 
 | #   | Prediction                                                                               | Source                                                              | Date    | Outcome   |
 |-----|------------------------------------------------------------------------------------------|---------------------------------------------------------------------|---------|-----------|
-| N1  | "The C++ Standard can't access the Internet. This is embarrassing and long overdue."     | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                   | 2021-10 | Confirmed - still true |
-| N2  | "We don't have a composable approach proposal [for networking] at this point"            | Voutilainen [P0592R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)<sup>[3]</sup>    | 2022    | Confirmed - still true |
-| N3  | Chair's note: "In the short term, this poll result doesn't mean much. We don't have a paper in hand that proposes networking based on the P2300 model." | [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup> | 2021-10 | Confirmed - still no such paper |
+| N1  | "The C++ Standard can't access the Internet. This is embarrassing and long overdue."     | [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                   | 2021-10 | Confirmed - still true |
+| N2  | "We don't have a composable approach proposal [for networking] at this point"            | Voutilainen [P0592R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)<sup>[3]</sup>    | 2022    | Confirmed - still true |
+| N3  | Chair's note: "In the short term, this poll result doesn't mean much. We don't have a paper in hand that proposes networking based on the P2300 model." | [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup> | 2021-10 | Confirmed - still no such paper |
 
 ### Implementation Maturity
 
 | #   | Prediction                                                                          | Source                                                                       | Date    | Outcome   |
 |-----|-------------------------------------------------------------------------------------|------------------------------------------------------------------------------|---------|-----------|
-| M1  | "many algorithms clearly labeled 'Not yet implemented' in libunifex"                | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                            | 2021-10 | Confirmed - libunifex archived; 50+ post-approval items in C++26 WD<sup>[21]</sup> |
+| M1  | "many algorithms clearly labeled 'Not yet implemented' in libunifex"                | [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>                            | 2021-10 | Confirmed - libunifex archived; 50+ post-approval items in C++26 WD<sup>[21]</sup> |
 | M2  | P2300 task type concerns: stack overflow, allocator, error handling                  | M&uuml;ller [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup>, K&uuml;hl [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[7]</sup> | 2025 | Confirmed - 16 open issues documented by task author |
 
 ## 4. Scorecard
@@ -138,25 +138,25 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 
 [2] [Bryce Adelstein Lelbach. "C++ Standard Parallelism." CppCon 2021](https://www.youtube.com/watch?v=LW_T2RGXego)
 
-[3] [Ville Voutilainen. P0592R5. "To boldly suggest an overall plan for C++26." WG21](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)
+[3] [Ville Voutilainen. P0592R5. "To boldly suggest an overall plan for C++26." WG21](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)
 
-[4] [Christopher Kohlhoff, Jamie Allsop, Vinnie Falco, Richard Hodges, Klemens Morgenstern. P2469R0. "Response to P2464: The Networking TS is baked, P2300 Sender/Receiver is not." WG21, 2021](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)
+[4] [Christopher Kohlhoff, Jamie Allsop, Vinnie Falco, Richard Hodges, Klemens Morgenstern. P2469R0. "Response to P2464: The Networking TS is baked, P2300 Sender/Receiver is not." WG21, 2021](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)
 
-[5] [Ville Voutilainen. P2464R0. "Ruminations on networking and executors." WG21, 2021](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)
+[5] [Ville Voutilainen. P2464R0. "Ruminations on networking and executors." WG21, 2021](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)
 
 [6] [Jonathan M&uuml;ller. P3801R0. "Concerns about the design of std::execution::task." WG21, 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)
 
 [7] [Dietmar K&uuml;hl. P3796R1. "Coroutine Task Issues." WG21, 2025](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)
 
-[8] [Christopher Kohlhoff, Jamie Allsop, Klemens Morgenstern. P2480R0. "Response to P2471: "NetTS, Asio, and Sender library design comparison" - corrected and expanded" WG21, 2021](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2480r0.pdf)
+[8] [Christopher Kohlhoff, Jamie Allsop, Klemens Morgenstern. P2480R0. "Response to P2471: "NetTS, Asio, and Sender library design comparison" - corrected and expanded" WG21, 2021](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2480r0.pdf)
 
 [9] [Mungo Gill, Vinnie Falco. P2583R4. WG21, 2026](https://isocpp.org/files/papers/P2583R4.pdf)
 
-[10] [Gor Nishanov. P1362R0. "Incremental Approach: Coroutine TS + Core Coroutines." WG21, 2019](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)
+[10] [Gor Nishanov. P1362R0. "Incremental Approach: Coroutine TS + Core Coroutines." WG21, 2019](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)
 
-[11] [Michael Garland, et al. P2403R0. "Presentation on P2300 - std::execution." WG21](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)
+[11] [Michael Garland, et al. P2403R0. "Presentation on P2300 - std::execution." WG21](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2403r0.pdf)
 
-[12] [Eric Niebler. P2999R3. "Sender Algorithm Customization." WG21, 2024](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
+[12] [Eric Niebler. P2999R3. "Sender Algorithm Customization." WG21, 2024](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html)
 
 [13] [Eric Niebler. P3303R1. "Fixing Lazy Sender Algorithm Customization." WG21, 2024](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3303r1.html)
 
@@ -168,11 +168,11 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 
 [17] [Eric Niebler. "What are Senders Good For, Anyway?" 2024](https://ericniebler.com/2024/02/04/what-are-senders-good-for-anyway/)
 
-[18] [Bryce Adelstein Lelbach. P2453R0. "2021 October Library Evolution Poll Outcomes." WG21, 2022](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)
+[18] [Bryce Adelstein Lelbach. P2453R0. "2021 October Library Evolution Poll Outcomes." WG21, 2022](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)
 
 [19] [Dmitry Prokoptsev. "C++ Coroutines and Structured Concurrency in Practice." CppCon 2024](https://www.youtube.com/watch?v=aPqMQ7SXSiw)
 
-[20] [Eric Niebler. P2470R0. "Slides for presentation of P2300R2: std::execution (sender/receiver)" WG21, 2021](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)
+[20] [Eric Niebler. P2470R0. "Slides for presentation of P2300R2: std::execution (sender/receiver)" WG21, 2021](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)
 
 [21] [LWG unresolved prioritized list](https://cplusplus.github.io/LWG/unresolved-prioritized.html)
 

@@ -64,7 +64,7 @@ Three topics are outside scope. Allocator timing - how and when the frame alloca
 
 ## 3. The Claim
 
-A standard task type provides a lingua franca. It eliminates pairwise bridges. It gives the ecosystem a common type that every library can accept and return. [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[1]</sup> Section 3 states: "The `task` coroutine provided by the standard library may not always fit user's needs." SG1 discussion notes on [P1056R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1056r1.html)<sup>[25]</sup>, "Add lazy coroutine (coroutine task) type," record (reproduced in [P3552R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r0.pdf)<sup>[26]</sup>): "There can be more than one `task` type for different needs."
+A standard task type provides a lingua franca. It eliminates pairwise bridges. It gives the ecosystem a common type that every library can accept and return. [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[1]</sup> Section 3 states: "The `task` coroutine provided by the standard library may not always fit user's needs." SG1 discussion notes on [P1056R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1056r1.html)<sup>[25]</sup>, "Add lazy coroutine (coroutine task) type," record (reproduced in [P3552R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r0.pdf)<sup>[26]</sup>): "There can be more than one `task` type for different needs."
 
 The claim is that `std::execution::task` serves as that lingua franca. This paper stress-tests that claim.
 
@@ -279,7 +279,7 @@ Bolas continued<sup>[18]</sup>:
 
 When the Environment changes, the return type changes, and every caller breaks. The separation was designed to prevent exactly this.
 
-Gor Nishanov designed the coroutine mechanism with an explicit layering model. [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[8]</sup> Section 4.4 and [N4287](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4287.pdf)<sup>[29]</sup> define four tiers:
+Gor Nishanov designed the coroutine mechanism with an explicit layering model. [P1362R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[8]</sup> Section 4.4 and [N4287](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4287.pdf)<sup>[29]</sup> define four tiers:
 
 | Who                        | What                                                                                                  |
 | -------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -290,7 +290,7 @@ Gor Nishanov designed the coroutine mechanism with an explicit layering model. [
 
 The middle tier is the one that matters. Power users customize the *environment* by defining new *awaitables* - not by changing the coroutine type. The coroutine type stays fixed; the awaitable carries the domain-specific protocol. The `Environment` parameter inverts this layering: it puts environment customization in the coroutine type itself, forcing a new type for each domain. What Nishanov assigned to the awaitable tier, `task<T, Environment>` moves into the expert tier and exposes in the return type.
 
-Nishanov reinforced the principle in [P0975R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0975r0.html)<sup>[9]</sup>:
+Nishanov reinforced the principle in [P0975R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0975r0.html)<sup>[9]</sup>:
 
 > "Unlike most other languages that support coroutines, C++ coroutines are open and not tied to any particular runtime or generator type and allow libraries to imbue coroutines with meaning."
 
@@ -385,13 +385,13 @@ Concept-level incompatibility still exists. A promise that does not provide `awa
 
 ## 10. Frequently Raised Concerns
 
-**Q1: Nicol Bolas is not normative.** Bolas is explaining the rationale, not writing the standard. The normative backing is Nishanov's [P0975R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0975r0.html)<sup>[9]</sup> ("open and not tied to any particular runtime") and [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[8]</sup> (layered complexity model), both published WG21 papers. Even setting aside design-intent sources, the empirical evidence in Section 8 - seven independent libraries converging on one-parameter designs - shows that the ecosystem treats the principle as operative.
+**Q1: Nicol Bolas is not normative.** Bolas is explaining the rationale, not writing the standard. The normative backing is Nishanov's [P0975R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0975r0.html)<sup>[9]</sup> ("open and not tied to any particular runtime") and [P1362R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[8]</sup> (layered complexity model), both published WG21 papers. Even setting aside design-intent sources, the empirical evidence in Section 8 - seven independent libraries converging on one-parameter designs - shows that the ecosystem treats the principle as operative.
 
 **Q2: `IoAwaitable` is the author's own design.** `IoAwaitable` is one realization of the principle. The cross_await bridges (Section 8, Klemens Morgenstern, independent author) and Google's `Co<T>` both use the same principle without `IoAwaitable`. The principle is: domain-specific invariants belong in the promise, not in the return type.
 
 **Q3: The Environment parameter serves a real need.** Agreed. The Environment creates a structural risk to task type diversity. The question is whether the risk is worth accepting for domains outside the sender model.
 
-**Q4: Production libraries do not interoperate anyway.** The cross_await bridges in Section 8 refute this. Four working examples, 51-105 lines each. The C++20 awaitable protocol is the interop surface. Diversity with interoperability is the design intent (Nishanov [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[8]</sup>: "mix and match").
+**Q4: Production libraries do not interoperate anyway.** The cross_await bridges in Section 8 refute this. Four working examples, 51-105 lines each. The C++20 awaitable protocol is the interop surface. Diversity with interoperability is the design intent (Nishanov [P1362R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[8]</sup>: "mix and match").
 
 **Q5: A default Environment will fix the fragmentation.** Even with a default, the parameter exists so users provide non-default environments. The moment they do, fragmentation begins. Adding a default delays the risk; it does not prevent it. Section 5 traces the progression from empty environments through NVIDIA's deployed queries - the default does not change the outcome.
 
@@ -431,9 +431,9 @@ The author thanks Gor Nishanov for the coroutine model's explicit support for ta
 
 [7] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak et al., 2024).
 
-[8] [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf) - "Incremental Approach: Coroutine TS + Core Coroutines" (Gor Nishanov, 2018).
+[8] [P1362R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf) - "Incremental Approach: Coroutine TS + Core Coroutines" (Gor Nishanov, 2018).
 
-[9] [P0975R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0975r0.html) - "Impact of coroutines on current and upcoming library facilities" (Gor Nishanov, 2018).
+[9] [P0975R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0975r0.html) - "Impact of coroutines on current and upcoming library facilities" (Gor Nishanov, 2018).
 
 [10] [P4092R0](https://isocpp.org/files/papers/P4092R0.pdf) - "Consuming Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026).
 
@@ -471,7 +471,7 @@ The author thanks Gor Nishanov for the coroutine model's explicit support for ta
 
 [24] [P3941R4](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r4.html) - "Scheduler Affinity" (Dietmar K&uuml;hl, 2026).
 
-[25] [P1056R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1056r1.html) - "Add lazy coroutine (coroutine task) type" (Lewis Baker, Gor Nishanov, 2019).
+[25] [P1056R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1056r1.html) - "Add lazy coroutine (coroutine task) type" (Lewis Baker, Gor Nishanov, 2019).
 
 [26] [P3552R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r0.pdf) - "Add a Coroutine Lazy Type" (Dietmar K&uuml;hl, Maikel Nadolski, 2025).
 

@@ -44,7 +44,7 @@ This paper asks for nothing.
 This paper grants `std::execution::task` every engineering fix that has been proposed, discussed, or implied. The following are assumed to ship:
 
 - **Case A (concession):** I/O operations return awaitables, not senders. The template operation state problem ([P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf)<sup>[4]</sup> Section 6.1) does not arise. This is the generous case.
-- **Case B (stated direction):** I/O operations return senders. LEWG polled in October 2021 that "the sender/receiver model (P2300) is a good basis for most asynchronous use cases, including networking" ([P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>); SG4 polled at Kona (November 2023) that networking must use the sender model. Under Case B, every `co_await` of an I/O sender inside a `task<T, IoEnv>` goes through `connect`/`start`/`state<Rcvr>`. The `state<Rcvr>` lives on the coroutine frame (no separate allocation), but the CPU cost of construction and environment extraction is per I/O operation. The narrow task-to-task fix (LWG4348) does not apply because the I/O operation is not a task.
+- **Case B (stated direction):** I/O operations return senders. LEWG polled in October 2021 that "the sender/receiver model (P2300) is a good basis for most asynchronous use cases, including networking" ([P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>); SG4 polled at Kona (November 2023) that networking must use the sender model. Under Case B, every `co_await` of an I/O sender inside a `task<T, IoEnv>` goes through `connect`/`start`/`state<Rcvr>`. The `state<Rcvr>` lives on the coroutine frame (no separate allocation), but the CPU cost of construction and environment extraction is per I/O operation. The narrow task-to-task fix (LWG4348) does not apply because the I/O operation is not a task.
 - Symmetric transfer works task-to-task. The stack overflow vulnerability ([P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup>) is resolved.
 - Frame allocator timing is fixed. The rework in [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html)<sup>[7]</sup> ships. The allocator reaches `promise_type::operator new` before the frame is allocated.
 - `AS-EXCEPT-PTR` does not convert an `error_code` to `exception_ptr`. I/O errors do not become exceptions.
@@ -294,7 +294,7 @@ The `set_value` branch unconditionally stores values and calls `state.arrive(rcv
 
 An I/O read returns `(error_code, size_t)`. Kohlhoff identified the routing problem in 2021:
 
-> "Due to the limitations of the `set_error` channel (which has a single 'error' argument) and `set_done` channel (which takes no arguments), partial results must be communicated down the `set_value` channel." ([P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[12]</sup>)
+> "Due to the limitations of the `set_error` channel (which has a single 'error' argument) and `set_done` channel (which takes no arguments), partial results must be communicated down the `set_value` channel." ([P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[12]</sup>)
 
 A fourth routing option addresses the `when_all` problem: `set_error(tuple(ec, T...))` on failure, `set_value(T...)` on success. The full compound result - including the byte count - goes into the error channel as a tuple. The standard `when_all` sees `set_error`, cancels siblings, and stores the error. Both values are preserved inside the tuple.
 
@@ -384,13 +384,13 @@ The concessions in Section 2 assume several engineering fixes ship. [P3552R3](ht
 
 If `task` ships in C++26 without these fixes, the concessions in Section 2 are hypothetical. The gap in Section 4 would be larger.
 
-LEWG and SG4 have polled that networking should use the sender model ([P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>). Case A (I/O as awaitables) is therefore more generous than the stated direction. Case B (Section 5.7) documents the cost under the stated plan.
+LEWG and SG4 have polled that networking should use the sender model ([P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>). Case A (I/O as awaitables) is therefore more generous than the stated direction. Case B (Section 5.7) documents the cost under the stated plan.
 
-[P2762R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r0.pdf)<sup>[16]</sup> mentioned `io_task` in one paragraph:
+[P2762R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r0.pdf)<sup>[16]</sup> mentioned `io_task` in one paragraph:
 
 > "It may be useful to have a coroutine task (`io_task`) injecting a scheduler into asynchronous networking operations used within a coroutine... The corresponding task class probably needs to be templatized on the relevant scheduler type."
 
-[P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[17]</sup> stopped at R2 (October 2023). No revision in over two years. No published paper defines what `IoEnv` looks like inside `std::execution::task`.
+[P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[17]</sup> stopped at R2 (October 2023). No revision in over two years. No published paper defines what `IoEnv` looks like inside `std::execution::task`.
 
 The implementation section of [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[1]</sup> acknowledges:
 
@@ -404,7 +404,7 @@ The implementation section of [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/
 
 > "Does the C++ design follow the zero-overhead principle? Should it? I think it should, even if that principle isn't trivial to define precisely. Some of you (for some definition of 'you') seem not to. We - WG21 as an organization - haven't taken it seriously enough to make it a requirement for acceptance of new features. I think that is a serious problem."
 
-The principle has two parts. [P0709R4](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0709r4.pdf)<sup>[19]</sup> (Sutter, 2019) defines them:
+The principle has two parts. [P0709R4](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0709r4.pdf)<sup>[19]</sup> (Sutter, 2019) defines them:
 
 > "'Zero overhead' is not claiming zero cost - of course using something always incurs some cost. Rather, C++'s zero-overhead principle has always meant that (a) 'if you don't use it you don't pay for it' and (b) 'if you do use it you can't reasonably write it more efficiently by hand.'"
 
@@ -458,7 +458,7 @@ The committee has the information to evaluate whether the gap justifies a separa
 
 ## Acknowledgments
 
-The author thanks Bjarne Stroustrup for [P3406R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3406r0.pdf) and for articulating the standard to which this paper holds itself; Herb Sutter for the two-part definition of zero overhead in [P0709R4](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0709r4.pdf); Dietmar K&uuml;hl for [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html) and [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html), for `beman::execution`, and for clarifying the stop token bridging resolution on the LEWG reflector; Jens Maurer for clarifying the stated direction for I/O primitives; Jonathan M&uuml;ller for [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html) and for documenting the symmetric transfer gap; Chris Kohlhoff for identifying the partial-success problem in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf); Eric Niebler, Lewis Baker, and Kirk Shoop for `std::execution`; Steve Gerbino for co-developing the bridge implementations; Peter Dimov for the frame allocator propagation analysis and for the `set_error(tuple(ec, T...))` routing that resolves the combinator gap; and Mungo Gill, Mohammad Nejati, Michael Vandeberg, and Andrzej Krzemie&nacute;ski for feedback.
+The author thanks Bjarne Stroustrup for [P3406R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3406r0.pdf) and for articulating the standard to which this paper holds itself; Herb Sutter for the two-part definition of zero overhead in [P0709R4](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0709r4.pdf); Dietmar K&uuml;hl for [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html) and [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html), for `beman::execution`, and for clarifying the stop token bridging resolution on the LEWG reflector; Jens Maurer for clarifying the stated direction for I/O primitives; Jonathan M&uuml;ller for [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html) and for documenting the symmetric transfer gap; Chris Kohlhoff for identifying the partial-success problem in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf); Eric Niebler, Lewis Baker, and Kirk Shoop for `std::execution`; Steve Gerbino for co-developing the bridge implementations; Peter Dimov for the frame allocator propagation analysis and for the `set_error(tuple(ec, T...))` routing that resolves the combinator gap; and Mungo Gill, Mohammad Nejati, Michael Vandeberg, and Andrzej Krzemie&nacute;ski for feedback.
 
 ---
 
@@ -472,7 +472,7 @@ The author thanks Bjarne Stroustrup for [P3406R0](https://www.open-std.org/jtc1/
 
 [4] [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf) - "Info: What C++20 Coroutines Already Buy The Standard" (Vinnie Falco, 2026).
 
-[5] [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
+[5] [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
 
 [6] [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html) - "Concerns about the design of `std::execution::task`" (Jonathan M&uuml;ller, 2025).
 
@@ -486,7 +486,7 @@ The author thanks Bjarne Stroustrup for [P3406R0](https://www.open-std.org/jtc1/
 
 [11] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
-[12] [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Slides: Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
+[12] [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Slides: Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
 
 [13] [P4124R0](https://isocpp.org/files/papers/P4124R0.pdf) - "Domain-Aware Combinators" (Vinnie Falco, 2026).
 
@@ -494,12 +494,12 @@ The author thanks Bjarne Stroustrup for [P3406R0](https://www.open-std.org/jtc1/
 
 [15] [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html) - "Coroutine Task Issues" (Dietmar K&uuml;hl, 2025).
 
-[16] [P2762R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r0.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
+[16] [P2762R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r0.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
 
-[17] [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
+[17] [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
 
 [18] [P3406R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3406r0.pdf) - "We need better performance testing" (Bjarne Stroustrup, 2024).
 
-[19] [P0709R4](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0709r4.pdf) - "Zero-overhead deterministic exceptions: Throwing values" (Herb Sutter, 2019).
+[19] [P0709R4](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0709r4.pdf) - "Zero-overhead deterministic exceptions: Throwing values" (Herb Sutter, 2019).
 
 [20] [Hacker News: Trying Out C++26 Executors](https://news.ycombinator.com/item?id=46072323) - 2025.

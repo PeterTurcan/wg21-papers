@@ -41,7 +41,7 @@ Coroutine-native I/O and `std::execution` are complementary. Each serves the dom
 
 This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
 
-The author is a co-author of [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[3]</sup>, "Response to P2464: The Networking TS is baked, P2300 Sender/Receiver is not," which argued in October 2021 that the Networking TS was more mature than P2300. The reader should be aware that the author had a prior published position on the relationship between the Networking TS and [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup>.
+The author is a co-author of [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[3]</sup>, "Response to P2464: The Networking TS is baked, P2300 Sender/Receiver is not," which argued in October 2021 that the Networking TS was more mature than P2300. The reader should be aware that the author had a prior published position on the relationship between the Networking TS and [P2300](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup>.
 
 The author's research method is systematic search of the published record - WG21 papers, published poll outcomes, and public mailing list archives. Every source cited in this paper is a published WG21 paper available on open-std.org or a published presentation available through wg21.link. The author also searched the LEWG reflector archives for evidence of sender-based networking deployments, prototypes, or implementations. No such deployment was identified. The reflector is not a public source and its contents are not quoted in this paper. The author acknowledges that absence of evidence is not evidence of absence. Committee discussions occur in rooms, hallways, dinners, and private channels that leave no public trace. Evidence that P2300 works for networking may exist in unpublished prototypes, internal deployments, or private communications. The author cannot prove that such evidence does not exist. If a reader is aware of a published document, deployment, or prototype that this paper's research did not reach, the author welcomes the correction and will update the record in a future revision.
 
@@ -51,7 +51,7 @@ This paper asks for nothing.
 
 ## 2. The Poll
 
-[P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>, "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022), documents the following poll:
+[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>, "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022), documents the following poll:
 
 > "The sender/receiver model (P2300) is a good basis for most asynchronous use cases, including networking, parallelism, and GPUs."
 >
@@ -65,11 +65,11 @@ The chair's published interpretation:
 
 ### 2.1 Context
 
-In WG21, the people who write proposals are often the same people who present them, champion them, and participate in the polls that advance them. This is normal and expected - domain experts are the people best positioned to do the work. The following co-authorships are documented for completeness. Bryce Adelstein Lelbach served as LEWG Chair and is a co-author of [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup>. Eric Niebler authored the [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> presentation slides ([P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup>) and is a co-author of [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> and [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[7]</sup>. Both contributed substantially to the design that the poll evaluated. The poll was open to all LEWG members and the results reflect the committee's collective judgment.
+In WG21, the people who write proposals are often the same people who present them, champion them, and participate in the polls that advance them. This is normal and expected - domain experts are the people best positioned to do the work. The following co-authorships are documented for completeness. Bryce Adelstein Lelbach served as LEWG Chair and is a co-author of [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup>. Eric Niebler authored the [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> presentation slides ([P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup>) and is a co-author of [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> and [P1525R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[7]</sup>. Both contributed substantially to the design that the poll evaluated. The poll was open to all LEWG members and the results reflect the committee's collective judgment.
 
 ### 2.2 Selected Voter Comments
 
-[P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> Section 4.2 publishes selected comments from voters on Poll 2. The following comments address the networking component of the poll. All quotes are verbatim from the published paper.
+[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> Section 4.2 publishes selected comments from voters on Poll 2. The following comments address the networking component of the poll. All quotes are verbatim from the published paper.
 
 Voters who stated they could not evaluate the networking claim:
 
@@ -93,7 +93,7 @@ These votes counted toward the "consensus in favor" that included networking.
 
 ### 2.3 Poll 4
 
-[P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> documents a second poll that directly addresses networking:
+[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> documents a second poll that directly addresses networking:
 
 > "Networking in the C++ Standard Library should be based on the sender/receiver model (P2300)."
 >
@@ -121,7 +121,7 @@ The poll was taken in October 2021. This section documents the published evidenc
 
 ### 3.1 Published Deployments
 
-[P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup> (Niebler, 2021), the P2300R2 presentation slides, documented the following deployments:
+[P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup> (Niebler, 2021), the P2300R2 presentation slides, documented the following deployments:
 
 > "Sender/receiver as specified in P2300R2 is currently being used in the following shipping Facebook products: Facebook Messenger on iOS, Android, Windows, and macOS; Instagram on iOS and Android; Facebook on iOS and Android; Portal; An internal Facebook product that runs on Linux."
 
@@ -135,7 +135,7 @@ The poll was taken in October 2021. This section documents the published evidenc
 
 ### 3.2 The P2300R2 Networking Example
 
-[P2300R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html)<sup>[8]</sup> Section 1.4 contains a networking example using `NN::async_read_some` and `NN::async_write_some`:
+[P2300R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html)<sup>[8]</sup> Section 1.4 contains a networking example using `NN::async_read_some` and `NN::async_write_some`:
 
 > "In this code, `NN::async_read_some` and `NN::async_write_some` are asynchronous socket-based networking APIs that return senders."
 
@@ -143,7 +143,7 @@ The `NN::` namespace prefix is a placeholder. The example is a hypothetical illu
 
 ### 3.3 Published Evidence Against
 
-[P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021), "Partial success scenarios with P2300," was published two months before the poll. The paper documented that compound I/O results - an error code and a byte count - cannot be routed onto the sender's three completion channels without information loss:
+[P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021), "Partial success scenarios with P2300," was published two months before the poll. The paper documented that compound I/O results - an error code and a byte count - cannot be routed onto the sender's three completion channels without information loss:
 
 > "Due to the limitations of the set_error channel (which has a single 'error' argument) and set_done channel (which takes no arguments), partial results must be communicated down the set_value channel."
 
@@ -153,9 +153,9 @@ The `NN::` namespace prefix is a placeholder. The example is a hypothetical illu
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sender-based networking deployment          | None published. The production exchange described in [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf)<sup>[25]</sup> considered and rejected sender/receivers for architectural incompatibility (Section 7.2). |
 | Sender-based networking prototype           |                                                                                                                                                                                                                           |
-| Sender-based networking code example        | One hypothetical example in [P2300R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html)<sup>[8]</sup> Section 1.4 using placeholder `NN::` namespace                                                                                           |
-| Published analysis of sender model for I/O  | [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021): compound I/O results cannot use `set_error` without information loss. Published before the poll.                                             |
-| Sender deployments (non-networking)         | [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup>: Facebook (mobile apps), NVIDIA (GPU dispatch), Bloomberg (experimentation)                                                                                           |
+| Sender-based networking code example        | One hypothetical example in [P2300R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html)<sup>[8]</sup> Section 1.4 using placeholder `NN::` namespace                                                                                           |
+| Published analysis of sender model for I/O  | [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021): compound I/O results cannot use `set_error` without information loss. Published before the poll.                                             |
+| Sender deployments (non-networking)         | [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup>: Facebook (mobile apps), NVIDIA (GPU dispatch), Bloomberg (experimentation)                                                                                           |
 
 ---
 
@@ -163,16 +163,16 @@ The `NN::` namespace prefix is a placeholder. The example is a hypothetical illu
 
 ### 4.1 Papers by Other Authors
 
-[P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> (K&uuml;hl, 2023), "Sender/Receiver Interface For Networking," is the first published paper proposing sender-based networking APIs. It was published two years after the poll. Section 4.2 documents five routing options for I/O results onto sender channels and writes:
+[P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> (K&uuml;hl, 2023), "Sender/Receiver Interface For Networking," is the first published paper proposing sender-based networking APIs. It was published two years after the poll. Section 4.2 documents five routing options for I/O results onto sender channels and writes:
 
 > "some of the error cases may have been partial successes. In that case, using the set_error channel taking just one argument is somewhat limiting."
 
-The concern [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> raised in August 2021 - before the poll - remains documented in the literature as of 2023.
+The concern [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> raised in August 2021 - before the poll - remains documented in the literature as of 2023.
 
 | Paper                                                           | Year | What it documents                                                                                     |
 | --------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------- |
-| [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup>            | 2021 | Compound I/O results cannot use `set_error` without information loss                                  |
-| [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup>            | 2023 | First sender-based networking API proposal. Error channel "somewhat limiting" for partial success.     |
+| [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup>            | 2021 | Compound I/O results cannot use `set_error` without information loss                                  |
+| [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup>            | 2023 | First sender-based networking API proposal. Error channel "somewhat limiting" for partial success.     |
 | [N4985](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4985.pdf)<sup>[11]</sup>                | 2024 | St. Louis minutes: national body raised concerns about P2300R10 at the adoption vote.                 |
 | [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[12]</sup>            | 2025 | "Concerns about the design of std::execution::task." Urges the committee to reconsider P3552R3.       |
 | [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[13]</sup>            | 2025 | "Coroutine Task Issues." Documents stack overflow, cancellation, and wording problems in the task.     |
@@ -205,11 +205,11 @@ The author's position on coroutine-native I/O is a consequence of the findings d
 
 ### 4.3 The Timeline
 
-- [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[22]</sup> (2005): first networking proposal.
+- [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[22]</sup> (2005): first networking proposal.
 - Networking TS published as ISO TS (2018).
-- [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> (October 2021): "including networking." Consensus in favor.
-- [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> (2023): first sender-based networking API proposal.
-- 2026: no sender-based networking has shipped. Networking is not in the C++ standard. Twenty-one years from [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[22]</sup>.
+- [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> (October 2021): "including networking." Consensus in favor.
+- [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> (2023): first sender-based networking API proposal.
+- 2026: no sender-based networking has shipped. Networking is not in the C++ standard. Twenty-one years from [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[22]</sup>.
 
 ---
 
@@ -217,11 +217,11 @@ The author's position on coroutine-native I/O is a consequence of the findings d
 
 **Q: The poll said "good basis," not "ready to ship."**
 
-A: Section 2 quotes the chair's interpretation. The poll's outcome shaped the committee's direction. [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> Section 3 states: "The combination of this 'grand unified model' poll and Poll 4 heavily encourages the networking study group to produce a paper based on Senders and Receivers." The word "networking" in the poll text directed the committee's networking work toward the sender model.
+A: Section 2 quotes the chair's interpretation. The poll's outcome shaped the committee's direction. [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> Section 3 states: "The combination of this 'grand unified model' poll and Poll 4 heavily encourages the networking study group to produce a paper based on Senders and Receivers." The word "networking" in the poll text directed the committee's networking work toward the sender model.
 
 **Q: P2300 has been refined since 2021.**
 
-A: Section 4.1 documents the 2026 evidence. The error channel concern from [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (2021) is documented again in [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> (2023). No sender-based networking deployment has been published.
+A: Section 4.1 documents the 2026 evidence. The error channel concern from [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (2021) is documented again in [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> (2023). No sender-based networking deployment has been published.
 
 **Q: The poll included "parallelism and GPUs" which are validated.**
 
@@ -239,7 +239,7 @@ A: Jonathan M&uuml;ller [reported](https://www.think-cell.com/en/career/devblog/
 
 ## Acknowledgments
 
-The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the published poll outcomes in [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html); Christopher Kohlhoff for [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf), which documented the partial success problem before the poll was taken; Dietmar K&uuml;hl for [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf), the first sender-based networking API proposal; Eric Niebler for [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf) and the deployment documentation; and Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) implementation work.
+The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the published poll outcomes in [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html); Christopher Kohlhoff for [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf), which documented the partial success problem before the poll was taken; Dietmar K&uuml;hl for [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf), the first sender-based networking API proposal; Eric Niebler for [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf) and the deployment documentation; and Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) implementation work.
 
 ---
 
@@ -249,21 +249,21 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 
 [2] [cppalliance/corosio](https://github.com/cppalliance/corosio) - Coroutine-native networking library.
 
-[3] [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf) - "Response to P2464: The Networking TS is baked, P2300 Sender/Receiver is not" (Christopher Kohlhoff, Jamie Allsop, Vinnie Falco, Richard Hodges, Klemens Morgenstern, 2021).
+[3] [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf) - "Response to P2464: The Networking TS is baked, P2300 Sender/Receiver is not" (Christopher Kohlhoff, Jamie Allsop, Vinnie Falco, Richard Hodges, Klemens Morgenstern, 2021).
 
 [4] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
-[5] [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
+[5] [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
 
-[6] [P2470R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf) - "Slides for presentation of P2300R2: std::execution (sender/receiver)" (Eric Niebler, 2021).
+[6] [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf) - "Slides for presentation of P2300R2: std::execution (sender/receiver)" (Eric Niebler, 2021).
 
-[7] [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf) - "One-Way execute is a Poor Basis Operation" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, 2019).
+[7] [P1525R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf) - "One-Way execute is a Poor Basis Operation" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, 2019).
 
-[8] [P2300R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html) - "std::execution" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2021).
+[8] [P2300R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html) - "std::execution" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2021).
 
-[9] [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Christopher Kohlhoff, 2021).
+[9] [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Christopher Kohlhoff, 2021).
 
-[10] [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
+[10] [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
 
 [11] [N4985](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4985.pdf) - "WG21 2024-06 St Louis Minutes of Meeting" (Nina Ranns, 2024).
 
@@ -287,7 +287,7 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 
 [21] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer and Sender Composition" (Vinnie Falco, 2026).
 
-[22] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
+[22] [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
 [23] [Trip Report: Summer ISO C++ Meeting in St. Louis, USA](https://www.think-cell.com/en/career/devblog/trip-report-summer-iso-cpp-meeting-in-st-louis-usa) - Jonathan M&uuml;ller, July 2024.
 

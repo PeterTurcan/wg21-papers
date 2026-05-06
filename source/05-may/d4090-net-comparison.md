@@ -93,7 +93,7 @@ I/O operations return compound results:
 | `read`    | `(status, bytes_transferred)` |
 | `write`   | `(status, bytes_written)`     |
 
-Every OS delivers both values together.<sup>[5]</sup> Chris Kohlhoff identified the consequence for senders in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[6]</sup>:
+Every OS delivers both values together.<sup>[5]</sup> Chris Kohlhoff identified the consequence for senders in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[6]</sup>:
 
 > "Due to the limitations of the `set_error` channel (which has a single 'error' argument) and `set_done` channel (which takes no arguments), partial results must be communicated down the `set_value` channel."
 
@@ -105,7 +105,7 @@ Four approaches follow.
 
 Each approach is constructed from [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[1]</sup> and [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[2]</sup>.
 
-K&uuml;hl enumerated five channel-routing options in [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[7]</sup> Section 4.2 and noted: "some of the error cases may have been partial successes...using the set_error channel taking just one argument is somewhat limiting." Shoop identified the same difficulty in [P2471R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[8]</sup>: completion tokens translating to senders "must use a heuristic to type-match the first arg."
+K&uuml;hl enumerated five channel-routing options in [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[7]</sup> Section 4.2 and noted: "some of the error cases may have been partial successes...using the set_error channel taking just one argument is somewhat limiting." Shoop identified the same difficulty in [P2471R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[8]</sup>: completion tokens translating to senders "must use a heuristic to type-match the first arg."
 
 [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[1]</sup> Section 4.14 demonstrates the pattern:
 
@@ -593,7 +593,7 @@ The authors will incorporate any such construction and re-evaluate every finding
 
 ## 14. Acknowledgments
 
-The authors thank Ian Petersen for identifying an asymmetry in an earlier draft, for providing four working sender implementations that clarified the equal-footing observation, and (with Jessica Wong and Kirk Shoop) for `async_scope` - his critique materially improved this paper; Ville Voutilainen for working through the dispatch pattern, the channel ping-pong construction, and the `variant_sender` analysis with characteristic generosity and precision; Jens Maurer for reflector discussion on design freedom inside sender chains; Dietmar K&uuml;hl for the channel-routing enumeration in [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[7]</sup> and for `beman::execution`; Chris Kohlhoff for identifying the partial-success problem in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[6]</sup>; Kirk Shoop for the completion-token heuristic analysis in [P2471R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[8]</sup>; Peter Dimov for the refined channel mapping in [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[16]</sup>, "Open Issues in `std::execution::task`"; Micha&lstrok; Dominiak, Eric Niebler, and Lewis Baker for `std::execution`; Fabio Fracassi for [P3570R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3570r2.html)<sup>[17]</sup>, "Optional variants in sender/receiver"; and Herb Sutter for identifying the need for tutorials and constructed comparisons.
+The authors thank Ian Petersen for identifying an asymmetry in an earlier draft, for providing four working sender implementations that clarified the equal-footing observation, and (with Jessica Wong and Kirk Shoop) for `async_scope` - his critique materially improved this paper; Ville Voutilainen for working through the dispatch pattern, the channel ping-pong construction, and the `variant_sender` analysis with characteristic generosity and precision; Jens Maurer for reflector discussion on design freedom inside sender chains; Dietmar K&uuml;hl for the channel-routing enumeration in [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[7]</sup> and for `beman::execution`; Chris Kohlhoff for identifying the partial-success problem in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[6]</sup>; Kirk Shoop for the completion-token heuristic analysis in [P2471R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[8]</sup>; Peter Dimov for the refined channel mapping in [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[16]</sup>, "Open Issues in `std::execution::task`"; Micha&lstrok; Dominiak, Eric Niebler, and Lewis Baker for `std::execution`; Fabio Fracassi for [P3570R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3570r2.html)<sup>[17]</sup>, "Optional variants in sender/receiver"; and Herb Sutter for identifying the need for tutorials and constructed comparisons.
 
 Any person quoted in this paper who believes their words have been presented out of context or who wishes a quotation removed may contact the authors, who will comply without question.
 
@@ -611,13 +611,13 @@ Any person quoted in this paper who believes their words have been presented out
 
 [5] [IEEE Std 1003.1-2024 - POSIX `read()` / `write()` specification](https://pubs.opengroup.org/onlinepubs/9799919799/)
 
-[6] [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Slides: Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
+[6] [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Slides: Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
 
-[7] [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
+[7] [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
 
-[8] [P2471R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf) - "NetTS, ASIO and Sender Library Design Comparison" (Kirk Shoop, 2021).
+[8] [P2471R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf) - "NetTS, ASIO and Sender Library Design Comparison" (Kirk Shoop, 2021).
 
-[9] LEWG reflector (lib-ext), March 2026. Threads: "Complicated success at coroutine/sender composition boundaries" (http://lists.isocpp.org/lib-ext/2026/03/31375.php) and "std::execution - dynamically selecting a channel" (http://lists.isocpp.org/lib-ext/2026/03/31377.php). Compilable examples: Petersen's four sender implementations (https://godbolt.org/z/7W51hYE7c) and Voutilainen's channel ping-pong (https://godbolt.org/z/h5cv5fbTE).
+[9] LEWG reflector (lib-ext), March 2026. Threads: "Complicated success at coroutine/sender composition boundaries" (https://lists.isocpp.org/lib-ext/2026/03/31375.php) and "std::execution - dynamically selecting a channel" (https://lists.isocpp.org/lib-ext/2026/03/31377.php). Compilable examples: Petersen's four sender implementations (https://godbolt.org/z/7W51hYE7c) and Voutilainen's channel ping-pong (https://godbolt.org/z/h5cv5fbTE).
 
 [10] [P4091R0](https://isocpp.org/files/papers/P4091R0.pdf) - "Two Error Models" (Vinnie Falco, 2026).
 

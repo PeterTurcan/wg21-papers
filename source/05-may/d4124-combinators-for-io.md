@@ -404,7 +404,7 @@ Domain-aware combinators resolve this. A single `when_all` dispatches at compile
 
 ## Acknowledgments
 
-The author thanks Peter Dimov for the `io_result` return type design and the `set_error(tuple(ec, T...))` routing analysis; Dietmar K&uuml;hl for identifying the irreplaceable sender algorithms inside a coroutine body; Chuanqi Xu for production experience confirming that concurrency combinators are the irreplaceable set and for the code size observation; Ian Petersen for confirming that four sender implementations of channel dispatch are equivalent to `auto [ec, buf] = co_await read(socket, buffer); switch (ec) { ... }`; Ville Voutilainen for the `dispatch` sender adapter sketch and for working through the channel ping-pong construction; Chris Kohlhoff for identifying the partial-success routing problem in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[8]</sup>; and Andrzej Krzemie&nacute;ski for the independent reflector question.
+The author thanks Peter Dimov for the `io_result` return type design and the `set_error(tuple(ec, T...))` routing analysis; Dietmar K&uuml;hl for identifying the irreplaceable sender algorithms inside a coroutine body; Chuanqi Xu for production experience confirming that concurrency combinators are the irreplaceable set and for the code size observation; Ian Petersen for confirming that four sender implementations of channel dispatch are equivalent to `auto [ec, buf] = co_await read(socket, buffer); switch (ec) { ... }`; Ville Voutilainen for the `dispatch` sender adapter sketch and for working through the channel ping-pong construction; Chris Kohlhoff for identifying the partial-success routing problem in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[8]</sup>; and Andrzej Krzemie&nacute;ski for the independent reflector question.
 
 ---
 
@@ -424,5 +424,5 @@ The author thanks Peter Dimov for the `io_result` return type design and the `se
 
 [7] Dietmar K&uuml;hl - Irreplaceable sender algorithms inside a coroutine body (LEWG reflector, March 18, 2026).
 
-[8] [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
+[8] [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
 

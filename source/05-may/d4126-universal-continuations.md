@@ -152,18 +152,18 @@ The tension between "frame hidden from the caller" and "frame visible to the cal
 
 | Year | Paper                                                             | Author(s)                          | Design                                                                                  |
 | ---- | ----------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------- |
-| 2015 | [N4453](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4453.pdf)<sup>[8]</sup>                   | Kohlhoff                           | Resumable Expressions. Single `resumable` keyword, "suspend down."                      |
-| 2015 | [P0114R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0114r0.pdf)<sup>[9]</sup>               | Kohlhoff                           | Resumable Expressions (revised).                                                        |
-| 2015 | [P0158R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0158r0.html)<sup>[10]</sup>               | Allsop et al.                      | Coroutines belong in a TS. Argued for more time.                                        |
-| 2018 | [P0057R8](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0057r8.pdf)<sup>[11]</sup>               | Nishanov                           | Coroutines TS. Frame-erased. The design that shipped.                                   |
-| 2018 | [P0973R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0973r0.pdf)<sup>[12]</sup>              | Romer, Dennett                     | Coroutines TS Use Cases and Design Issues. Critique: implicit allocation, hidden frame.  |
-| 2018 | [P1063R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf)<sup>[13]</sup>              | Romer, Dennett, Carruth            | Core Coroutines. Frame-visible alternative. Expose minimal primitives.                   |
+| 2015 | [N4453](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4453.pdf)<sup>[8]</sup>                   | Kohlhoff                           | Resumable Expressions. Single `resumable` keyword, "suspend down."                      |
+| 2015 | [P0114R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0114r0.pdf)<sup>[9]</sup>               | Kohlhoff                           | Resumable Expressions (revised).                                                        |
+| 2015 | [P0158R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0158r0.html)<sup>[10]</sup>               | Allsop et al.                      | Coroutines belong in a TS. Argued for more time.                                        |
+| 2018 | [P0057R8](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0057r8.pdf)<sup>[11]</sup>               | Nishanov                           | Coroutines TS. Frame-erased. The design that shipped.                                   |
+| 2018 | [P0973R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0973r0.pdf)<sup>[12]</sup>              | Romer, Dennett                     | Coroutines TS Use Cases and Design Issues. Critique: implicit allocation, hidden frame.  |
+| 2018 | [P1063R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf)<sup>[13]</sup>              | Romer, Dennett, Carruth            | Core Coroutines. Frame-visible alternative. Expose minimal primitives.                   |
 | 2018 | [P1134R0](https://vinniefalco.github.io/papers/drafts/d1134r0.html)<sup>[14]</sup> | Falco                   | An Elegant Coroutine Abstraction. Library-only stackless coroutines.                     |
-| 2018 | [P1342R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf)<sup>[15]</sup>              | Baker                              | Unifying Coroutines TS and Core Coroutines. Attempted compromise.                        |
-| 2018 | [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[16]</sup>              | Nishanov                           | Incremental Approach: Coroutine TS + Core Coroutines.                                    |
-| 2019 | [P1492R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1492r0.pdf)<sup>[17]</sup>              | Smith, Vandevoorde et al.          | Language and implementation impact of coroutine proposals.                                |
-| 2019 | [P1493R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1493r0.pdf)<sup>[18]</sup>              | Romer, Nishanov, Baker, Mihailov   | Coroutines: Use-cases and Trade-offs.                                                    |
-| 2019 | [P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[19]</sup>              | Nishanov                           | Merge Coroutines TS into C++20. The frame-erased model ships.                            |
+| 2018 | [P1342R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf)<sup>[15]</sup>              | Baker                              | Unifying Coroutines TS and Core Coroutines. Attempted compromise.                        |
+| 2018 | [P1362R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[16]</sup>              | Nishanov                           | Incremental Approach: Coroutine TS + Core Coroutines.                                    |
+| 2019 | [P1492R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1492r0.pdf)<sup>[17]</sup>              | Smith, Vandevoorde et al.          | Language and implementation impact of coroutine proposals.                                |
+| 2019 | [P1493R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1493r0.pdf)<sup>[18]</sup>              | Romer, Nishanov, Baker, Mihailov   | Coroutines: Use-cases and Trade-offs.                                                    |
+| 2019 | [P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[19]</sup>              | Nishanov                           | Merge Coroutines TS into C++20. The frame-erased model ships.                            |
 | 2024 | [P3203R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3203r0.html)<sup>[20]</sup>              | Morgenstern                        | Implementation defined coroutine extensions. Legalizes `coroutine_handle` specialization. |
 | 2026 | [P0876R22](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p0876r22.pdf)<sup>[21]</sup>            | Kowalke, Goodspeed                 | `fiber_context`. Stackful coroutines. Complementary, not competing.                      |
 
@@ -193,7 +193,7 @@ C++20 coroutines type-erase the frame through `coroutine_handle<>`. The promise 
 
 Senders want to see everything in the type system. The frame is part of the operation state. The sender pipeline owns the frame, knows its size, and can inline it.
 
-Romer, Dennett, and Carruth identified this need in [P1063R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf)<sup>[13]</sup>, "Core Coroutines." Their proposal sought to expose minimal coroutine primitives that map directly to the underlying implementation, giving the caller direct access to the coroutine frame in the C++ type system. Baker attempted to unify the two models in [P1342R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf)<sup>[15]</sup>.
+Romer, Dennett, and Carruth identified this need in [P1063R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf)<sup>[13]</sup>, "Core Coroutines." Their proposal sought to expose minimal coroutine primitives that map directly to the underlying implementation, giving the caller direct access to the coroutine frame in the C++ type system. Baker attempted to unify the two models in [P1342R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf)<sup>[15]</sup>.
 
 If C++ had frame-visible stackless coroutines, senders could invoke IoAwaitables by constructing the frame inline in their operation state. No allocation. The frame is part of the sender's storage.
 
@@ -399,7 +399,7 @@ A: C++ has multiple models for parallel execution, formatted output, and error h
 
 ## Acknowledgments
 
-The author thanks Gor Nishanov for the C++20 coroutine model and its explicit support for task type diversity; Christopher Kohlhoff for the original continuation framing in [P0113R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0113r0.html)<sup>[22]</sup> and for Resumable Expressions, which explored the boundary between type erasure and type visibility before most of the committee was thinking about it; Geoff Romer, James Dennett, and Chandler Carruth for [P1063R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf)<sup>[13]</sup>, which identified the frame-visibility need with precision; Lewis Baker for [P1342R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf)<sup>[15]</sup>, which attempted to unify the two models; Klemens Morgenstern for [P3203R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3203r0.html)<sup>[20]</sup>, which removes the legal barrier and documents the ABI reality; Niall Douglas for presenting [P3203R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3203r0.html)<sup>[20]</sup> at Sofia; Oliver Kowalke and Nat Goodspeed for a decade of work on stackful coroutines; and Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy)<sup>[3]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[4]</sup> implementation work.
+The author thanks Gor Nishanov for the C++20 coroutine model and its explicit support for task type diversity; Christopher Kohlhoff for the original continuation framing in [P0113R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0113r0.html)<sup>[22]</sup> and for Resumable Expressions, which explored the boundary between type erasure and type visibility before most of the committee was thinking about it; Geoff Romer, James Dennett, and Chandler Carruth for [P1063R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf)<sup>[13]</sup>, which identified the frame-visibility need with precision; Lewis Baker for [P1342R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf)<sup>[15]</sup>, which attempted to unify the two models; Klemens Morgenstern for [P3203R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3203r0.html)<sup>[20]</sup>, which removes the legal barrier and documents the ABI reality; Niall Douglas for presenting [P3203R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3203r0.html)<sup>[20]</sup> at Sofia; Oliver Kowalke and Nat Goodspeed for a decade of work on stackful coroutines; and Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy)<sup>[3]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[4]</sup> implementation work.
 
 ---
 
@@ -419,32 +419,32 @@ The author thanks Gor Nishanov for the C++20 coroutine model and its explicit su
 
 [7] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
-[8] [N4453](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4453.pdf) - "Resumable Expressions" (Christopher Kohlhoff, 2015).
+[8] [N4453](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4453.pdf) - "Resumable Expressions" (Christopher Kohlhoff, 2015).
 
-[9] [P0114R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0114r0.pdf) - "Resumable Expressions" (Christopher Kohlhoff, 2015).
+[9] [P0114R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0114r0.pdf) - "Resumable Expressions" (Christopher Kohlhoff, 2015).
 
-[10] [P0158R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0158r0.html) - "Coroutines belong in a TS" (Jamie Allsop, Jonathan Wakely, Christopher Kohlhoff, Anthony Williams, Roger Orr, Andy Sawyer, Jonathan Coe, Arash Partow, 2015).
+[10] [P0158R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0158r0.html) - "Coroutines belong in a TS" (Jamie Allsop, Jonathan Wakely, Christopher Kohlhoff, Anthony Williams, Roger Orr, Andy Sawyer, Jonathan Coe, Arash Partow, 2015).
 
-[11] [P0057R8](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0057r8.pdf) - "Working Draft, C++ Extensions for Coroutines" (Gor Nishanov, 2018).
+[11] [P0057R8](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0057r8.pdf) - "Working Draft, C++ Extensions for Coroutines" (Gor Nishanov, 2018).
 
-[12] [P0973R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0973r0.pdf) - "Coroutines TS Use Cases and Design Issues" (Geoff Romer, James Dennett, 2018).
+[12] [P0973R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0973r0.pdf) - "Coroutines TS Use Cases and Design Issues" (Geoff Romer, James Dennett, 2018).
 
-[13] [P1063R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf) - "Core Coroutines" (Geoff Romer, James Dennett, Chandler Carruth, 2018).
+[13] [P1063R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1063r0.pdf) - "Core Coroutines" (Geoff Romer, James Dennett, Chandler Carruth, 2018).
 
 [14] [P1134R0](https://vinniefalco.github.io/papers/drafts/d1134r0.html) - "An Elegant Coroutine Abstraction" (Vinnie Falco, 2018).
 
-[15] [P1342R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf) - "Unifying Coroutines TS and Core Coroutines" (Lewis Baker, 2018).
+[15] [P1342R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1342r0.pdf) - "Unifying Coroutines TS and Core Coroutines" (Lewis Baker, 2018).
 
-[16] [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf) - "Incremental Approach: Coroutine TS + Core Coroutines" (Gor Nishanov, 2018).
+[16] [P1362R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf) - "Incremental Approach: Coroutine TS + Core Coroutines" (Gor Nishanov, 2018).
 
-[17] [P1492R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1492r0.pdf) - "Language and implementation impact of coroutine proposals" (Richard Smith, Daveed Vandevoorde et al., 2019).
+[17] [P1492R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1492r0.pdf) - "Language and implementation impact of coroutine proposals" (Richard Smith, Daveed Vandevoorde et al., 2019).
 
-[18] [P1493R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1493r0.pdf) - "Coroutines: Use-cases and Trade-offs" (Geoffrey Romer, Gor Nishanov, Lewis Baker, Mihail Mihailov, 2019).
+[18] [P1493R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1493r0.pdf) - "Coroutines: Use-cases and Trade-offs" (Geoffrey Romer, Gor Nishanov, Lewis Baker, Mihail Mihailov, 2019).
 
-[19] [P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html) - "Merge Coroutines TS into C++20 working draft" (Gor Nishanov, 2019).
+[19] [P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html) - "Merge Coroutines TS into C++20 working draft" (Gor Nishanov, 2019).
 
 [20] [P3203R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3203r0.html) - "Implementation defined coroutine extensions" (Klemens Morgenstern, 2024).
 
 [21] [P0876R22](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p0876r22.pdf) - "fiber_context - fibers without scheduler" (Oliver Kowalke, Nat Goodspeed, 2026).
 
-[22] [P0113R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0113r0.html) - "Executors and Asynchronous Operations, Revision 2" (Christopher Kohlhoff, 2015).
+[22] [P0113R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0113r0.html) - "Executors and Asynchronous Operations, Revision 2" (Christopher Kohlhoff, 2015).

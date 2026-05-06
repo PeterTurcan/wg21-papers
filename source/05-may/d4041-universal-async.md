@@ -40,7 +40,7 @@ This paper asks for nothing.
 
 ## 2. Two Standard Async Models
 
-C++20 standardized coroutines ([P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[5]</sup>, [P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[6]</sup>). They are ISO C++.
+C++20 standardized coroutines ([P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[5]</sup>, [P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[6]</sup>). They are ISO C++.
 
 C++26 adds `std::execution` ([P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[7]</sup>, "std::execution"). Schedulers, senders, receivers, and composable algorithms for asynchronous computation.
 
@@ -88,7 +88,7 @@ Every post-adoption item falls into one of three categories.
 
 | Origin              | Items                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Count |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----: |
-| Sender Sub-Language | [P2855R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2855r1.html), [P2999R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html), [P3175R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3175r3.html), [P3187R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3187r1.pdf), [P3303R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3303r1.html), [P3373R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3373r2.pdf), [P3557R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3557r3.html), [P3570R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3570r2.html), [P3682R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3682r0.pdf), [P3718R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html), [P3826R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r3.html), [P3941R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r1.html), LWG 4190, 4206, 4215, 4368 |    16 |
+| Sender Sub-Language | [P2855R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2855r1.html), [P2999R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html), [P3175R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3175r3.html), [P3187R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3187r1.pdf), [P3303R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3303r1.html), [P3373R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3373r2.pdf), [P3557R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3557r3.html), [P3570R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3570r2.html), [P3682R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3682r0.pdf), [P3718R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3718r0.html), [P3826R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3826r3.html), [P3941R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3941r1.html), LWG 4190, 4206, 4215, 4368 |    16 |
 | Sender Integration  | [P3927R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3927r0.html), [P3950R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3950r0.pdf), [D3980R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r0.html)<sup>[20]</sup>, LWG 4356, US 255-384, US 253-386, US 254-385, US 261-391                                                                                                                                                                                                                                                                                                          |     8 |
 | Coroutine-Intrinsic | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |     0 |
 
@@ -116,7 +116,7 @@ Robert Leahy proposed a core language change in [P3950R0](https://www.open-std.o
 
 > *"Disallowing it either disadvantages coroutines vis-a-vis `std::execution` or necessitates library workarounds."*
 
-Chris Kohlhoff identified the partial success tension in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[24]</sup> ("Partial success scenarios with P2300," 2021):
+Chris Kohlhoff identified the partial success tension in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[24]</sup> ("Partial success scenarios with P2300," 2021):
 
 > *"Due to the limitations of the `set_error` channel (which has a single 'error' argument) and `set_done` channel (which takes no arguments), partial results must be communicated down the `set_value` channel."*
 
@@ -141,12 +141,12 @@ Both [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r1
 
 | Date                          | Event                                                                                                                         |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| February 2020 (Prague)        | Partial success raised during [P1678R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1678r2.pdf)<sup>[25]</sup> review. LEWG polls SF:7/F:14/N:9/A:3/SA:0. No resolution. |
+| February 2020 (Prague)        | Partial success raised during [P1678R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1678r2.pdf)<sup>[25]</sup> review. LEWG polls SF:7/F:14/N:9/A:3/SA:0. No resolution. |
 | February 2021 (SG4 telecon)   | Participant states sender/receivers have a loss: no success/partial-success.                                                   |
 | July-October 2021 (LEWG)      | Debated across five telecons. LEWG outcome document: *"Better explain how partial success works with senders/receivers."*      |
-| August 2021                   | Kohlhoff publishes [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[24]</sup>.                                                       |
+| August 2021                   | Kohlhoff publishes [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[24]</sup>.                                                       |
 | 2022-2024                     | Six revisions through [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[7]</sup>. Three-channel model unchanged. |
-| 2023                          | K&uuml;hl's [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[26]</sup> preserves Asio's `(error_code, size_t)` convention.          |
+| 2023                          | K&uuml;hl's [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[26]</sup> preserves Asio's `(error_code, size_t)` convention.          |
 | November 2023 (Kona)          | SG4 polls that networking must use the sender model (SF:5/F:5/N:1/A:0/SA:1).                                                 |
 | November 2024 (Wroclaw)       | Channel question resurfaces during P0260 (Concurrent Queues). Debated across two face-to-face meetings.                       |
 | February 2025 (Hagenberg)     | Concurrent queue channel question remained open. Poll to reopen withdrawn.                                                    |
@@ -173,7 +173,7 @@ SG14 (February 2026 mailing): *"SG14 advise that Networking (SG4) should not be 
 
 ## 8. Ecosystem Adoption
 
-The sender/receiver model has been public since [P2300R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html)<sup>[61]</sup> (2021). [stdexec](https://github.com/NVIDIA/stdexec)<sup>[48]</sup> has existed as a reference implementation throughout. These results may not be exhaustive; additions are welcome.
+The sender/receiver model has been public since [P2300R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html)<sup>[61]</sup> (2021). [stdexec](https://github.com/NVIDIA/stdexec)<sup>[48]</sup> has existed as a reference implementation throughout. These results may not be exhaustive; additions are welcome.
 
 | Domain                | Project                                                                                     | Status                                                                   |
 | --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -230,9 +230,9 @@ this paper.
 
 [4] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
 
-[5] [P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html) - "Merge Coroutines TS into C++20 working draft" (Gor Nishanov, 2018).
+[5] [P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html) - "Merge Coroutines TS into C++20 working draft" (Gor Nishanov, 2018).
 
-[6] [P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html) - "Add symmetric coroutine control transfer" (Gor Nishanov, 2018).
+[6] [P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html) - "Add symmetric coroutine control transfer" (Gor Nishanov, 2018).
 
 [7] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak, Georgy Evtushenko, Lewis Baker, Lucian Radu Teodorescu, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
@@ -268,15 +268,15 @@ this paper.
 
 [23] [P3950R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3950r0.pdf) - "return_value & return_void Are Not Mutually Exclusive" (Robert Leahy, 2025).
 
-[24] [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
+[24] [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
 
-[25] [P1678R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1678r2.pdf) - "Callbacks and Composition" (Kirk Shoop, 2020).
+[25] [P1678R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1678r2.pdf) - "Callbacks and Composition" (Kirk Shoop, 2020).
 
-[26] [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
+[26] [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
 
 [27] [P2855R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2855r1.html) - "Member customization points for Senders and Receivers" (Ville Voutilainen, 2024).
 
-[28] [P2999R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html) - "Sender Algorithm Customization" (Eric Niebler, 2024).
+[28] [P2999R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2999r3.html) - "Sender Algorithm Customization" (Eric Niebler, 2024).
 
 [29] [P3175R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3175r3.html) - "Reconsidering the std::execution::on algorithm" (Eric Niebler, 2024).
 
@@ -354,7 +354,7 @@ this paper.
 
 [60] [C++26 NB ballot comments](https://github.com/cplusplus/nbballot) - National body comments repository.
 
-[61] [P2300R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html) - "std::execution" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, 2021).
+[61] [P2300R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html) - "std::execution" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, 2021).
 
 [62] [Boost.MySQL](https://github.com/boostorg/mysql) - Async MySQL client library for Boost (Rub&eacute;n P&eacute;rez).
 

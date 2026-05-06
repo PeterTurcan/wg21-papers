@@ -336,7 +336,7 @@ Anthropic, for Claude - the model that powered the analysis.
 
 [6] [D4133R0](https://isocpp.org/files/papers/D4133R0.pdf) - "What Every Proposal Must Contain" (Vinnie Falco, 2026).
 
-[7] [P0542R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html) - "Support for contract based programming in C++" (G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, 2018).
+[7] [P0542R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html) - "Support for contract based programming in C++" (G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, 2018).
 
 [8] [P3846R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3846r0.pdf) - "C++26 Contracts, reasserted" (Timur Doumler, Joshua Berne et al., 2025).
 

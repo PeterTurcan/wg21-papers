@@ -11,7 +11,7 @@ reply-to:
 
 ## Abstract
 
-C++20 provides symmetric transfer ([P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup>) - a mechanism where `await_suspend` returns a `coroutine_handle<>` and the compiler resumes the designated coroutine as a tail call. Coroutine chains execute in constant stack space. `std::execution` ([P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>) composes asynchronous operations through sender algorithms. These algorithms create receivers that are structs, not coroutines. No `coroutine_handle<>` exists at any intermediate point in a sender pipeline. When a coroutine co_awaits a sender that completes synchronously, the stack grows by one frame per completion. [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[3]</sup>'s `std::execution::task` inherits this property. A protocol-level fix exists: completion functions and `start()` return `coroutine_handle<>` instead of `void`, enabling struct receivers to propagate handles from downstream without becoming coroutines. The fix preserves zero-allocation composition but requires changing the return type of every completion function, every `start()`, and every sender algorithm in [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>. This paper documents the gap, describes the fix, enumerates the changes required, and provides draft proposed wording for the protocol-level changes.
+C++20 provides symmetric transfer ([P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup>) - a mechanism where `await_suspend` returns a `coroutine_handle<>` and the compiler resumes the designated coroutine as a tail call. Coroutine chains execute in constant stack space. `std::execution` ([P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>) composes asynchronous operations through sender algorithms. These algorithms create receivers that are structs, not coroutines. No `coroutine_handle<>` exists at any intermediate point in a sender pipeline. When a coroutine co_awaits a sender that completes synchronously, the stack grows by one frame per completion. [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[3]</sup>'s `std::execution::task` inherits this property. A protocol-level fix exists: completion functions and `start()` return `coroutine_handle<>` instead of `void`, enabling struct receivers to propagate handles from downstream without becoming coroutines. The fix preserves zero-allocation composition but requires changing the return type of every completion function, every `start()`, and every sender algorithm in [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>. This paper documents the gap, describes the fix, enumerates the changes required, and provides draft proposed wording for the protocol-level changes.
 
 ---
 
@@ -70,7 +70,7 @@ This paper asks for nothing.
 
 ## 2. Symmetric Transfer in C++20
 
-Prior to [P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup>, coroutines could only return control to their caller or resumer. Gor Nishanov described the problem:
+Prior to [P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup>, coroutines could only return control to their caller or resumer. Gor Nishanov described the problem:
 
 > "Recursive generators, zero-overhead futures and other facilities require efficient coroutine to coroutine control transfer. Involving a queue and a scheduler makes coroutine to coroutine control transfer inefficient. Coroutines need direct and efficient way of expressing the desired behavior."
 
@@ -275,7 +275,7 @@ K&uuml;hl acknowledged the general case requires a different mitigation:
 
 > "There is a general issue that stack size needs to be bounded when operations complete synchronously. The general idea is to use a trampoline scheduler which bounds stack size and reschedules when the stack size or the recursion depth becomes too big."
 
-A trampoline scheduler is a runtime mitigation. It detects excessive stack depth and reschedules. This is the runtime overhead in the completion path that [P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> was specifically adopted to eliminate.
+A trampoline scheduler is a runtime mitigation. It detects excessive stack depth and reschedules. This is the runtime overhead in the completion path that [P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> was specifically adopted to eliminate.
 
 M&uuml;ller identifies a language-level alternative: guaranteed tail calls. If C++ adopted such a feature, `set_value` could transfer control without growing the stack, potentially closing the gap without changing the receiver abstraction. No such feature exists in C++.
 
@@ -296,7 +296,7 @@ Neither mitigation is zero-cost. Symmetric transfer is zero-cost.
 
 The distinction is structural. Symmetric transfer is a compile-time guarantee: the compiler arranges a tail call from `await_suspend` to the designated coroutine. The trampoline is a runtime heuristic: it monitors stack depth and reschedules when a threshold is exceeded. The trampoline requires choosing that threshold. Too low and the scheduler reschedules unnecessarily, adding latency to every deep completion chain. Too high and the stack overflows on platforms with small stacks - embedded systems, WebAssembly, threads with reduced stack size. No single threshold is correct across deployment targets.
 
-[P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> was adopted into C++20 specifically to eliminate this class of runtime mitigation. Nishanov wrote: *"Involving a queue and a scheduler makes coroutine to coroutine control transfer inefficient."* The trampoline scheduler reintroduces the queue-and-scheduler overhead that symmetric transfer was designed to remove.
+[P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> was adopted into C++20 specifically to eliminate this class of runtime mitigation. Nishanov wrote: *"Involving a queue and a scheduler makes coroutine to coroutine control transfer inefficient."* The trampoline scheduler reintroduces the queue-and-scheduler overhead that symmetric transfer was designed to remove.
 
 Symmetric transfer does not prevent all stack overflow. Infinite recursion exhausts any finite stack regardless. What symmetric transfer prevents is the specific case where a finite coroutine chain overflows due to accumulated frames from non-tail calls. Sender composition creates exactly this case.
 
@@ -402,7 +402,7 @@ This is a tradeoff, not a defect. [P2300R10](https://www.open-std.org/jtc1/sc22/
 
 Three facts from the public record bear on how this gap came to exist.
 
-1. [P2300R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html)<sup>[17]</sup> (2021) through [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> (2024): the phrase "symmetric transfer" does not appear. The void return type of completion functions is specified but never discussed as a tradeoff against `coroutine_handle<>` propagation. No design rationale section explains why `set_value`, `set_error`, `set_stopped`, and `start()` return `void` instead of `coroutine_handle<>`. No revision history entry across ten revisions mentions symmetric transfer as a considered and rejected alternative.
+1. [P2300R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html)<sup>[17]</sup> (2021) through [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> (2024): the phrase "symmetric transfer" does not appear. The void return type of completion functions is specified but never discussed as a tradeoff against `coroutine_handle<>` propagation. No design rationale section explains why `set_value`, `set_error`, `set_stopped`, and `start()` return `void` instead of `coroutine_handle<>`. No revision history entry across ten revisions mentions symmetric transfer as a considered and rejected alternative.
 
 2. [P3552R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r0.pdf)<sup>[18]</sup> through [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[3]</sup> (K&uuml;hl, 2025): the task paper is the first to document the limitation. K&uuml;hl writes: *"With senders it is also not possible to use symmetric transfer to combat the problem: to achieve the full generality and composing senders, there are still multiple function calls used, e.g., when producing the completion signal."* The characterization is "not possible" - a limitation discovered downstream, not a tradeoff documented upstream.
 
@@ -440,7 +440,7 @@ coroutine_handle<> set_value(Args&&... args) noexcept {
 }
 ```
 
-The `sender-awaitable` bridge uses the third form of `await_suspend` from [P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> ("Add symmetric coroutine control transfer"):
+The `sender-awaitable` bridge uses the third form of `await_suspend` from [P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> ("Add symmetric coroutine control transfer"):
 
 ```cpp
 // current sender-awaitable
@@ -668,7 +668,7 @@ Changing the return type of a function changes its calling convention and, for t
 
 ## 14. Conclusion
 
-[P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> was adopted into C++20 to solve a specific problem: stack overflow in coroutine chains. The solution is `coroutine_handle<>`-returning `await_suspend`. Every major coroutine library adopted it.
+[P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html)<sup>[1]</sup> was adopted into C++20 to solve a specific problem: stack overflow in coroutine chains. The solution is `coroutine_handle<>`-returning `await_suspend`. Every major coroutine library adopted it.
 
 Under the current protocol, the sender model's architectural choice - composing operations through non-coroutine sender algorithms with void-returning completions - prevents this mechanism from operating. [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[3]</sup>'s `std::execution::task` inherits this limitation. The proposed task-to-task fix does not reach the general case. No launch mechanism avoids the sender composition layer. The trampoline scheduler mitigation reintroduces the runtime cost that symmetric transfer was designed to eliminate.
 
@@ -859,7 +859,7 @@ and Jonathan M&uuml;ller for documenting the limitation in
 
 ### WG21 Papers
 
-[1] [P0913R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html) - "Add symmetric coroutine control transfer" (Gor Nishanov, 2018).
+[1] [P0913R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0913r1.html) - "Add symmetric coroutine control transfer" (Gor Nishanov, 2018).
 
 [2] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak, Georgy Evtushenko, Lewis Baker, Lucian Radu Teodorescu, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
@@ -895,7 +895,7 @@ and Jonathan M&uuml;ller for documenting the limitation in
 
 [16] [C++ Working Draft](https://eel.is/c++draft/) - (Richard Smith, ed.).
 
-[17] [P2300R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html) - "std::execution" (Micha&#322; Dominiak, Lewis Baker, Lee Howes, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2021).
+[17] [P2300R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r0.html) - "std::execution" (Micha&#322; Dominiak, Lewis Baker, Lee Howes, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2021).
 
 [18] [P3552R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r0.pdf) - "Add a Coroutine Lazy Type" (Dietmar K&uuml;hl, Maikel Nadolski, 2025).
 

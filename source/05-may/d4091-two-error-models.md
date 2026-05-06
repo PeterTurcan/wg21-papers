@@ -161,7 +161,7 @@ Each requires different application handling. None indicates that the operation 
 
 Partial results are normal. A `write` that sends 500 of 1,000 bytes before `ECONNRESET` produces `(ECONNRESET, 500)`. Both values are needed.
 
-Chris Kohlhoff identified this in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[10]</sup> ("Partial success scenarios with P2300," 2021):
+Chris Kohlhoff identified this in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[10]</sup> ("Partial success scenarios with P2300," 2021):
 
 > "Due to the limitations of the `set_error` channel (which has a single 'error' argument) and `set_done` channel (which takes no arguments), partial results must be communicated down the `set_value` channel."
 
@@ -235,11 +235,11 @@ Both mappings demonstrate the same structural problem: any function from `(error
 
 ### 6.2 Prior Engagement
 
-Dietmar K&uuml;hl enumerated five channel-routing options for I/O in [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[13]</sup> (Section 4.2) and acknowledged the partial-success problem directly: "some of the error cases may have been partial successes. In that case, using the set_error channel taking just one argument is somewhat limiting."
+Dietmar K&uuml;hl enumerated five channel-routing options for I/O in [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[13]</sup> (Section 4.2) and acknowledged the partial-success problem directly: "some of the error cases may have been partial successes. In that case, using the set_error channel taking just one argument is somewhat limiting."
 
-Kirk Shoop identified the same heuristic difficulty in [P2471R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[14]</sup>, observing that completion tokens translating to senders "must use a heuristic to type-match the first arg."
+Kirk Shoop identified the same heuristic difficulty in [P2471R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[14]</sup>, observing that completion tokens translating to senders "must use a heuristic to type-match the first arg."
 
-To the author's knowledge, no published paper resolves the compound-result channel-routing problem identified in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[10]</sup>. The problem has been identified by Kohlhoff (2021), K&uuml;hl (2023), and Shoop (2021). It remains open.
+To the author's knowledge, no published paper resolves the compound-result channel-routing problem identified in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[10]</sup>. The problem has been identified by Kohlhoff (2021), K&uuml;hl (2023), and Shoop (2021). It remains open.
 
 ### 6.3 The P2300 Authors' Position
 
@@ -257,7 +257,7 @@ For the second case:
 
 This is position 11.6 (Section 11). The composition algebra participates, but every `upon_error` handler in the pipeline must understand the bundled type.
 
-An earlier paper by several of the same authors, [P1525R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1525r1.pdf)<sup>[15]</sup> ("One-Way execute is a Poor Basis Operation," 2020), characterized the error channel's intended scope:
+An earlier paper by several of the same authors, [P1525R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1525r1.pdf)<sup>[15]</sup> ("One-Way execute is a Poor Basis Operation," 2020), characterized the error channel's intended scope:
 
 > "The `set_error()` channel of a receiver, like C++ exceptions, is for exceptional circumstances: things like dropped network connections, resource allocation failure, or inability to create an execution agents."<sup>[15]</sup>
 
@@ -422,7 +422,7 @@ The partition is real. The abstraction floor exists in both paradigms. Senders c
 
 The author thanks Andrzej Krzemie&nacute;ski for the question that launched the discussion; Ville Voutilainen for broadening the problem beyond I/O, constructing the dispatch adapter, demonstrating data preservation on both channels, and characterizing the boundary between generic and application-specific composition with precision; Ian Petersen for four working sender implementations, for confirming the equivalence between sender and coroutine dispatch, and for identifying the symmetry between coroutine and sender error channels that prompted this revision; and Jens Maurer for framing the design spectrum.
 
-The author also thanks Chris Kohlhoff for identifying the partial-success problem in [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[10]</sup>, Dietmar K&uuml;hl for the channel-routing enumeration in [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[13]</sup> and for `beman::execution`, Kirk Shoop for the completion-token heuristic analysis in [P2471R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[14]</sup>, Fabio Fracassi for [P3570R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3570r2.html)<sup>[19]</sup>, Peter Dimov for the refined channel mapping, Micha&lstrok; Dominiak, Eric Niebler, and Lewis Baker for `std::execution`, Maikel Nadolski for work on `execution::task`, and Steve Gerbino for co-developing the constructed comparison.
+The author also thanks Chris Kohlhoff for identifying the partial-success problem in [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[10]</sup>, Dietmar K&uuml;hl for the channel-routing enumeration in [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[13]</sup> and for `beman::execution`, Kirk Shoop for the completion-token heuristic analysis in [P2471R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf)<sup>[14]</sup>, Fabio Fracassi for [P3570R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3570r2.html)<sup>[19]</sup>, Peter Dimov for the refined channel mapping, Micha&lstrok; Dominiak, Eric Niebler, and Lewis Baker for `std::execution`, Maikel Nadolski for work on `execution::task`, and Steve Gerbino for co-developing the constructed comparison.
 
 Any quoted participant who wishes a passage retracted or revised may contact the author, who is happy to edit.
 
@@ -430,7 +430,7 @@ Any quoted participant who wishes a passage retracted or revised may contact the
 
 ## References
 
-[1] [Lib-ext reflector, "std::execution -- dynamically selecting a channel," March 2026](http://lists.isocpp.org/lib-ext/2026/03/31330.php)
+[1] [Lib-ext reflector, "std::execution -- dynamically selecting a channel," March 2026](https://lists.isocpp.org/lib-ext/2026/03/31330.php)
 
 [2] [P4088R0](https://isocpp.org/files/papers/P4088R0.pdf) - "What C++20 Coroutines Already Buy The Standard" (Vinnie Falco, 2026).
 
@@ -438,7 +438,7 @@ Any quoted participant who wishes a passage retracted or revised may contact the
 
 [4] [cppalliance/corosio](https://github.com/cppalliance/corosio) - Coroutine-native networking library.
 
-[5] [Lib-ext reflector, "Complicated success at coroutine/sender composition boundaries (from SG14 Mar 11)," March 2026](http://lists.isocpp.org/lib-ext/2026/03/31333.php)
+[5] [Lib-ext reflector, "Complicated success at coroutine/sender composition boundaries (from SG14 Mar 11)," March 2026](https://lists.isocpp.org/lib-ext/2026/03/31333.php)
 
 [6] [io_uring completion queue entry (`struct io_uring_cqe`), Linux kernel 5.1+](https://man7.org/linux/man-pages/man2/io_uring_enter.2.html)
 
@@ -448,17 +448,17 @@ Any quoted participant who wishes a passage retracted or revised may contact the
 
 [9] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak et al., 2024).
 
-[10] [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
+[10] [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
 
 [11] [bemanproject/net](https://github.com/bemanproject/net) - Sender/receiver networking library.
 
 [12] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Open Issues in `std::execution::task`" (Vinnie Falco, Mungo Gill, 2026).
 
-[13] [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
+[13] [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
 
-[14] [P2471R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf) - "NetTS, ASIO and Sender Library Design Comparison" (Kirk Shoop, 2021).
+[14] [P2471R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2471r1.pdf) - "NetTS, ASIO and Sender Library Design Comparison" (Kirk Shoop, 2021).
 
-[15] [P1525R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1525r1.pdf) - "One-Way execute is a Poor Basis Operation" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes et al., 2020).
+[15] [P1525R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1525r1.pdf) - "One-Way execute is a Poor Basis Operation" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes et al., 2020).
 
 [16] [Ian Petersen, four sender implementations of channel dispatch, March 2026 (accessed 2026-03-15)](https://godbolt.org/z/7W51hYE7c)
 

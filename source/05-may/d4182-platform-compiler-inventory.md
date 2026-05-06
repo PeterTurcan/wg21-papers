@@ -297,7 +297,7 @@ Legend:
 
 **Executive summary**
 
-GCC is the reference open-source toolchain for many Linux distributions and embedded GNU triples. cppreference lists **GCC 10** as the first release in its C++20 matrix for coroutines ([P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html))<sup>[5]</sup>.
+GCC is the reference open-source toolchain for many Linux distributions and embedded GNU triples. cppreference lists **GCC 10** as the first release in its C++20 matrix for coroutines ([P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html))<sup>[5]</sup>.
 
 **Schema**
 
@@ -320,7 +320,7 @@ Cross GCC for bare-metal uses the same front end with a runtime link that does n
 
 Clang is widely used on Darwin, Linux, and Windows. Apple ships a fork tied to Xcode releases.
 
-cppreference lists **Clang 8** as the first column entry for C++20 coroutines ([P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[7]</sup>), with partial support in early releases<sup>[5]</sup>. For **libc++**, polymorphic memory resources ([P0220R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html)<sup>[8]</sup>) appear from **Clang 16** in that table<sup>[6]</sup>.
+cppreference lists **Clang 8** as the first column entry for C++20 coroutines ([P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[7]</sup>), with partial support in early releases<sup>[5]</sup>. For **libc++**, polymorphic memory resources ([P0220R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html)<sup>[8]</sup>) appear from **Clang 16** in that table<sup>[6]</sup>.
 
 **Schema**
 
@@ -339,7 +339,7 @@ cppreference lists **Clang 8** as the first column entry for C++20 coroutines ([
 
 **Executive summary**
 
-Microsoft documents C++20 coroutines ([P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[7]</sup>) from **Visual Studio 2019 version 16.8** onward (toolset **19.28**)<sup>[9]</sup>. The Microsoft STL ships `<memory_resource>` ([P0220R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html)<sup>[8]</sup>) from **Visual Studio 2017 version 15.6** onward<sup>[9]</sup>.
+Microsoft documents C++20 coroutines ([P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[7]</sup>) from **Visual Studio 2019 version 16.8** onward (toolset **19.28**)<sup>[9]</sup>. The Microsoft STL ships `<memory_resource>` ([P0220R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html)<sup>[8]</sup>) from **Visual Studio 2017 version 15.6** onward<sup>[9]</sup>.
 
 TLS access patterns for DLLs differ from ELF static TLS as summarised in [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.2.
 
@@ -437,9 +437,9 @@ The author thanks Vinnie Falco and the C++ Alliance proposal authors whose platf
 
 [6] [Compiler support for C++17](https://en.cppreference.com/w/cpp/compiler_support/17) - cppreference.com (per-library minimum versions, including P0220R1 `<memory_resource>`).
 
-[7] [P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html) - "Merge Coroutines TS into C++20 working draft" (Gor Nishanov, 2019).
+[7] [P0912R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html) - "Merge Coroutines TS into C++20 working draft" (Gor Nishanov, 2019).
 
-[8] [P0220R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html) - "Adopt Library Fundamentals V1 TS Components for C++17 (R1)" (Beman Dawes, 2016).
+[8] [P0220R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html) - "Adopt Library Fundamentals V1 TS Components for C++17 (R1)" (Beman Dawes, 2016).
 
 [9] [Microsoft C++ language conformance](https://learn.microsoft.com/en-us/cpp/overview/visual-cpp-language-conformance) - Microsoft Learn.
 

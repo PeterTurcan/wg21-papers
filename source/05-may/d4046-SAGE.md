@@ -100,7 +100,7 @@ WG21 has created substantial documentation. The question is what that documentat
 | Document | Knowledge Transmitted |
 |----------|----------------------|
 | [P2000R5: Direction for ISO C++](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2000r5.pdf) | Vision, priorities |
-| [P0592R5: Bold Overall Plan](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)     | Feature roadmaps   |
+| [P0592R5: Bold Overall Plan](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)     | Feature roadmaps   |
 
 WG21's documentation transmits conclusions effectively. The judgment behind those conclusions is held by experienced participants.
 
@@ -120,7 +120,7 @@ The generating principles - how to *think* about API design, how to recognize pa
 
 [SD-9: Library Evolution Policies](https://isocpp.org/std/standing-documents/sd-9-library-evolution-policies)<sup>[8]</sup> represents a good-faith effort to capture policy knowledge. The supporting papers illustrate what written documentation can and cannot transmit.
 
-The foundational paper [P2267R1: Library Evolution Policies](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2267r1.html)<sup>[10]</sup> captures process - how policies are adopted. [P3201R1: LEWG [[nodiscard]] policy](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3201r1.html)<sup>[11]</sup> captures outcome - what the policy says. The question is how much of the underlying judgment each transmits.
+The foundational paper [P2267R1: Library Evolution Policies](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2267r1.html)<sup>[10]</sup> captures process - how policies are adopted. [P3201R1: LEWG [[nodiscard]] policy](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3201r1.html)<sup>[11]</sup> captures outcome - what the policy says. The question is how much of the underlying judgment each transmits.
 
 Two rationale papers attempt deeper knowledge transfer, with instructive differences in success:
 
@@ -668,7 +668,7 @@ Thanks to all interview participants for sharing their expertise.
 
 [9] [SD-10: Language Evolution Principles](https://isocpp.org/std/standing-documents/sd-10-language-evolution-principles)
 
-[10] [Levi, Inbal et al. P2267R1: Library Evolution Policies](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2267r1.html)
+[10] [Levi, Inbal et al. P2267R1: Library Evolution Policies](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2267r1.html)
 
 [11] [Nea&#x021B;u, Darius; Sankel, David. P3201R1: LEWG [[nodiscard]] policy](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3201r1.html)
 
@@ -698,7 +698,7 @@ Thanks to all interview participants for sharing their expertise.
 
 [24] [Stroustrup, Hinnant, Orr, Vandevoorde, Wong. P2000: Direction for ISO C++](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2000r5.pdf)
 
-[25] [Voutilainen, Ville. P0592: Bold Overall Plan](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)
+[25] [Voutilainen, Ville. P0592: Bold Overall Plan](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)
 
 ---
 

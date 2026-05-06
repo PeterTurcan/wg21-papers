@@ -151,7 +151,7 @@ Everybody converged on custom types independently.
 
 The committee already endorsed this principle.
 
-[P0298R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0298r3.pdf)<sup>[9]</sup> introduced `std::byte` because `unsigned char` performed triple duty. Neil MacIntosh wrote:
+[P0298R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0298r3.pdf)<sup>[9]</sup> introduced `std::byte` because `unsigned char` performed triple duty. Neil MacIntosh wrote:
 
 > "these types perform a 'triple duty'. Not only are they used for byte addressing, but also as arithmetic types, and as character types. This multiplicity of roles opens the door for programmer error"<sup>[9]</sup>
 
@@ -228,7 +228,7 @@ public:
 };
 ```
 
-These are the [Networking TS](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4771.pdf)<sup>[10]</sup> types.
+These are the [Networking TS](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4771.pdf)<sup>[10]</sup> types.
 
 ## 10. Side by Side
 
@@ -301,6 +301,6 @@ The buffer model described here draws on twenty years of Asio's buffer sequence 
 
 [8] [.NET System.IO.Pipelines](https://learn.microsoft.com/en-us/dotnet/api/system.io.pipelines) - `ReadOnlySequence<T>`.
 
-[9] [P0298R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0298r3.pdf) - "A byte type definition" (Neil MacIntosh, 2017).
+[9] [P0298R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0298r3.pdf) - "A byte type definition" (Neil MacIntosh, 2017).
 
-[10] [N4771](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4771.pdf) - "Working Draft, C++ Extensions for Networking" (2018).
+[10] [N4771](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4771.pdf) - "Working Draft, C++ Extensions for Networking" (2018).

@@ -59,7 +59,7 @@ Without that waist, every stack reinvents incompatible task types and environmen
 
 The alternative of leaving coroutine I/O vocabulary to the ecosystem was considered. [Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)<sup>[5]</sup> has been available for over twenty years. In that time, the C++ ecosystem has not produced a shared task type or environment protocol for async I/O. Each networking library builds on a different async model, so they cannot compose. The higher layers of the abstraction tower - HTTP frameworks, database drivers, RPC stacks that interoperate - have not emerged because the foundation is not shared. Twenty years of observed ecosystem behavior is sufficient to record that a shared vocabulary requires standardization.
 
-Historic **whether-and-how** questions for committee networking priorities appear in [P0592R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)<sup>[6]</sup>, the 2021 LEWG polls [P2452R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2452r0.html)<sup>[7]</sup> / [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[8]</sup>, and later SG4 and TAPS-oriented papers such as [P3185R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3185r0.html)<sup>[9]</sup> and [P3482R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3482r0.html)<sup>[10]</sup>. The historical arc from [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[11]</sup> through the Networking TS through executor unification through [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[12]</sup> is traced in [P4099R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4099r0.pdf)<sup>[13]</sup>.
+Historic **whether-and-how** questions for committee networking priorities appear in [P0592R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html)<sup>[6]</sup>, the 2021 LEWG polls [P2452R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2452r0.html)<sup>[7]</sup> / [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[8]</sup>, and later SG4 and TAPS-oriented papers such as [P3185R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3185r0.html)<sup>[9]</sup> and [P3482R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3482r0.html)<sup>[10]</sup>. The historical arc from [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[11]</sup> through the Networking TS through executor unification through [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[12]</sup> is traced in [P4099R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4099r0.pdf)<sup>[13]</sup>.
 
 ---
 
@@ -208,7 +208,7 @@ void post(continuation& c) const;
 
 *Why `dispatch` returns `coroutine_handle<>`.* Symmetric transfer avoids stack buildup. Without it, a chain of N coroutines grows the call stack by N frames. [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[16]</sup> provides the full analysis. `dispatch` returns `c.h` directly when inline execution is safe, or `noop_coroutine()` when it queues. The caller performs `return dispatch(c)` in its own `await_suspend`, and the compiler optimizes the tail call.
 
-*Each concept requirement is load-bearing.* [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[17]</sup> unified three executor models across 14 revisions; the unified design was never deployed. [P1738R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1738r0.pdf)<sup>[18]</sup> diagnosed the concept hierarchy as hostile to generic programming. [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[19]</sup> recorded Rapperswil feedback that P0443R0 had too many concepts; its own analysis concluded that domain-specific requirements "are not universal" and should not be imposed on all executor types. The _IoAwaitable_ executor concept has seven requirements. Removing any one produces a concrete failure:
+*Each concept requirement is load-bearing.* [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[17]</sup> unified three executor models across 14 revisions; the unified design was never deployed. [P1738R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1738r0.pdf)<sup>[18]</sup> diagnosed the concept hierarchy as hostile to generic programming. [P1791R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[19]</sup> recorded Rapperswil feedback that P0443R0 had too many concepts; its own analysis concluded that domain-specific requirements "are not universal" and should not be imposed on all executor types. The _IoAwaitable_ executor concept has seven requirements. Removing any one produces a concrete failure:
 
 - Nothrow copy/move: exception safety at suspension points
 - `context()`: launch functions discover the default frame allocator
@@ -243,7 +243,7 @@ The I/O object cancels the pending operation through the platform primitive: `Ca
 
 *Why cooperative cancellation.* No operation is forcibly terminated. The I/O layer requests cancellation, the OS acknowledges it, and the operation completes with an error code. Resource cleanup is predictable. The coroutine always resumes - it handles cancellation via its normal error path. This differs from the sender model where `set_stopped` may cause `co_await` to never resume ([P4096R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4096r0.pdf)<sup>[20]</sup> Section 3-4).
 
-*Historical context.* [P2175R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2175r0.html)<sup>[21]</sup> extended `std::stop_token` for sender/receiver with `stoppable_token` and receiver-based context propagation. [P3409R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3409r0.html)<sup>[22]</sup> found that allowing arbitrary stop-callback registration leads to intrusive lists and synchronization overhead (spin-mutex), motivating more constrained token shapes. The _IoAwaitable_ model uses `std::stop_token` directly with bounded, forward-only propagation, avoiding this cost.
+*Historical context.* [P2175R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2175r0.html)<sup>[21]</sup> extended `std::stop_token` for sender/receiver with `stoppable_token` and receiver-based context propagation. [P3409R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3409r0.html)<sup>[22]</sup> found that allowing arbitrary stop-callback registration leads to intrusive lists and synchronization overhead (spin-mutex), motivating more constrained token shapes. The _IoAwaitable_ model uses `std::stop_token` directly with bounded, forward-only propagation, avoiding this cost.
 
 ### 5.5 `execution_context`
 
@@ -274,7 +274,7 @@ protected:
 
 *Why base class, not concept.* Services provide singletons with ordered shutdown. `shutdown()` walks services in reverse order of registration, preventing use-after-free in service dependencies. The service registry requires runtime polymorphism - a compile-time mechanism cannot provide the same ordered-shutdown guarantees when services are registered dynamically.
 
-*Precedent.* The `execution_context` pattern originates in the Networking TS ([N4242](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4242.html)<sup>[23]</sup>, [N4575](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4575.pdf)<sup>[24]</sup>, [N4711](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4711.pdf)<sup>[25]</sup>) and has been stable across every revision. The service model, the shutdown ordering, and the `use_service`/`make_service` API have remained unchanged through over a decade of production use in Boost.Asio.
+*Precedent.* The `execution_context` pattern originates in the Networking TS ([N4242](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4242.html)<sup>[23]</sup>, [N4575](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4575.pdf)<sup>[24]</sup>, [N4711](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4711.pdf)<sup>[25]</sup>) and has been stable across every revision. The service model, the shutdown ordering, and the `use_service`/`make_service` API have remained unchanged through over a decade of production use in Boost.Asio.
 
 *Trade-off:* Virtual `shutdown()` in the service base class; runtime polymorphism in the service registry. *Revisit if:* a compile-time service mechanism can provide the same ordered-shutdown guarantees.
 
@@ -341,9 +341,9 @@ The `executor_ref` type-erases any _Executor_ as two pointers. This is why `task
 
 The protocol chooses the other side of the fork: type-erase the executor through `executor_ref`, keep `task<T>` at one template parameter, and accept one vtable indirection per `dispatch`/`post` call. The cost is bounded and constant - one pointer indirection, no allocation, no template instantiation. A coroutine returning `task<int>` can be defined in a `.cpp` file and called from any translation unit without exposing the executor type, the frame allocator, or the stop token in the public interface.
 
-C++20 coroutines allocate a frame for every invocation. For I/O coroutines, this allocation is unavoidable: Heap Allocation eLision Optimization (HALO) cannot apply when frame lifetime depends on an external event ([P2477R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2477r3.html)<sup>[27]</sup>). The frame already hides concrete types - sockets, SSL contexts, parsers - from the caller's type system. The executor is one more type that vanishes behind the same boundary.
+C++20 coroutines allocate a frame for every invocation. For I/O coroutines, this allocation is unavoidable: Heap Allocation eLision Optimization (HALO) cannot apply when frame lifetime depends on an external event ([P2477R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2477r3.html)<sup>[27]</sup>). The frame already hides concrete types - sockets, SSL contexts, parsers - from the caller's type system. The executor is one more type that vanishes behind the same boundary.
 
-*Historical context.* [N4046](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4046.pdf)<sup>[28]</sup> argued that the compiler is unable to see through a virtual interface, and that forcing type erasure at the executor interface prevents implementers from choosing a better erasure. [P4099R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4099r0.pdf)<sup>[13]</sup> Section 5 documents the design fork: `coroutine_handle<>` in the awaitable trades type-erased streams, ABI stability, and separate compilation against full pipeline visibility and compile-time graphs. Boost.Asio and Boost.Beast made streams templates; the result was template explosion, binary bloat, and ABI instability across a decade of production use.
+*Historical context.* [N4046](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4046.pdf)<sup>[28]</sup> argued that the compiler is unable to see through a virtual interface, and that forcing type erasure at the executor interface prevents implementers from choosing a better erasure. [P4099R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4099r0.pdf)<sup>[13]</sup> Section 5 documents the design fork: `coroutine_handle<>` in the awaitable trades type-erased streams, ABI stability, and separate compilation against full pipeline visibility and compile-time graphs. Boost.Asio and Boost.Beast made streams templates; the result was template explosion, binary bloat, and ABI instability across a decade of production use.
 
 *Revisit if:* the vtable overhead proves measurable relative to total operation cost in a validated benchmark, or if the language gains a mechanism to expose concrete types inside the frame without a second template parameter on the task.
 
@@ -361,7 +361,7 @@ A *frame allocator* is a `memory_resource` used exclusively for coroutine frame 
 
 The mimalloc result is the critical comparison: a state-of-the-art general-purpose allocator with per-thread caches, yet the recycling frame allocator is 1.28x faster. Different deployments need different strategies - bounded pools, per-tenant budgets, allocation tracking - so the execution model must let the application choose.
 
-*Historical context.* [P0054R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0054r0.html)<sup>[29]</sup> established `operator new` as the coroutine frame allocation hook. [P2006R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2006r0.pdf)<sup>[30]</sup> documented the "lifetime impedance mismatch" when adapting senders to awaitables - the adapter often adds a heap allocation due to inverted ownership. [P4095R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4095r0.pdf)<sup>[31]</sup> Section 4.3 demonstrated that the zero-allocation argument in [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[32]</sup> applies to `execute(F&&)` type erasure, not to coroutine awaiters where the awaiter lives in the frame.
+*Historical context.* [P0054R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0054r0.html)<sup>[29]</sup> established `operator new` as the coroutine frame allocation hook. [P2006R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2006r0.pdf)<sup>[30]</sup> documented the "lifetime impedance mismatch" when adapting senders to awaitables - the adapter often adds a heap allocation due to inverted ownership. [P4095R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4095r0.pdf)<sup>[31]</sup> Section 4.3 demonstrated that the zero-allocation argument in [P1525R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[32]</sup> applies to `execute(F&&)` type erasure, not to coroutine awaiters where the awaiter lives in the frame.
 
 The frame allocator must be present at invocation time: `operator new` executes before the coroutine body. Section 8 documents the two delivery channels.
 
@@ -581,7 +581,7 @@ Type erasure through `executor_ref` (Section 6.2) keeps `task<T>` at one templat
 
 Our evidence shows that the sender algebra is structurally suited to DAG-shaped work - GPU kernel fusion, heterogeneous compute pipelines, complex parallel algorithms - where sender composition, schedulers, and structured concurrency across heterogeneous resources are the essential operations. Byte-oriented I/O - sockets, DNS, TLS, HTTP - is sequential by nature for many handlers. A coroutine reads bytes, parses a frame, writes a response. The work is a chain, not a graph. _IoAwaitable_ captures this pattern with minimal machinery.
 
-[P4094R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4094r0.pdf)<sup>[15]</sup> traces the executor unification arc from [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[17]</sup> (14 revisions, never deployed as unified) through [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[32]</sup> (Cologne 2019) to [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[12]</sup>. [P4095R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4095r0.pdf)<sup>[31]</sup> demonstrates that under continuation framing, three of four deficiencies identified by [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[32]</sup> do not arise. [P4096R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4096r0.pdf)<sup>[20]</sup> re-examines [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[35]</sup> under the coroutine executor model. [P4097R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4097r0.pdf)<sup>[36]</sup> traces the evidence available at the time of the [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[8]</sup> "including networking" poll. [P4098R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4098r0.pdf)<sup>[37]</sup> tabulates claims against published evidence across the entire executor and networking timeline.
+[P4094R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4094r0.pdf)<sup>[15]</sup> traces the executor unification arc from [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[17]</sup> (14 revisions, never deployed as unified) through [P1525R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[32]</sup> (Cologne 2019) to [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[12]</sup>. [P4095R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4095r0.pdf)<sup>[31]</sup> demonstrates that under continuation framing, three of four deficiencies identified by [P1525R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[32]</sup> do not arise. [P4096R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4096r0.pdf)<sup>[20]</sup> re-examines [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[35]</sup> under the coroutine executor model. [P4097R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4097r0.pdf)<sup>[36]</sup> traces the evidence available at the time of the [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[8]</sup> "including networking" poll. [P4098R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4098r0.pdf)<sup>[37]</sup> tabulates claims against published evidence across the entire executor and networking timeline.
 
 **Bridges** make the partnership concrete. [P4092R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4092r0.pdf)<sup>[38]</sup> specifies **`await_sender`**: consume a `std::execution` sender from inside an _IoAwaitable_ coroutine and return to the I/O executor. [P4093R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4093r0.pdf)<sup>[39]</sup> specifies **`as_sender`**: wrap an _IoAwaitable_ as a sender for algorithms that speak sender/receiver.
 
@@ -698,7 +698,7 @@ When code calls a blocking read on a socket, the thread waits while the network 
 
 ### A.2 The Thread-Per-Connection Trap
 
-The natural response to blocking I/O is to spawn a thread per connection. Each thread consumes memory (typically 1MB for the stack) and creates scheduling overhead. At 10,000 connections, the scheduler spends more time switching between threads than running actual code. The [C10K problem](http://www.kegel.com/c10k.html)<sup>[44]</sup> revealed that thread-per-connection does not scale.
+The natural response to blocking I/O is to spawn a thread per connection. Each thread consumes memory (typically 1MB for the stack) and creates scheduling overhead. At 10,000 connections, the scheduler spends more time switching between threads than running actual code. The [C10K problem](https://www.kegel.com/c10k.html)<sup>[44]</sup> revealed that thread-per-connection does not scale.
 
 ### A.3 Event-Driven I/O
 
@@ -1084,17 +1084,17 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [5] [Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html) - Asynchronous I/O library (Chris Kohlhoff).
 
-[6] [P0592R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html) - "To boldly suggest an overall plan for C++26" (Ville Voutilainen, 2022).
+[6] [P0592R5](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p0592r5.html) - "To boldly suggest an overall plan for C++26" (Ville Voutilainen, 2022).
 
-[7] [P2452R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2452r0.html) - "2021 October Library Evolution and Concurrency Polls on Networking and Executors" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2021).
+[7] [P2452R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2452r0.html) - "2021 October Library Evolution and Concurrency Polls on Networking and Executors" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2021).
 
-[8] [P2453R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
+[8] [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).
 
 [9] [P3185R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3185r0.html) - "A proposed direction for C++ Standard Networking based on IETF TAPS" (Thomas Rodgers, 2024).
 
 [10] [P3482R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3482r0.html) - "Proposed API for creating TAPS based networking connections" (Thomas Rodgers, Dietmar K&uuml;hl, 2024).
 
-[11] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
+[11] [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
 [12] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "`std::execution`" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
@@ -1106,43 +1106,43 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [16] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer" (Mungo Gill, Vinnie Falco, 2026).
 
-[17] [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, Gordon Brown, Michael Wong, 2020).
+[17] [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, Gordon Brown, Michael Wong, 2020).
 
-[18] [P1738R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1738r0.pdf) - "The Executor Concept Hierarchy Needs a Single Root" (Eric Niebler, 2019).
+[18] [P1738R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1738r0.pdf) - "The Executor Concept Hierarchy Needs a Single Root" (Eric Niebler, 2019).
 
-[19] [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html) - "Evolution of the P0443 Unified Executors Proposal to accommodate new requirements" (Christopher Kohlhoff, Jamie Allsop, 2019).
+[19] [P1791R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html) - "Evolution of the P0443 Unified Executors Proposal to accommodate new requirements" (Christopher Kohlhoff, Jamie Allsop, 2019).
 
 [20] [P4096R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4096r0.pdf) - "History: Coroutine Executors and P2464R0" (Vinnie Falco, 2026).
 
-[21] [P2175R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2175r0.html) - "Composable cancellation for sender-based async operations" (Lewis Baker, 2020).
+[21] [P2175R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2175r0.html) - "Composable cancellation for sender-based async operations" (Lewis Baker, 2020).
 
 [22] [P3409R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3409r0.html) - "Enabling more efficient stop-token based cancellation of senders" (Lewis Baker, 2024).
 
-[23] [N4242](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4242.html) - "Executors and Asynchronous Operations, Revision 1" (Chris Kohlhoff, 2014).
+[23] [N4242](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4242.html) - "Executors and Asynchronous Operations, Revision 1" (Chris Kohlhoff, 2014).
 
-[24] [N4575](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4575.pdf) - "Networking TS Working Draft" (2016).
+[24] [N4575](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4575.pdf) - "Networking TS Working Draft" (2016).
 
-[25] [N4711](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4711.pdf) - "Networking TS Working Draft" (2017).
+[25] [N4711](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4711.pdf) - "Networking TS Working Draft" (2017).
 
 [26] [N5014](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/n5014.pdf) - "Working Draft, Standard for Programming Language C++" (2025).
 
-[27] [P2477R3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2477r3.html) - "Allow programmers to control coroutine elision" (Xu, 2022).
+[27] [P2477R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2477r3.html) - "Allow programmers to control coroutine elision" (Xu, 2022).
 
-[28] [N4046](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4046.pdf) - "Executors and Asynchronous Operations" (Chris Kohlhoff, 2014).
+[28] [N4046](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4046.pdf) - "Executors and Asynchronous Operations" (Chris Kohlhoff, 2014).
 
-[29] [P0054R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0054r0.html) - "Coroutines: reports from the fields" (Gor Nishanov, 2015).
+[29] [P0054R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0054r0.html) - "Coroutines: reports from the fields" (Gor Nishanov, 2015).
 
-[30] [P2006R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2006r0.pdf) - "Eliminating heap-allocations in sender/receiver with connect()/start() as basis operations" (Lewis Baker, Eric Niebler, Kirk Shoop, Lee Howes, 2020).
+[30] [P2006R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2006r0.pdf) - "Eliminating heap-allocations in sender/receiver with connect()/start() as basis operations" (Lewis Baker, Eric Niebler, Kirk Shoop, Lee Howes, 2020).
 
 [31] [P4095R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4095r0.pdf) - "History: The Basis Operation and P1525" (Vinnie Falco, 2026).
 
-[32] [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf) - "One-Way execute is a Poor Basis Operation" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, 2019).
+[32] [P1525R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf) - "One-Way execute is a Poor Basis Operation" (Eric Niebler, Kirk Shoop, Lewis Baker, Lee Howes, 2019).
 
 [33] [P4035R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4035r0.pdf) - "Support: The Need for Escape Hatches" (Vinnie Falco, 2026).
 
 [34] [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf) - "The Coroutine Frame Allocator Timing Problem" (Vinnie Falco, 2026).
 
-[35] [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html) - "Ruminations on networking and executors" (Ville Voutilainen, 2021).
+[35] [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html) - "Ruminations on networking and executors" (Ville Voutilainen, 2021).
 
 [36] [P4097R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4097r0.pdf) - "History: The Networking Claim and P2453R0" (Vinnie Falco, 2026).
 
@@ -1160,4 +1160,4 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [43] [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf) - "Report: Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).
 
-[44] [The C10K problem](http://www.kegel.com/c10k.html) - Scalable network programming (Dan Kegel).
+[44] [The C10K problem](https://www.kegel.com/c10k.html) - Scalable network programming (Dan Kegel).
