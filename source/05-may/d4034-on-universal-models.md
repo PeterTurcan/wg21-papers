@@ -36,7 +36,7 @@ Coroutine-native I/O and `std::execution` are complementary. Each serves the dom
 
 This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
 
-The author has papers before the committee proposing coroutine-based I/O ([P4003R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r2.pdf)) and analyzing `std::execution` ([P2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf), [P4007R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r2.pdf), [P4014R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r1.pdf)). Every claim in this paper is sourced to public committee records, published scholarship, or cited implementations.
+The author has papers before the committee proposing coroutine-based I/O ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)) and analyzing `std::execution` ([P2583R4](https://isocpp.org/files/papers/P2583R4.pdf), [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf), [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)). Every claim in this paper is sourced to public committee records, published scholarship, or cited implementations.
 
 This paper asks for nothing.
 
@@ -93,7 +93,7 @@ A `task<T>` from one library can be `co_await`ed inside a `task<T>` from another
 
 The structure mirrors the Internet's hourglass architecture<sup>[3]</sup>. Below the waist: runtimes (Asio, libuv, io_uring, GPU schedulers). Above the waist: task types, algorithms, ergonomic layers. At the waist: three operations. Innovation happens above and below. The waist is fixed.
 
-[P4003R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r2.pdf)<sup>[4]</sup> extends the protocol with an `io_env` parameter that carries stop token, executor, and allocator through `await_suspend` - context propagation without coupling the awaitable to any promise type:
+[P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup> extends the protocol with an `io_env` parameter that carries stop token, executor, and allocator through `await_suspend` - context propagation without coupling the awaitable to any promise type:
 
 ```cpp
 template<typename A>
@@ -193,7 +193,7 @@ Universal models that endure have one thing in common: they earned the name.
 
 [3] [Hourglass model](https://en.wikipedia.org/wiki/Hourglass_model) - "Hourglass model" (Wikipedia).
 
-[4] [P4003R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r2.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[4] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [5] [The Rise and Fall of CORBA](<https://dl.acm.org/doi/10.1145/1142031.1142044>) - "The Rise and Fall of CORBA" (Michi Henning, 2006).
 

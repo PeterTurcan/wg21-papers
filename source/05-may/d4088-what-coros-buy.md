@@ -58,7 +58,7 @@ The coroutine "tutorial" is: write regular code, put `co_await` before async ope
 
 ### 2.2 Thirty Algorithms
 
-The sender model replaces these constructs with library equivalents: `let_value` for local variables, `then` for function calls, `upon_error` for `catch`, `when_all` for concurrent joins, `repeat_effect_until` for `for`. [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> is a progressive tutorial of all thirty sender algorithms in C++26. The `retry` algorithm requires approximately 120 lines of template machinery as a sender; the coroutine equivalent is seven lines. The four-layer composition example in [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> Section 12 collapses from interleaved sender pipelines into a single coroutine.
+The sender model replaces these constructs with library equivalents: `let_value` for local variables, `then` for function calls, `upon_error` for `catch`, `when_all` for concurrent joins, `repeat_effect_until` for `for`. [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)<sup>[4]</sup> is a progressive tutorial of all thirty sender algorithms in C++26. The `retry` algorithm requires approximately 120 lines of template machinery as a sender; the coroutine equivalent is seven lines. The four-layer composition example in [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)<sup>[4]</sup> Section 12 collapses from interleaved sender pipelines into a single coroutine.
 
 | Model      | New vocabulary                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -483,11 +483,11 @@ A: `any_sender` type-erases the sender, not the receiver. `connect(any_sender, r
 
 **Q: Does `std::execution::task` not already bridge both models?**
 
-A: It does. `task` is a coroutine that is also a sender. But serving both models in one type is where the friction originates - two template parameters, open issues documented in [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[23]</sup>, constraints that neither model alone requires. The companion approach accepts the design fork: each model does what it does best, and bridges connect them at ~10-14 ns with zero allocations. The question is whether the coroutine side carries I/O facilities that exploit the properties `coroutine_handle<>` provides: concrete operation states, type-erased streams, separate compilation, ABI stability. `task` bridges the models. It does not provide I/O.
+A: It does. `task` is a coroutine that is also a sender. But serving both models in one type is where the friction originates - two template parameters, open issues documented in [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[23]</sup>, constraints that neither model alone requires. The companion approach accepts the design fork: each model does what it does best, and bridges connect them at ~10-14 ns with zero allocations. The question is whether the coroutine side carries I/O facilities that exploit the properties `coroutine_handle<>` provides: concrete operation states, type-erased streams, separate compilation, ABI stability. `task` bridges the models. It does not provide I/O.
 
 **Q: Two async models are harder to teach.**
 
-A: C++ already teaches three execution models: parallel algorithms with execution policies, `std::execution` with sender algorithms, and coroutines with `co_await`. These three complement each other in C++26. The teachability cost was paid when the committee shipped all three. Coroutine-native I/O does not add a fourth model. It completes the third. The programmer already writes `co_await` - coroutines are the code they already know, with three keywords added. The sender model requires thirty algorithms, each replacing a language construct the programmer already knows. [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> is a progressive tutorial of all thirty. The `retry` algorithm: approximately 120 lines as a sender, seven as a coroutine. The four-layer composition in [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[4]</sup> Section 12 collapses from interleaved sender pipelines into a single coroutine.
+A: C++ already teaches three execution models: parallel algorithms with execution policies, `std::execution` with sender algorithms, and coroutines with `co_await`. These three complement each other in C++26. The teachability cost was paid when the committee shipped all three. Coroutine-native I/O does not add a fourth model. It completes the third. The programmer already writes `co_await` - coroutines are the code they already know, with three keywords added. The sender model requires thirty algorithms, each replacing a language construct the programmer already knows. [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)<sup>[4]</sup> is a progressive tutorial of all thirty. The `retry` algorithm: approximately 120 lines as a sender, seven as a coroutine. The four-layer composition in [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)<sup>[4]</sup> Section 12 collapses from interleaved sender pipelines into a single coroutine.
 
 The teachability gap extends beyond the committee. On the `stdexec` issue tracker, a user [reported](https://github.com/NVIDIA/stdexec/issues/1564)<sup>[28]</sup> that `let_error([](int) { ... })` does not compile when the upstream sender can also complete with `std::exception_ptr`. The response: *"This is the design of stdexec."* The user replied: *"The obvious solution was just use `let_error([](int) ...`. But it's not working because of 'This is the design'."* Another user summarized the sentiment: *"Is it fundamentally impossible? May `let_*` senders be implemented that way in future?"* The answer was no.
 
@@ -495,7 +495,7 @@ Jonathan M&uuml;ller [wrote](https://www.think-cell.com/en/career/devblog/trip-r
 
 One anonymous r/cpp commenter [reported](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/)<sup>[30]</sup>: *"I seriously investigated [libunifex] for roughly 2 work-days. I didn't like it, and couldn't use it to do what I wanted. That doesn't mean that libunifex couldn't - it means that I couldn't. The cognitive load was too high."*
 
-Independent production confirmation: the derivatives exchange described in [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[31]</sup> - a team with a mature message-passing pipeline architecture - reported that the sender/receiver expression syntax caused many mental "trips" when reasoning about behaviour, and did not scale beyond simple examples (Section 7.2).
+Independent production confirmation: the derivatives exchange described in [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf)<sup>[31]</sup> - a team with a mature message-passing pipeline architecture - reported that the sender/receiver expression syntax caused many mental "trips" when reasoning about behaviour, and did not scale beyond simple examples (Section 7.2).
 
 **Q: Coroutines were not designed for I/O.**
 
@@ -511,7 +511,7 @@ A: `std::execution::task` ([P3552R3](https://www.open-std.org/jtc1/sc22/wg21/doc
 
 **Q: This picks the coroutine model as the winner for I/O.**
 
-A: The `IoAwaitable` concept ([P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[24]</sup>) requires one function: `await_suspend(coroutine_handle<>, io_env const*)`. The protocol is two concepts, one type-erased executor, and a frame allocator cache. The specification fits in six pages. It says nothing about sockets, streams, TCP, TLS, or HTTP. Remove `await_ready` and you lose the synchronous fast path. Remove `io_env` and you lose the executor and stop token. Nothing is removable. This is the narrowest enabler. What gets built on top is the committee's decision.
+A: The `IoAwaitable` concept ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[24]</sup>) requires one function: `await_suspend(coroutine_handle<>, io_env const*)`. The protocol is two concepts, one type-erased executor, and a frame allocator cache. The specification fits in six pages. It says nothing about sockets, streams, TCP, TLS, or HTTP. Remove `await_ready` and you lose the synchronous fast path. Remove `io_env` and you lose the executor and stop token. Nothing is removable. This is the narrowest enabler. What gets built on top is the committee's decision.
 
 **Q: The domain split is artificial. Senders compose across domains.**
 
@@ -523,11 +523,11 @@ A: Different computation models must interact at boundaries. C and C++ interact 
 
 **Q: The prerequisite has not shipped - `task` is still being iterated.**
 
-A: `std::execution` shipped: the scheduler abstraction, the sender composition algebra, the three-channel completion model, and the structured concurrency guarantees are in the C++26 working draft. `task`'s open issues are classified in [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[23]</sup> Section 2 as fixable post-ship - the `promise_type` is a class template instantiated in user code, so its allocation strategy, error handling, and environment forwarding can change between standard revisions without binary incompatibility. The prerequisite is the execution vocabulary, not one coroutine task type.
+A: `std::execution` shipped: the scheduler abstraction, the sender composition algebra, the three-channel completion model, and the structured concurrency guarantees are in the C++26 working draft. `task`'s open issues are classified in [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[23]</sup> Section 2 as fixable post-ship - the `promise_type` is a class template instantiated in user code, so its allocation strategy, error handling, and environment forwarding can change between standard revisions without binary incompatibility. The prerequisite is the execution vocabulary, not one coroutine task type.
 
 **Q: P2300 was designed to serve I/O too. Its motivating example is a TCP server.**
 
-A: The motivating example demonstrates the gap. [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[27]</sup> "`std::execution`" Section 1.4.1.3 is analyzed in [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[23]</sup> Section 3 and [P4090R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4090r0.pdf)<sup>[20]</sup>. The echo server loses the byte count on the error path. The I/O types cannot be type-erased without per-operation allocation. The stream cannot be separately compiled. The design intent included I/O. The design properties serve parallel and heterogeneous dispatch. This paper documents the difference between intent and outcome.
+A: The motivating example demonstrates the gap. [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[27]</sup> "`std::execution`" Section 1.4.1.3 is analyzed in [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[23]</sup> Section 3 and [P4090R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4090r0.pdf)<sup>[20]</sup>. The echo server loses the byte count on the error path. The I/O types cannot be type-erased without per-operation allocation. The stream cannot be separately compiled. The design intent included I/O. The design properties serve parallel and heterogeneous dispatch. This paper documents the difference between intent and outcome.
 
 **Q: io_uring's batch submission model favors senders.**
 
@@ -535,7 +535,7 @@ A: The coroutine model does not submit one syscall per `co_await`. The event loo
 
 **Q: This is too much scope for C++29.**
 
-A: [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[24]</sup> is two concepts, one executor, and a frame allocator cache. Six pages. The Network Endeavor ([P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf)<sup>[1]</sup>) is modular - each paper stands independently. If one paper ships, that is progress. If four ship, that is a foundation. The team's target is pencils down by December 2028: reviewed, stable proposals with implementation experience.
+A: [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[24]</sup> is two concepts, one executor, and a frame allocator cache. Six pages. The Network Endeavor ([P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf)<sup>[1]</sup>) is modular - each paper stands independently. If one paper ships, that is progress. If four ship, that is a foundation. The team's target is pencils down by December 2028: reviewed, stable proposals with implementation experience.
 
 ---
 
@@ -602,7 +602,7 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 
 [3] [cppalliance/corosio](https://github.com/cppalliance/corosio) - Coroutine-native networking library.
 
-[4] [P4014](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf) - "The Sender Sub-Language" (Vinnie Falco, Mungo Gill, 2026).
+[4] [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf) - "The Sender Sub-Language For Beginners" (Vinnie Falco, Mungo Gill, 2026).
 
 [5] [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html) - "Add a Coroutine Task Type" (Dietmar K&uuml;hl, Maikel Nadolski, 2025).
 
@@ -640,9 +640,9 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 
 [22] [P4089](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4089r0.pdf) - "On the Diversity of Coroutine Task Types" (Vinnie Falco, 2026).
 
-[23] [P4007](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
+[23] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Open Issues in `std::execution::task`" (Vinnie Falco, Mungo Gill, 2026).
 
-[24] [P4003](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[24] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [25] [P4092](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4092r0.pdf) - "Consuming Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026).
 
@@ -656,4 +656,4 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 
 [30] [r/cpp: C++ committee polling results for asynchronous programming](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/) - Oct 2021.
 
-[31] [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).
+[31] [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).

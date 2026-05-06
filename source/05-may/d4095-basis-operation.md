@@ -43,7 +43,7 @@ This paper examines the published record. That effort requires re-examining cons
 
 [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[1]</sup> was consequential. It provided the technical argument that the executor concept's basis operation was insufficient for building higher-level async control structures. The argument was adopted at Cologne. The sender/receiver model that replaced the executor concept traces its committee lineage to this paper. Decisions of that magnitude deserve periodic review. This paper provides one. The intent is to ensure the committee's record is complete, not to assign blame.
 
-The coroutine executor concept did not exist in 2019. C++20 coroutines were ratified in 2020. [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[5]</sup>, "Coroutines for I/O," was published in 2026. The analysis this paper provides was not available when [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[1]</sup> was written.
+The coroutine executor concept did not exist in 2019. C++20 coroutines were ratified in 2020. [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[5]</sup>, "A Minimal Coroutine Execution Model," was published in 2026. The analysis this paper provides was not available when [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[1]</sup> was written.
 
 This paper asks for nothing.
 
@@ -230,7 +230,7 @@ The three papers that drove the pivot - [P1525R0](http://www.open-std.org/jtc1/s
 
 ## 6. The Coroutine Executor Under P1525R0's Criteria
 
-Section 4 analyzed the two framings in the abstract. The coroutine executor concept ([P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[5]</sup>) makes the continuation framing concrete:
+Section 4 analyzed the two framings in the abstract. The coroutine executor concept ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[5]</sup>) makes the continuation framing concrete:
 
 ```cpp
 std::coroutine_handle<> dispatch(
@@ -258,7 +258,7 @@ A: Under the work framing, the diagnosis is correct. This paper documents that t
 
 **Q: The coroutine executor did not exist in 2019.**
 
-A: Correct. C++20 coroutines were ratified in 2020. The coroutine executor concept was published in [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[5]</sup> (2026). The analysis this paper provides was not available when [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[1]</sup> was written. This paper does not argue that [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[1]</sup>'s authors should have known. It documents what is now observable.
+A: Correct. C++20 coroutines were ratified in 2020. The coroutine executor concept was published in [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[5]</sup> (2026). The analysis this paper provides was not available when [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[1]</sup> was written. This paper does not argue that [P1525R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[1]</sup>'s authors should have known. It documents what is now observable.
 
 **Q: The continuation framing is a retroactive reinterpretation.**
 
@@ -290,7 +290,7 @@ The author thanks Eric Niebler, Kirk Shoop, Lewis Baker, and Lee Howes for [P152
 
 [4] [cppalliance/corosio](https://github.com/cppalliance/corosio) - Coroutine-native networking library.
 
-[5] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[5] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [6] [P0443R10](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0443r10.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, H. Carter Edwards, Gordon Brown, David Hollman, 2019).
 

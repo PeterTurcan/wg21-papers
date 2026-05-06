@@ -35,7 +35,7 @@ reply-to:
 
 ### R0: February 2026 (pre-Croydon mailing)
 
-* Original analysis of structural gaps. See [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[2]</sup>.
+* Original analysis of structural gaps. See [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[2]</sup>.
 
 ---
 
@@ -45,7 +45,7 @@ The author provides information and serves at the pleasure of the committee.
 
 Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
 
-The authors developed [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[2]</sup> ("Senders and Coroutines") and [P2583R3](https://isocpp.org/files/papers/P2583R3.pdf)<sup>[3]</sup> ("Symmetric Transfer and Sender Composition"). The classification below holds regardless of whether any alternative design exists.
+The authors developed [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[2]</sup> ("Senders and Coroutines") and [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[3]</sup> ("Symmetric Transfer and Sender Composition"). The classification below holds regardless of whether any alternative design exists.
 
 This paper asks for nothing.
 
@@ -72,7 +72,7 @@ The issues in this section are items where shipping forecloses the fix.
 | Allocator Timing      | [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html)<sup>[6]</sup>, [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[4]</sup>, [LWG 4356](https://cplusplus.github.io/LWG/issue4356)<sup>[7]</sup>, [US 254-385](https://github.com/cplusplus/nbballot/issues/960)<sup>[8]</sup> | partial |
 | Allocator Propagation | [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html)<sup>[6]</sup>, [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[4]</sup>                                                                                                                                                  | partial |
 | Error Return          | [P3950R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3950r0.pdf)<sup>[9]</sup>, [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[5]</sup>, [P1713R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1713r0.pdf)<sup>[10]</sup>                                                                                                                | no    |
-| Symmetric Transfer    | [P2583R3](https://isocpp.org/files/papers/P2583R3.pdf)<sup>[3]</sup>, [US 246-373](https://github.com/cplusplus/nbballot/issues/948)<sup>[11]</sup>, [LWG 4348](https://cplusplus.github.io/LWG/issue4348)<sup>[12]</sup>, [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[5]</sup>, [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[4]</sup> | no    |
+| Symmetric Transfer    | [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[3]</sup>, [US 246-373](https://github.com/cplusplus/nbballot/issues/948)<sup>[11]</sup>, [LWG 4348](https://cplusplus.github.io/LWG/issue4348)<sup>[12]</sup>, [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[5]</sup>, [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[4]</sup> | no    |
 
 - **Allocator Timing.** [P3980R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3980r1.html)<sup>[6]</sup> separates frame allocation from environment allocation: the environment allocator is now sourced from `get_allocator(get_env(rcvr))` at `connect` time, resolving environment-based injection. The frame allocator, however, remains call-site-specified via `allocator_arg` in the coroutine parameter list. This is a structural consequence of coroutine allocation timing - the frame is allocated by `operator new` before `connect`/`start` runs, so the receiver's environment is unavailable. Shipping standardizes the two-tier split. A design where frame allocation participates in environment-based propagation is foreclosed without a language change to coroutine allocation.
 
@@ -102,9 +102,9 @@ Papers, issues, and ballot comments referenced in this document.
 
 [1] [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html) - "Add a Coroutine Task Type" (Dietmar K&uuml;hl, Maikel Nadolski, 2025).
 
-[2] [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
+[2] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Open Issues in `std::execution::task`" (Vinnie Falco, Mungo Gill, 2026).
 
-[3] [P2583R3](https://isocpp.org/files/papers/P2583R3.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
+[3] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
 
 [4] [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html) - "Coroutine Task Issues" (Dietmar K&uuml;hl, 2025).
 

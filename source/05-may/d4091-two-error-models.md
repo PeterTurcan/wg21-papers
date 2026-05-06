@@ -220,7 +220,7 @@ else
 
 All non-zero error codes go to `set_error`. The byte count is discarded unconditionally.
 
-**The refined mapping.** Peter Dimov proposed a convention, documented in [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[12]</sup> (Section 3.6), that preserves partial results by discriminating the channel based on the byte count and error code category:
+**The refined mapping.** Peter Dimov proposed a convention, documented in [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[12]</sup> (Section 3.6), that preserves partial results by discriminating the channel based on the byte count and error code category:
 
 | Completion                     | Channel             |
 | ------------------------------ | ------------------- |
@@ -452,7 +452,7 @@ Any quoted participant who wishes a passage retracted or revised may contact the
 
 [11] [bemanproject/net](https://github.com/bemanproject/net) - Sender/receiver networking library.
 
-[12] [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
+[12] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Open Issues in `std::execution::task`" (Vinnie Falco, Mungo Gill, 2026).
 
 [13] [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf) - "Sender/Receiver Interface For Networking" (Dietmar K&uuml;hl, 2023).
 

@@ -32,7 +32,7 @@ Coroutine-native I/O and `std::execution` are complementary. Each serves the dom
 
 This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
 
-The author developed [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[1]</sup> ("Coroutines for I/O"), [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[2]</sup> ("Senders and Coroutines"), [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[3]</sup> ("The Sender Sub-Language"), and [P2583R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r1.pdf)<sup>[4]</sup> ("Symmetric Transfer and Sender Composition"). A coroutine-only design cannot express compile-time work graphs, does not support heterogeneous dispatch, and assumes cooperative scheduling. This paper does not cite those libraries or P4003R0 as evidence for any claim. They are disclosed as context for the author's perspective.
+The author developed [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> ("A Minimal Coroutine Execution Model"), [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[2]</sup> ("Open Issues in `std::execution::task`"), [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)<sup>[3]</sup> ("The Sender Sub-Language For Beginners"), and [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[4]</sup> ("Symmetric Transfer and Sender Composition"). A coroutine-only design cannot express compile-time work graphs, does not support heterogeneous dispatch, and assumes cooperative scheduling. This paper does not cite those libraries or P4003R3 as evidence for any claim. They are disclosed as context for the author's perspective.
 
 This paper asks for nothing.
 
@@ -222,13 +222,13 @@ this paper.
 
 ### WG21 Papers
 
-[1] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[1] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
-[2] [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
+[2] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Open Issues in `std::execution::task`" (Vinnie Falco, Mungo Gill, 2026).
 
-[3] [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf) - "The Sender Sub-Language" (Vinnie Falco, Mungo Gill, 2026).
+[3] [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf) - "The Sender Sub-Language For Beginners" (Vinnie Falco, Mungo Gill, 2026).
 
-[4] [P2583R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r1.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
+[4] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
 
 [5] [P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html) - "Merge Coroutines TS into C++20 working draft" (Gor Nishanov, 2018).
 

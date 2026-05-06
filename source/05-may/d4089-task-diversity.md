@@ -324,7 +324,7 @@ Nine coroutine libraries are surveyed below. Asio is the most widely deployed C+
 [cppcoro-task]: https://github.com/lewissbaker/cppcoro/blob/master/include/cppcoro/task.hpp
 [aiopp-task]: https://github.com/pfirsich/aiopp/blob/main/include/aiopp/task.hpp
 [libcoro-task]: https://github.com/jbaldwin/libcoro/blob/main/include/coro/task.hpp
-[folly-task]: https://github.com/facebook/folly/blob/main/folly/experimental/coro/Task.h
+[folly-task]: https://github.com/facebook/folly/blob/main/folly/coro/Task.h
 [asio-awaitable]: https://www.boost.org/doc/libs/latest/doc/html/boost_asio/reference/awaitable.html
 [p3552-task]: https://github.com/bemanproject/task/blob/main/include/beman/task/detail/task.hpp
 
@@ -353,7 +353,7 @@ Domain-specific task types interoperate through the C++20 awaitable protocol. Th
 
 The fix is a general pattern: define a concept that constrains awaitables, not task types. The promise remains the extension point. The return type stays clean.
 
-`IoAwaitable` ([P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[12]</sup>) is one realization:
+`IoAwaitable` ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[12]</sup>) is one realization:
 
 ```cpp
 template<typename A>
@@ -369,7 +369,7 @@ Any type satisfying the concept works. The task type remains `task<T>` - one par
 
 The concept constrains the awaitable, not the task type. Any task type whose promise propagates `io_env` can `co_await` any `IoAwaitable` - N task types plus M awaitables equals N+M implementations.
 
-The standard queries that P2300R10 propagates through environments have natural homes in this model. The scheduler and stop token reach the awaitable through `await_transform`, which passes the promise's state into the awaitable's `await_suspend` - exactly what `IoAwaitable`'s signature captures. The allocator reaches the coroutine frame through `promise_type::operator new`, which the compiler already calls with the coroutine's parameters. The detailed mapping is in [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[12]</sup>.
+The standard queries that P2300R10 propagates through environments have natural homes in this model. The scheduler and stop token reach the awaitable through `await_transform`, which passes the promise's state into the awaitable's `await_suspend` - exactly what `IoAwaitable`'s signature captures. The allocator reaches the coroutine frame through `promise_type::operator new`, which the compiler already calls with the coroutine's parameters. The detailed mapping is in [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[12]</sup>.
 
 Bolas explained the role of `await_transform`<sup>[19]</sup>:
 
@@ -439,7 +439,7 @@ The author thanks Gor Nishanov for the coroutine model's explicit support for ta
 
 [11] [P4093R0](https://isocpp.org/files/papers/P4093R0.pdf) - "Producing Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026).
 
-[12] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[12] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 ### StackOverflow and GitHub
 

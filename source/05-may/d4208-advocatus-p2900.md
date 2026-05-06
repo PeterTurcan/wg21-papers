@@ -11,7 +11,7 @@ reply-to:
 
 ## Abstract
 
-An AI examines [P2900R14](https://wg21.link/p2900r14) "Contracts for C++" by applying the Advocatus Diaboli from [P4207R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4207r0.pdf) "Prosecute Your Paper To Improve It." The Advocatus is a structured adversarial review tool for WG21 papers. It reads the paper, assembles a dossier, tests every claim, cross-examines its own findings, and delivers a formal verdict.
+An AI examines [P2900R14](https://wg21.link/p2900r14) "Contracts for C++" by applying the Advocatus Diaboli from [P4207R0](https://isocpp.org/files/papers/P4207R0.pdf) "Prosecute Your Paper To Improve It." The Advocatus is a structured adversarial review tool for WG21 papers. It reads the paper, assembles a dossier, tests every claim, cross-examines its own findings, and delivers a formal verdict.
 
 ---
 

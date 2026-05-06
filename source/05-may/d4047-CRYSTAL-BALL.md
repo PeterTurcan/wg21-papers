@@ -28,7 +28,7 @@ The author provides information and serves at the pleasure of the committee.
 
 This paper examines the published record. That effort requires re-examining consequential papers, including papers written by people the author respects.
 
-The author has papers before the committee proposing coroutine-based I/O ([P4003R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r2.pdf)) and analyzing `std::execution` ([P2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf), [P4007R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r2.pdf), [P4014R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r1.pdf)). Every prediction and outcome cited below is sourced to public committee records, published blog posts, or recorded conference talks.
+The author has papers before the committee proposing coroutine-based I/O ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)) and analyzing `std::execution` ([P2583R4](https://isocpp.org/files/papers/P2583R4.pdf), [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf), [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)). Every prediction and outcome cited below is sourced to public committee records, published blog posts, or recorded conference talks.
 
 **The author is the intelligence of record.** [P4023R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4023r0.pdf)<sup>[1]</sup> (Directions Group, "Strategic Direction for AI in C++") establishes that "the ultimate responsibility for accuracy, logic, and normative quality rests entirely with the human author." This paper follows that principle. AI tools assist with research, compilation, and drafting. The author curates, verifies, and takes responsibility for every claim.
 
@@ -63,7 +63,7 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 | S1  | Stack overflow from reentrant completion without executors is "user-hostile default behaviour"          | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - M&uuml;ller [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[6]</sup> (2025), K&uuml;hl [P3796R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[7]</sup> |
 | S2  | P2300 design "insufficiently paranoid to be suited to internet-facing software development"            | [P2480R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2480r0.pdf)<sup>[8]</sup>               | 2021-10 | Partially confirmed - networking deferred to C++29 |
 | S3  | `set_error` channel confusion - scheduling errors vs. I/O errors                                       | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - still unresolved |
-| S4  | "P2300 will likely require language changes to work effectively" - tail calls, trampolines              | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - [P2583R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf)<sup>[9]</sup> documents symmetric transfer gap (2026) |
+| S4  | "P2300 will likely require language changes to work effectively" - tail calls, trampolines              | [P2469R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[4]</sup>               | 2021-10 | Confirmed - [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[9]</sup> documents symmetric transfer gap (2026) |
 | S5  | Tail call concerns documented before P2300                                                             | Nishanov [P1362R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)<sup>[10]</sup>      | 2019    | Confirmed - still open |
 
 ### Customization Mechanism
@@ -150,7 +150,7 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 
 [8] [Christopher Kohlhoff, Jamie Allsop, Klemens Morgenstern. P2480R0. "Response to P2471: "NetTS, Asio, and Sender library design comparison" - corrected and expanded" WG21, 2021](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2480r0.pdf)
 
-[9] [Vinnie Falco, Klemens Morgenstern. P2583R3. WG21, 2026](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf)
+[9] [Mungo Gill, Vinnie Falco. P2583R4. WG21, 2026](https://isocpp.org/files/papers/P2583R4.pdf)
 
 [10] [Gor Nishanov. P1362R0. "Incremental Approach: Coroutine TS + Core Coroutines." WG21, 2019](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1362r0.pdf)
 

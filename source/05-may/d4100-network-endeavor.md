@@ -25,7 +25,7 @@ Two libraries - Capy and Corosio - use those mechanisms directly to deliver type
 
 ### R1: May 2026 (pre-Brno mailing)
 
-- The buffer-concepts paper (Paper 4) is split into a buffer-ranges pair and a dynamic-buffer pair, following the IoAwaitable pattern (P4003R1 ask + P4172R0 design). Each topic now has an ask paper and a design paper.
+- The buffer-concepts paper (Paper 4) is split into a buffer-ranges pair and a dynamic-buffer pair, following the IoAwaitable pattern (P4003R3 ask + P4172R0 design). Each topic now has an ask paper and a design paper.
 - Dynamic Buffer is promoted to its own series slot as Paper 5. Stream Concepts becomes Paper 6 (was 5). Combinators becomes Paper 7 (was 6). Stage Two papers (Timers, Signals, Files, TCP, DNS, UDP, TLS) shift from Papers 7-13 to Papers 8-14. The series is now fourteen papers (was thirteen).
 - Section 8.4 narrowed to the buffer-ranges vocabulary only; new Section 8.5 added for Dynamic Buffer. Subsequent Section 8.x headings renumbered.
 - Section 11 timeline tables updated with Dynamic Buffer entries and shifted Stage Two paper numbers.
@@ -187,7 +187,7 @@ Three gains:
 
 3. **Backend insulation.** Swap Asio for Corosio by recompiling one `.cpp` file. Consumers never recompile. Headers do not change.
 
-Frame allocator propagation works through the adapter. Recycling allocators on MSVC yield a 3.1x throughput improvement ([P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[3]</sup> Section 5).
+Frame allocator propagation works through the adapter. Recycling allocators on MSVC yield a 3.1x throughput improvement ([P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[3]</sup> Section 5).
 
 ### 5.2 The Migration Path
 
@@ -285,13 +285,13 @@ The ABI stability of Stage One provides the boundary. `any_stream` is the contra
 
 ### 8.1 Paper 1: IoAwaitable Protocol
 
-[P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[4]</sup> published. [P4172R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4172r0.pdf)<sup>[5]</sup> provides design rationale. Targeting first LEWG review at Brno (June 2026).
+[P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup> published. [P4172R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4172r0.pdf)<sup>[5]</sup> provides design rationale. Targeting first LEWG review at Brno (June 2026).
 
 The coroutine execution model for I/O. Depends on nothing.
 
 **Key types.** `IoAwaitable` concept, `IoRunnable` concept, `Executor` concept (`dispatch`, `post`, `context`), `execution_context` with service registry and frame allocator ownership, `executor_ref` (two-pointer type-erased executor), `io_env` (bundles executor, stop token, frame allocator).
 
-**What coroutines provide.** The IoAwaitable protocol solves frame allocator timing through forward propagation via TLS. The frame allocator is available before `operator new` executes. No language extensions required. 3.1x throughput improvement using recycling allocators on MSVC ([P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[3]</sup> Section 5).
+**What coroutines provide.** The IoAwaitable protocol solves frame allocator timing through forward propagation via TLS. The frame allocator is available before `operator new` executes. No language extensions required. 3.1x throughput improvement using recycling allocators on MSVC ([P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[3]</sup> Section 5).
 
 **Shipping status.** Capy implements the full protocol. Corosio builds a complete networking stack on it. Shipping today on Windows, Linux, and macOS.
 
@@ -427,7 +427,7 @@ Sender algorithms compose at compile time with full type information. The optimi
 
 The question is whether byte-oriented I/O benefits from the same model.
 
-The properties in Section 3 - type erasure, frame allocation, symmetric transfer - work because coroutines are used directly. A sender layer between the coroutine and the platform loses them. [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[3]</sup> documents four structural gaps where `std::execution` meets coroutines: three at the boundary - error reporting, error returns, and frame allocator propagation - and one inside the composition mechanism: the symmetric transfer gap (documented in [P2583R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r0.pdf)<sup>[7]</sup>).
+The properties in Section 3 - type erasure, frame allocation, symmetric transfer - work because coroutines are used directly. A sender layer between the coroutine and the platform loses them. [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[3]</sup> documents four structural gaps where `std::execution` meets coroutines: three at the boundary - error reporting, error returns, and frame allocator propagation - and one inside the composition mechanism: the symmetric transfer gap (documented in [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[7]</sup>).
 
 Domain specialization is not fragmentation. GPU compute got `nvexec` with CUDA extensions and a separate namespace. C++ has multiple container types, multiple string types, multiple smart pointer types. Two async models for two distinct domains is the same principle.
 
@@ -548,15 +548,15 @@ We built this. It works. We are reporting what we found.
 
 [2] [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf) - "What C++20 Coroutines Already Buy The Standard" (Vinnie Falco, 2026).
 
-[3] [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
+[3] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
 
-[4] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[4] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [5] [P4172R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4172r0.pdf) - "IoAwaitable for Coroutine-Native Byte-Oriented I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [6] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
-[7] [P2583R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r0.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
+[7] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
 
 ---
 
@@ -568,6 +568,6 @@ The authors of `std::execution` - Eric Niebler, Kirk Shoop, Lewis Baker, and the
 
 The committee designed C++20 coroutines. Gor Nishanov, Lewis Baker, and their collaborators gave C++ the language mechanisms that make this I/O design possible.
 
-Dietmar K&uuml;hl's feedback on [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) and [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf) improved the technical quality of both papers.
+Dietmar K&uuml;hl's feedback on [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) and [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf) improved the technical quality of both papers.
 
 Ruben Perez, Marcelo Zimbres Silva, and the Boost.Postgres team adopted Capy and Corosio independently. Their experience is evidence we could not manufacture ourselves.

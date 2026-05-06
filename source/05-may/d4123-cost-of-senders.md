@@ -68,7 +68,7 @@ Everything above is granted without reservation.
 
 ## 3. Three Paths
 
-Both models require an I/O environment - a bundle of state that every I/O operation needs: a type-erased executor (to submit work to the reactor), a stop token (for cancellation), and optionally a frame allocator. [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[10]</sup> defines this as `io_env` and specifies the `IoAwaitable` concept that consumes it. In the coroutine-native model, the promise carries `io_env` directly. In the sender model, the `Environment` template parameter of `std::execution::task` serves this role; this paper uses `IoEnv` to denote an `Environment` specialized for I/O.
+Both models require an I/O environment - a bundle of state that every I/O operation needs: a type-erased executor (to submit work to the reactor), a stop token (for cancellation), and optionally a frame allocator. [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[10]</sup> defines this as `io_env` and specifies the `IoAwaitable` concept that consumes it. In the coroutine-native model, the promise carries `io_env` directly. In the sender model, the `Environment` template parameter of `std::execution::task` serves this role; this paper uses `IoEnv` to denote an `Environment` specialized for I/O.
 
 The same I/O operation. The same user code. Three paths: the coroutine-native model, `task<T, IoEnv>` with I/O awaitables (Case A), and `task<T, IoEnv>` with I/O senders (Case B).
 
@@ -309,7 +309,7 @@ With the fourth routing, the standard `when_all` cancels siblings on I/O error. 
 
 #### 5.5.3 The Remaining Difference
 
-The fourth routing makes `when_all` cancel siblings on I/O error. It does not make the composition clean. Downstream algorithms - `upon_error`, `let_error`, `retry` - now receive `tuple<error_code, size_t>` instead of `error_code`. Every handler must branch on the error type with `if constexpr`. Partial transfer data (bytes read before the error) is semantically misplaced inside the error channel. `retry` sees the tuple and retries the whole operation; the byte count is lost. [P4124R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4124r0.pdf)<sup>[13]</sup> examines these problems in detail and shows that the first three routing strategies fail to achieve correct I/O error handling, and that the fourth corrupts downstream composition, without a domain-aware combinator.
+The fourth routing makes `when_all` cancel siblings on I/O error. It does not make the composition clean. Downstream algorithms - `upon_error`, `let_error`, `retry` - now receive `tuple<error_code, size_t>` instead of `error_code`. Every handler must branch on the error type with `if constexpr`. Partial transfer data (bytes read before the error) is semantically misplaced inside the error channel. `retry` sees the tuple and retries the whole operation; the byte count is lost. [P4124R0](https://isocpp.org/files/papers/P4124R0.pdf)<sup>[13]</sup> examines these problems in detail and shows that the first three routing strategies fail to achieve correct I/O error handling, and that the fourth corrupts downstream composition, without a domain-aware combinator.
 
 The coroutine-native model's combinator has direct access to the result value after `co_await`:
 
@@ -361,7 +361,7 @@ Three properties of Case B deserve attention.
 
 The coroutine frame itself is already allocated. The sender machinery adds CPU overhead on top of the same allocation profile. The "no allocation" benefit does not materialize for the I/O user because the coroutine frame provides the storage regardless of whether the I/O operation is a sender or an awaitable.
 
-**No symmetric transfer.** `set_value` is void-returning ([D2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf)<sup>[14]</sup> documents this gap). The `awaitable-receiver` calls `continuation.resume()` as a function call. In the coroutine-native model, `await_suspend` returns `coroutine_handle<>` and the compiler arranges a tail call. The symmetric transfer gap documented in [D2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf)<sup>[14]</sup> applies to every I/O completion under Case B.
+**No symmetric transfer.** `set_value` is void-returning ([P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[14]</sup> documents this gap). The `awaitable-receiver` calls `continuation.resume()` as a function call. In the coroutine-native model, `await_suspend` returns `coroutine_handle<>` and the compiler arranges a tail call. The symmetric transfer gap documented in [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[14]</sup> applies to every I/O completion under Case B.
 
 **Type-erased streams allocate per operation.** When the I/O operation is an awaitable, the awaitable returned by a type-erased stream has a fixed, compile-time-known size - a pointer to the vtable and a pointer to the buffer. The compiler places it on the coroutine frame. No heap allocation.
 
@@ -482,15 +482,15 @@ The author thanks Bjarne Stroustrup for [P3406R0](https://www.open-std.org/jtc1/
 
 [9] [P4093R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4093r0.pdf) - "Info: Producing Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026).
 
-[10] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, 2026).
+[10] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [11] [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html) - "std::execution" (Micha&lstrok; Dominiak, Lewis Baker, Lee Howes, Kirk Shoop, Michael Garland, Eric Niebler, Bryce Adelstein Lelbach, 2024).
 
 [12] [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf) - "Slides: Partial success scenarios with P2300" (Chris Kohlhoff, 2021).
 
-[13] [P4124R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4124r0.pdf) - "Domain-Aware Combinators" (Vinnie Falco, 2026).
+[13] [P4124R0](https://isocpp.org/files/papers/P4124R0.pdf) - "Domain-Aware Combinators" (Vinnie Falco, 2026).
 
-[14] [D2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf) - "Info: Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
+[14] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer and Sender Composition" (Mungo Gill, Vinnie Falco, 2026).
 
 [15] [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html) - "Coroutine Task Issues" (Dietmar K&uuml;hl, 2025).
 

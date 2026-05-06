@@ -14,7 +14,7 @@ reply-to:
 
 Senders pay a frame allocation to enter the awaitable protocol. They do not have to.
 
-The IoAwaitable protocol ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup>) defines a contract between a coroutine and an I/O reactor: the coroutine suspends, the reactor performs the operation, and the executor resumes the coroutine when the result is ready. The only way to obtain a `coroutine_handle<>` today is from a coroutine, and a coroutine requires a frame allocation. A sender pipeline that wants to invoke an IoAwaitable must allocate a coroutine frame to get a handle - even though the sender already has its own operation state and does not need a frame.
+The IoAwaitable protocol ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup>) defines a contract between a coroutine and an I/O reactor: the coroutine suspends, the reactor performs the operation, and the executor resumes the coroutine when the result is ready. The only way to obtain a `coroutine_handle<>` today is from a coroutine, and a coroutine requires a frame allocation. A sender pipeline that wants to invoke an IoAwaitable must allocate a coroutine frame to get a handle - even though the sender already has its own operation state and does not need a frame.
 
 This paper is additive. It does not take anything away from senders, from coroutines, or from any existing design. It gives senders something they do not have today: zero-allocation access to every IoAwaitable ever written - timers, channels, semaphores, I/O operations, and anything else the ecosystem produces. A general bridge to standard awaitables would also need to handle the `void`-returning and `bool`-returning variants of `await_suspend`. It gives awaitable authors a new consumer base without modifying a single line of their code.
 
@@ -58,7 +58,7 @@ One I/O implementation. Both coroutines and senders consume it. Zero allocation 
 
 ### 2.1 The Executor
 
-The coroutine executor ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup>) has two operations:
+The coroutine executor ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup>) has two operations:
 
 ```cpp
 coroutine_handle<>
@@ -405,7 +405,7 @@ The author thanks Gor Nishanov for the C++20 coroutine model and its explicit su
 
 ## References
 
-[1] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[1] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [2] [P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) - "The Network Endeavor: Coroutine-Native I/O for C++29" (Vinnie Falco, Steve Gerbino, Michael Vandeberg, Mungo Gill, Mohammad Nejati, 2026).
 

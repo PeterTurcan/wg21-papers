@@ -59,7 +59,7 @@ An I/O-aware `when_all` follows the same principle. The combinator knows the res
 auto [ec, n] = co_await sock.async_read_some(buf);
 ```
 
-`ec` is always present. `!ec` means success; the remaining elements are meaningful. `ec` means failure; the remaining elements are present but not guaranteed meaningful. `io_result` is defined in [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf)<sup>[4]</sup>.
+`ec` is always present. `!ec` means success; the remaining elements are meaningful. `ec` means failure; the remaining elements are present but not guaranteed meaningful. `io_result` is defined in [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup>.
 
 ### 2.2 Behavior
 
@@ -265,7 +265,7 @@ io_adapt(IoAwaitable auto op)
 ```
 
 > [!NOTE]
-> `co_yield with_error(...)` is not part of `std::execution::task` as specified in [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html). It requires a language change to the mutual exclusion of `return_value` and `return_void` in coroutine promise types; see [P3950R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3950r0.pdf) and [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) Section 3.
+> `co_yield with_error(...)` is not part of `std::execution::task` as specified in [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html). It requires a language change to the mutual exclusion of `return_value` and `return_void` in coroutine promise types; see [P3950R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p3950r0.pdf) and [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) Section 3.
 
 The call site:
 
@@ -416,7 +416,7 @@ The author thanks Peter Dimov for the `io_result` return type design and the `se
 
 [3] [cppalliance/capy](https://github.com/cppalliance/capy) - Coroutine I/O primitives library.
 
-[4] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[4] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [5] Peter Dimov - `io_result` return type design and routing analysis (LEWG reflector, March 2026; beast2 Slack, February-March 2026).
 

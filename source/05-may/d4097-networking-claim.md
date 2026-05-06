@@ -151,7 +151,7 @@ The `NN::` namespace prefix is a placeholder. The example is a hypothetical illu
 
 | Category                                    | Evidence in the published record at the time of the vote                                                                                                                                                                  |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sender-based networking deployment          | None published. The production exchange described in [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[25]</sup> considered and rejected sender/receivers for architectural incompatibility (Section 7.2). |
+| Sender-based networking deployment          | None published. The production exchange described in [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf)<sup>[25]</sup> considered and rejected sender/receivers for architectural incompatibility (Section 7.2). |
 | Sender-based networking prototype           |                                                                                                                                                                                                                           |
 | Sender-based networking code example        | One hypothetical example in [P2300R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html)<sup>[8]</sup> Section 1.4 using placeholder `NN::` namespace                                                                                           |
 | Published analysis of sender model for I/O  | [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021): compound I/O results cannot use `set_error` without information loss. Published before the poll.                                             |
@@ -176,7 +176,7 @@ The concern [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2
 | [N4985](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4985.pdf)<sup>[11]</sup>                | 2024 | St. Louis minutes: national body raised concerns about P2300R10 at the adoption vote.                 |
 | [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[12]</sup>            | 2025 | "Concerns about the design of std::execution::task." Urges the committee to reconsider P3552R3.       |
 | [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[13]</sup>            | 2025 | "Coroutine Task Issues." Documents stack overflow, cancellation, and wording problems in the task.     |
-| Published sender-based networking deployment                    | 2026 | None. The only published production I/O evaluation ([P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[25]</sup>) chose coroutines; sender/receivers rejected as architecturally incompatible. |
+| Published sender-based networking deployment                    | 2026 | None. The only published production I/O evaluation ([P4125R1](https://isocpp.org/files/papers/P4125R1.pdf)<sup>[25]</sup>) chose coroutines; sender/receivers rejected as architecturally incompatible. |
 
 [N4985](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4985.pdf)<sup>[11]</sup>, the St. Louis 2024 minutes, records the moment [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> was adopted into the C++ working paper:
 
@@ -192,14 +192,14 @@ The following papers are authored or co-authored by the author of this paper. Th
 
 | Paper                                                           | Title                                                | What it documents                                                                   |
 | --------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[14]</sup>            | A Minimal Coroutine Execution Model                  | The coroutine executor concept for networking                                       |
-| [P4007R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r1.pdf)<sup>[15]</sup>            | Open Issues in `std::execution::task`                | `AS-EXCEPT-PTR` converts routine `error_code` to `exception_ptr`                   |
+| [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[14]</sup>            | A Minimal Coroutine Execution Model                  | The coroutine executor concept for networking                                       |
+| [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[15]</sup>            | Open Issues in `std::execution::task`                | `AS-EXCEPT-PTR` converts routine `error_code` to `exception_ptr`                   |
 | [P4090R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4090r0.pdf)<sup>[16]</sup>            | Sender I/O: A Constructed Comparison                 | Side-by-side sender vs. coroutine networking code                                   |
 | [P4091R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4091r0.pdf)<sup>[17]</sup>            | Two Error Models                                     | The sender error channel vs. `error_code` for I/O                                  |
 | [P4092R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4092r0.pdf)<sup>[18]</sup>            | Consuming Senders from Coroutine-Native Code         | Coroutine-to-sender interop bridge                                                  |
 | [P4093R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4093r0.pdf)<sup>[19]</sup>            | Producing Senders from Coroutine-Native Code         | Sender-to-coroutine interop bridge                                                  |
 | [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf)<sup>[20]</sup>            | What C++20 Coroutines Already Buy The Standard                              | The argument for coroutine-native I/O as the foundation for networking              |
-| [P2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf)<sup>[21]</sup>            | Symmetric Transfer and Sender Composition            | Symmetric transfer gap in sender task types                                         |
+| [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[21]</sup>            | Symmetric Transfer and Sender Composition            | Symmetric transfer gap in sender task types                                         |
 
 The author's position on coroutine-native I/O is a consequence of the findings documented in this series, not a premise.
 
@@ -271,9 +271,9 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 
 [13] [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html) - "Coroutine Task Issues" (Dietmar K&uuml;hl, 2025).
 
-[14] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[14] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
-[15] [P4007R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r1.pdf) - "Open Issues in std::execution::task" (Vinnie Falco, 2026).
+[15] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Open Issues in std::execution::task" (Vinnie Falco, 2026).
 
 [16] [P4090R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4090r0.pdf) - "Sender I/O: A Constructed Comparison" (Vinnie Falco, 2026).
 
@@ -285,7 +285,7 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 
 [20] [P4088R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4088r0.pdf) - "What C++20 Coroutines Already Buy The Standard" (Vinnie Falco, 2026).
 
-[21] [P2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf) - "Symmetric Transfer and Sender Composition" (Vinnie Falco, 2026).
+[21] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer and Sender Composition" (Vinnie Falco, 2026).
 
 [22] [N1925](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
@@ -293,4 +293,4 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 
 [24] [r/cpp: C++ committee polling results for asynchronous programming](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/) - Oct 2021.
 
-[25] [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).
+[25] [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).

@@ -12,7 +12,7 @@ reply-to:
 
 Every mailing repeats the same deployment background. This paper puts one citeable inventory in the record.
 
-It consolidates platform categories, operating-system and runtime context, and representative compiler families so authors can cite a single WG21 paper instead of rehearsing the same background in every proposal. The platform survey extends the capability table in [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> with additional columns aimed at SG14 readers. The compiler survey adds matching rows for toolchain families. The document is a **working reference**. Later revisions may extend the schema and add rows. Proposals with sources may reach the author through the addresses in the front matter.
+It consolidates platform categories, operating-system and runtime context, and representative compiler families so authors can cite a single WG21 paper instead of rehearsing the same background in every proposal. The platform survey extends the capability table in [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> with additional columns aimed at SG14 readers. The compiler survey adds matching rows for toolchain families. The document is a **working reference**. Later revisions may extend the schema and add rows. Proposals with sources may reach the author through the addresses in the front matter.
 
 ---
 
@@ -42,7 +42,7 @@ This paper consolidates a single, citeable inventory of **platform categories**,
 
 The inventory is a **living document**. Later revisions may add schema columns, platform rows, and compiler rows as the record improves. Propose additions or corrections by contacting the author at the address in the front matter. Include sources the editors can verify.
 
-The platform half of the inventory extends the capability survey used in [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 ("Platforms Without Thread-Local Storage") for a different question - deployment and toolchain context for authors, not the coroutine frame allocator timing argument itself. The compiler half fills the second table on the same footing: reference material, maintained over time.
+The platform half of the inventory extends the capability survey used in [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 ("Platforms Without Thread-Local Storage") for a different question - deployment and toolchain context for authors, not the coroutine frame allocator timing argument itself. The compiler half fills the second table on the same footing: reference material, maintained over time.
 
 ---
 
@@ -50,7 +50,7 @@ The platform half of the inventory extends the capability survey used in [P4127R
 
 ### 3.1 Platform schema
 
-The schema below states baseline capabilities from [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1, plus additional columns for SG14 readers. It is presented as two tables sharing the **Category** index so each table has room to read clearly.
+The schema below states baseline capabilities from [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1, plus additional columns for SG14 readers. It is presented as two tables sharing the **Category** index so each table has room to read clearly.
 
 **Table A - Language and library support.** What C++ facilities apply on each platform.
 
@@ -114,9 +114,9 @@ Desktop operating systems deliver full hosted implementations, C++20 coroutines 
 | Exceptions in typical shipping builds | Typically on. Most shipping desktop binaries leave exceptions enabled unless a product or studio policy turns them off |
 | Hot-path allocation style | Heap plus PMR |
 | Scheduling class | Best effort. General-purpose OS scheduling (not a hard real-time kernel guarantee) |
-| Thread-local storage access pattern | Static TLS. Thread-local objects live in the loader-managed TLS block for the process or main modules. On Windows, DLLs can still pay an extra indirection as discussed in [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.2 |
+| Thread-local storage access pattern | Static TLS. Thread-local objects live in the loader-managed TLS block for the process or main modules. On Windows, DLLs can still pay an extra indirection as discussed in [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.2 |
 
-[P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 groups this row with the same top-tier capability set as other full-hosted platforms in that survey.
+[P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 groups this row with the same top-tier capability set as other full-hosted platforms in that survey.
 
 ---
 
@@ -141,7 +141,7 @@ Mobile stacks are full hosted environments on ARM64 for mainstream C++ toolchain
 | Scheduling class | Best effort |
 | Thread-local storage access pattern | Static TLS |
 
-[P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 lists this row alongside desktop. Store rules and battery targets change optimisation pressure, but hosted builds keep the core facilities in the table.
+[P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 lists this row alongside desktop. Store rules and battery targets change optimisation pressure, but hosted builds keep the core facilities in the table.
 
 ---
 
@@ -166,7 +166,7 @@ Vendor SDKs supply hosted C++ with coroutine support and TLS for titles that opt
 | Scheduling class | Best effort |
 | Thread-local storage access pattern | Static or vendor. Access path can be the usual static TLS block or a vendor-specific runtime detail not visible in public documentation |
 
-[P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 includes this row in the top group. Treat vendor guidance as the authority for a specific title target.
+[P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 includes this row in the top group. Treat vendor guidance as the authority for a specific title target.
 
 ---
 
@@ -183,7 +183,7 @@ These kernels support threaded C++ with TLS in configurations that ship coroutin
 | Platform category | Full RTOS (QNX, Zephyr, VxWorks) |
 | C++20 coroutines (in practice) | Yes |
 | `thread_local` available | Yes |
-| Hosted `<memory_resource>` | Hosted PMR (platform-supplied). May appear as part of the platform-provided hosted subset, not necessarily a full desktop-class library layout. [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 records the PMR column as **Hosted** for this row |
+| Hosted `<memory_resource>` | Hosted PMR (platform-supplied). May appear as part of the platform-provided hosted subset, not necessarily a full desktop-class library layout. [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 records the PMR column as **Hosted** for this row |
 | General-purpose heap worth customising | Yes |
 | Hosted standard-library profile | Partial to full. From slim RTOS images through near-desktop library surface |
 | Exceptions in typical shipping builds | Varies. Automotive and industrial certification: some builds forbid exceptions entirely, others allow them in non-safety paths |
@@ -214,7 +214,7 @@ Many microcontroller-focused RTOS images lack `thread_local` and lack hosted PMR
 | Scheduling class | Soft real-time. Typical RTOS latency goals without claiming a single certification level |
 | Thread-local storage access pattern | Not applicable |
 
-[P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 gives **Partial** for coroutines and **No** for `thread_local` and PMR. The Raspberry Pi Pico (RP2040) example in that section notes community coroutine support, incomplete `thread_local` in the SDK at the time of writing, and newlib in freestanding mode without `<memory_resource>`<sup>[1]</sup>. Pigweed provides C++20 coroutines with an allocator passed per coroutine (`CoroContext`) because PMR is not available in those environments<sup>[4]</sup>.
+[P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 gives **Partial** for coroutines and **No** for `thread_local` and PMR. The Raspberry Pi Pico (RP2040) example in that section notes community coroutine support, incomplete `thread_local` in the SDK at the time of writing, and newlib in freestanding mode without `<memory_resource>`<sup>[1]</sup>. Pigweed provides C++20 coroutines with an allocator passed per coroutine (`CoroContext`) because PMR is not available in those environments<sup>[4]</sup>.
 
 ---
 
@@ -239,7 +239,7 @@ Firmware without an OS may still use a constrained heap. Coroutines are partial 
 | Scheduling class | Hard real-time or none. Strict cycle-bound firmware is one case; bring-up or lab setups where no RTOS schedule applies are the other |
 | Thread-local storage access pattern | Not applicable |
 
-[P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 marks heap as **Rare** for this row. The intersection of hosted PMR and absence of TLS remains empty in that paper's survey.
+[P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 marks heap as **Rare** for this row. The intersection of hosted PMR and absence of TLS remains empty in that paper's survey.
 
 ---
 
@@ -264,7 +264,7 @@ Device compilation targets are not general hosted C++ environments. Coroutines, 
 | Scheduling class | SIMT. Device-side parallel execution model (contrast with host preemption and threading) |
 | Thread-local storage access pattern | Not applicable |
 
-[P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.1 places this row in the bottom group. This row is the **device** environment; host compilation for the same program follows Sections 4.2-4.4.
+[P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.1 places this row in the bottom group. This row is the **device** environment; host compilation for the same program follows Sections 4.2-4.4.
 
 ---
 
@@ -341,7 +341,7 @@ cppreference lists **Clang 8** as the first column entry for C++20 coroutines ([
 
 Microsoft documents C++20 coroutines ([P0912R5](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0912r5.html)<sup>[7]</sup>) from **Visual Studio 2019 version 16.8** onward (toolset **19.28**)<sup>[9]</sup>. The Microsoft STL ships `<memory_resource>` ([P0220R1](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0220r1.html)<sup>[8]</sup>) from **Visual Studio 2017 version 15.6** onward<sup>[9]</sup>.
 
-TLS access patterns for DLLs differ from ELF static TLS as summarised in [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.2.
+TLS access patterns for DLLs differ from ELF static TLS as summarised in [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.2.
 
 **Schema**
 
@@ -349,7 +349,7 @@ TLS access patterns for DLLs differ from ELF static TLS as summarised in [P4127R
 | ----- | ----- |
 | Toolchain family | MSVC |
 | C++20 coroutine support | Yes |
-| `thread_local` code generation | Windows TLS model. `thread_local` in DLLs can use the slow path described in [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> Section 9.2, unlike a single static link |
+| `thread_local` code generation | Windows TLS model. `thread_local` in DLLs can use the slow path described in [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> Section 9.2, unlike a single static link |
 | Hosted versus freestanding profile | Hosted Windows primary. Targets user-mode Windows toolchains with the full CRT, not every experimental or kernel target MSVC can be aimed at |
 | Exceptions (typical default) | Typically on |
 | PMR in shipped standard library | Yes |
@@ -419,13 +419,13 @@ The integrator supplies object layout, TLS lowering, exception machinery, and ru
 
 ## Acknowledgments
 
-The author thanks Vinnie Falco and the C++ Alliance proposal authors whose platform survey in [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[1]</sup> seeded Section 3.
+The author thanks Vinnie Falco and the C++ Alliance proposal authors whose platform survey in [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[1]</sup> seeded Section 3.
 
 ---
 
 ## References
 
-[1] [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf) - "The Coroutine Frame Allocator Timing Problem" (Vinnie Falco, C++ Alliance Proposal Team, 2026).
+[1] [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf) - "The Coroutine Frame Allocator Timing Problem" (Vinnie Falco, C++ Alliance Proposal Team, 2026).
 
 [2] [P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) - "The Network Endeavour: Coroutine-Native I/O for C++29" (Vinnie Falco, Steve Gerbino, Michael Vandeberg, Mungo Gill, Mohammad Nejati, 2026).
 

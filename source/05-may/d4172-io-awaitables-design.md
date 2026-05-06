@@ -14,9 +14,9 @@ reply-to:
 
 This paper documents the design rationale for the _IoAwaitable_ protocol.
 
-[P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> proposes the normative vocabulary (_IoAwaitable_, launch functions, executor shape). This paper is the companion record: why each facility exists, what alternatives were considered, how each choice was forced by the constraints of the domain, and where the historical evidence lives. Section 3 defines three audiences and their expected skill levels. Sections 4-7 present each protocol facility grouped by audience with expanded design rationale. Section 8 addresses frame allocator propagation. Section 9 demonstrates the ergonomic payoff. Sections 10-11 cover complementary use with `std::execution` and evidence. Appendix A provides async I/O background for committee members unfamiliar with the domain.
+[P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> proposes the normative vocabulary (_IoAwaitable_, launch functions, executor shape). This paper is the companion record: why each facility exists, what alternatives were considered, how each choice was forced by the constraints of the domain, and where the historical evidence lives. Section 3 defines three audiences and their expected skill levels. Sections 4-7 present each protocol facility grouped by audience with expanded design rationale. Section 8 addresses frame allocator propagation. Section 9 demonstrates the ergonomic payoff. Sections 10-11 cover complementary use with `std::execution` and evidence. Appendix A provides async I/O background for committee members unfamiliar with the domain.
 
-Read [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> first for specification text; read this paper when you need the design audit trail.
+Read [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> first for specification text; read this paper when you need the design audit trail.
 
 ---
 
@@ -51,11 +51,11 @@ This paper asks for nothing.
 
 ## 2. Why Standardize
 
-The [Network Endeavor](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) ([P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf)<sup>[2]</sup>) is a sequence of papers toward coroutine-native byte-oriented I/O in C++. [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> is the first increment that lands **normative vocabulary** in a proposal: _IoAwaitable_, _IoRunnable_, launch functions, `io_env`, type-erased _Executor_, and `execution_context`-shaped hosting. It is not a sockets, TLS, DNS, or buffer-sequence standard. Higher layers still need shared buffer and reactor choices; the standard does not promise them in the same breath. What it does promise is a **narrow waist**: agreement on how coroutine tasks start, suspend with environment in hand, cancel, and allocate frames so that libraries above the hook can interoperate.
+The [Network Endeavor](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) ([P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf)<sup>[2]</sup>) is a sequence of papers toward coroutine-native byte-oriented I/O in C++. [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> is the first increment that lands **normative vocabulary** in a proposal: _IoAwaitable_, _IoRunnable_, launch functions, `io_env`, type-erased _Executor_, and `execution_context`-shaped hosting. It is not a sockets, TLS, DNS, or buffer-sequence standard. Higher layers still need shared buffer and reactor choices; the standard does not promise them in the same breath. What it does promise is a **narrow waist**: agreement on how coroutine tasks start, suspend with environment in hand, cancel, and allocate frames so that libraries above the hook can interoperate.
 
-Without that waist, every stack reinvents incompatible task types and environments; an HTTP layer on one model does not compose with storage or RPC on another. A small vocabulary is easier to ship and to revise than a monolithic networking API, and wrong vocabulary ossifies (allocator parameters threaded with `allocator_arg_t` through every public coroutine are difficult to undo once they ship; Section 8.1 demonstrates the signature pressure). The design in [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> favors out-of-band delivery of a frame `memory_resource` into `operator new` so application coroutines stay clean; Section 8.2 records the implementation choices and Section 8.4 records when other propagation shapes are appropriate.
+Without that waist, every stack reinvents incompatible task types and environments; an HTTP layer on one model does not compose with storage or RPC on another. A small vocabulary is easier to ship and to revise than a monolithic networking API, and wrong vocabulary ossifies (allocator parameters threaded with `allocator_arg_t` through every public coroutine are difficult to undo once they ship; Section 8.1 demonstrates the signature pressure). The design in [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> favors out-of-band delivery of a frame `memory_resource` into `operator new` so application coroutines stay clean; Section 8.2 records the implementation choices and Section 8.4 records when other propagation shapes are appropriate.
 
-**Performance** matters at that hook: [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> reports recycling frame allocators well ahead of `std::allocator` and ahead of mimalloc for microbenchmarks on the paper's workloads. The point is not a benchmark contest; it is that the standard should not force a slow default at the frame boundary.
+**Performance** matters at that hook: [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> reports recycling frame allocators well ahead of `std::allocator` and ahead of mimalloc for microbenchmarks on the paper's workloads. The point is not a benchmark contest; it is that the standard should not force a slow default at the frame boundary.
 
 The alternative of leaving coroutine I/O vocabulary to the ecosystem was considered. [Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)<sup>[5]</sup> has been available for over twenty years. In that time, the C++ ecosystem has not produced a shared task type or environment protocol for async I/O. Each networking library builds on a different async model, so they cannot compose. The higher layers of the abstraction tower - HTTP frameworks, database drivers, RPC stacks that interoperate - have not emerged because the foundation is not shared. Twenty years of observed ecosystem behavior is sufficient to record that a shared vocabulary requires standardization.
 
@@ -206,7 +206,7 @@ void post(continuation& c) const;
 
 *Why two operations, not one.* `dispatch` runs the continuation inline when the caller is already in the executor's context. This is the common case after an I/O completion: the reactor thread detects the completion and dispatches the waiting coroutine with zero overhead via symmetric transfer. `post` always defers. The distinction matters for correctness: dispatching while holding a lock can deadlock if the continuation tries to acquire the same lock. `post` guarantees the continuation runs after the current function returns.
 
-*Why `dispatch` returns `coroutine_handle<>`.* Symmetric transfer avoids stack buildup. Without it, a chain of N coroutines grows the call stack by N frames. [P2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf)<sup>[16]</sup> provides the full analysis. `dispatch` returns `c.h` directly when inline execution is safe, or `noop_coroutine()` when it queues. The caller performs `return dispatch(c)` in its own `await_suspend`, and the compiler optimizes the tail call.
+*Why `dispatch` returns `coroutine_handle<>`.* Symmetric transfer avoids stack buildup. Without it, a chain of N coroutines grows the call stack by N frames. [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf)<sup>[16]</sup> provides the full analysis. `dispatch` returns `c.h` directly when inline execution is safe, or `noop_coroutine()` when it queues. The caller performs `return dispatch(c)` in its own `await_suspend`, and the compiler optimizes the tail call.
 
 *Each concept requirement is load-bearing.* [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[17]</sup> unified three executor models across 14 revisions; the unified design was never deployed. [P1738R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1738r0.pdf)<sup>[18]</sup> diagnosed the concept hierarchy as hostile to generic programming. [P1791R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[19]</sup> recorded Rapperswil feedback that P0443R0 had too many concepts; its own analysis concluded that domain-specific requirements "are not universal" and should not be imposed on all executor types. The _IoAwaitable_ executor concept has seven requirements. Removing any one produces a concrete failure:
 
@@ -384,7 +384,7 @@ int main()
 }
 ```
 
-The two-phase syntax - `run_async(ex)(my_task())` - exists because `operator new` executes before the coroutine body. The frame allocator must be set before `my_task()` is called. The first call (`run_async(ex)`) sets up the environment including the frame allocator. The second call (`(my_task())`) invokes the coroutine, whose `operator new` reads the frame allocator that is now in place. [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[34]</sup> enumerates every C++20 coroutine customization point and proves the design space is closed: the parameter list and out-of-band state are the only two delivery channels.
+The two-phase syntax - `run_async(ex)(my_task())` - exists because `operator new` executes before the coroutine body. The frame allocator must be set before `my_task()` is called. The first call (`run_async(ex)`) sets up the environment including the frame allocator. The second call (`(my_task())`) invokes the coroutine, whose `operator new` reads the frame allocator that is now in place. [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[34]</sup> enumerates every C++20 coroutine customization point and proves the design space is closed: the parameter list and out-of-band state are the only two delivery channels.
 
 Two-phase invocation was considered against single-call alternatives. The `operator new` timing constraint makes single-call impossible without language changes. The syntax is localized to launch sites. Application-level coroutines never see it.
 
@@ -420,7 +420,7 @@ co_await run(worker_ex, source.get_token(), pool)(
 
 ## 8. Frame Allocator Propagation
 
-The frame allocator must be in place when the compiler calls `operator new` to create the coroutine frame. [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf)<sup>[34]</sup> enumerates every C++20 coroutine customization point and proves the design space is closed: the parameter list and out-of-band state are the only two delivery channels. This section documents both, explains why both must exist, and details the out-of-band implementation choices.
+The frame allocator must be in place when the compiler calls `operator new` to create the coroutine frame. [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf)<sup>[34]</sup> enumerates every C++20 coroutine customization point and proves the design space is closed: the parameter list and out-of-band state are the only two delivery channels. This section documents both, explains why both must exist, and details the out-of-band implementation choices.
 
 ### 8.1 The Parameter List (`allocator_arg_t`)
 
@@ -467,7 +467,7 @@ route_task handle_upload(
 
 Every `co_await` in the chain must forward the allocator. Containers in the standard library accept allocators because they are written once by experts and used many times. Coroutine handlers are the reverse: they are written by application developers, often in large numbers, for specific business logic. Burdening every handler with frame allocation plumbing is a significant ergonomic cost (Section 9 evaluates this against the audience skill model from Section 3).
 
-Nothing in [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> forbids a codebase from choosing `allocator_arg_t` propagation end to end when explicit signatures are preferable.
+Nothing in [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> forbids a codebase from choosing `allocator_arg_t` propagation end to end when explicit signatures are preferable.
 
 ### 8.2 Out-of-Band Propagation
 
@@ -609,9 +609,9 @@ The I/O coroutine does not become a sender body. The GPU work remains a sender g
 
 ---
 
-## 11. Evidence and Accountability ([P4133R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4133r0.pdf)<sup>[40]</sup>)
+## 11. Evidence and Accountability ([D4133R0](https://isocpp.org/files/papers/D4133R0.pdf)<sup>[40]</sup>)
 
-[P4133R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4133r0.pdf)<sup>[40]</sup> Section 3 lists topics for an implementation and experience paper. The protocol described in this paper was not designed top-down from theory. It was discovered bottom-up from working code, starting from an empty directory with nothing inherited and no existing framework assumed. Each facility was added when the next use case demanded it and not before. Every design decision recorded in this paper was forced by that process.
+[D4133R0](https://isocpp.org/files/papers/D4133R0.pdf)<sup>[40]</sup> Section 3 lists topics for an implementation and experience paper. The protocol described in this paper was not designed top-down from theory. It was discovered bottom-up from working code, starting from an empty directory with nothing inherited and no existing framework assumed. Each facility was added when the next use case demanded it and not before. Every design decision recorded in this paper was forced by that process.
 
 The protocol is recent. The patterns it captures are not. Type-erased executors, stop-token cancellation, and per-chain frame allocation have been refined across years of networking library development. The protocol is small because it was distilled from experience, not because it is incomplete.
 
@@ -619,7 +619,7 @@ The protocol is recent. The patterns it captures are not. Type-erased executors,
 
 Four alternative approaches address the same problem space. Each is presented at its strongest.
 
-**Sender/receiver ([P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[12]</sup>).** The committee-adopted framework for structured asynchronous execution. Its advantages are real: generality across I/O, GPU, and parallel workloads; a formal algebra of sender composition; strong structured-concurrency guarantees. For domains that require DAG-shaped execution graphs, sender/receiver provides machinery that _IoAwaitable_ does not attempt. Where sender/receiver is less well suited is in the I/O-specific properties: it requires a second template parameter on the task type, it does not define a frame allocator propagation mechanism, and the sender composition algebra adds conceptual weight that I/O coroutines do not use. [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf)<sup>[41]</sup> and [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf)<sup>[42]</sup> examine this relationship in detail.
+**Sender/receiver ([P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[12]</sup>).** The committee-adopted framework for structured asynchronous execution. Its advantages are real: generality across I/O, GPU, and parallel workloads; a formal algebra of sender composition; strong structured-concurrency guarantees. For domains that require DAG-shaped execution graphs, sender/receiver provides machinery that _IoAwaitable_ does not attempt. Where sender/receiver is less well suited is in the I/O-specific properties: it requires a second template parameter on the task type, it does not define a frame allocator propagation mechanism, and the sender composition algebra adds conceptual weight that I/O coroutines do not use. [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[41]</sup> and [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf)<sup>[42]</sup> examine this relationship in detail.
 
 **Boost.Asio completion handlers ([Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)<sup>[5]</sup>).** The most widely deployed C++ async I/O model. Mature, extensively documented. Supports coroutines through completion tokens. The absence of a standard frame allocator propagation mechanism forces either `allocator_arg_t` signature pollution or reliance on `shared_ptr` for lifetime management.
 
@@ -631,15 +631,15 @@ Four alternative approaches address the same problem space. Each is presented at
 
 Each major design decision is documented with rationale, trade-offs, and conditions for revisiting.
 
-**Two-argument `await_suspend(coroutine_handle<>, io_env const*)`** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.2). The only signature that makes protocol violations a compile error. *Trade-off:* the signature is non-standard; existing awaitables must be adapted. *Revisit if:* the language gains a mechanism for statically verifying awaitable-promise compatibility.
+**Two-argument `await_suspend(coroutine_handle<>, io_env const*)`** ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> Section 4.2). The only signature that makes protocol violations a compile error. *Trade-off:* the signature is non-standard; existing awaitables must be adapted. *Revisit if:* the language gains a mechanism for statically verifying awaitable-promise compatibility.
 
 **Out-of-band frame allocator propagation** (Section 8). Respects `operator new` timing without polluting application coroutine signatures. *Trade-off:* introduces a non-obvious propagation path. *Revisit if:* the language gains a mechanism to inject allocator context into `operator new` without function parameters.
 
-**Type-erased `executor_ref`** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.3). Keeps `task<T>` at one template parameter. *Trade-off:* type information is lost behind the erasure boundary. *Revisit if:* the overhead proves measurable relative to I/O latency.
+**Type-erased `executor_ref`** ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> Section 4.3). Keeps `task<T>` at one template parameter. *Trade-off:* type information is lost behind the erasure boundary. *Revisit if:* the overhead proves measurable relative to I/O latency.
 
-**`io_env` passed by pointer** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.1). Pointer semantics make ownership explicit. *Trade-off:* nullable pointer. *Revisit if:* a reference-based alternative can enforce the same ownership semantics.
+**`io_env` passed by pointer** ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> Section 4.1). Pointer semantics make ownership explicit. *Trade-off:* nullable pointer. *Revisit if:* a reference-based alternative can enforce the same ownership semantics.
 
-**`execution_context` as a base class** ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup> Section 4.4). I/O objects bind to contexts, not executors. *Trade-off:* virtual `shutdown()`; runtime polymorphism. *Revisit if:* a compile-time service mechanism provides the same guarantees.
+**`execution_context` as a base class** ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup> Section 4.4). I/O objects bind to contexts, not executors. *Trade-off:* virtual `shutdown()`; runtime polymorphism. *Revisit if:* a compile-time service mechanism provides the same guarantees.
 
 ### 11.3 Domain Coverage
 
@@ -650,7 +650,7 @@ Each major design decision is documented with rationale, trade-offs, and conditi
 | DNS resolution   | Corosio<sup>[4]</sup>  | All supported platforms                                  |
 | Timers           | Corosio<sup>[4]</sup>  | All supported platforms                                  |
 
-[P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[43]</sup> reports a derivatives exchange porting from Asio callbacks to coroutine-native I/O using the _IoAwaitable_ protocol.
+[P4125R1](https://isocpp.org/files/papers/P4125R1.pdf)<sup>[43]</sup> reports a derivatives exchange porting from Asio callbacks to coroutine-native I/O using the _IoAwaitable_ protocol.
 
 Domains not yet validated: embedded/real-time, file I/O, database I/O, game engines. GPU compute is a complementary domain addressed by `std::execution` (Section 10).
 
@@ -680,7 +680,7 @@ We commit to a retrospective at two standard releases or six years after standar
 
 ## Appendix A: Understanding Asynchronous I/O
 
-Not every committee member or library reviewer works with network programming daily, and the challenges that shape I/O library design may not be immediately obvious from other domains. This appendix provides the background needed to evaluate the design decisions in [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[1]</sup>.
+Not every committee member or library reviewer works with network programming daily, and the challenges that shape I/O library design may not be immediately obvious from other domains. This appendix provides the background needed to evaluate the design decisions in [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[1]</sup>.
 
 ### A.1 The Problem with Waiting
 
@@ -1074,7 +1074,7 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 ## References
 
-[1] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "Ask: A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[1] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "Ask: A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [2] [P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) - "The Network Endeavor: Coroutine-Native I/O for C++29" (Vinnie Falco et al., 2026).
 
@@ -1104,7 +1104,7 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [15] [P4094R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4094r0.pdf) - "History: The Unification of Executors and P0443" (Vinnie Falco, 2026).
 
-[16] [P2583R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r3.pdf) - "Symmetric Transfer" (Mungo Gill, Vinnie Falco, 2026).
+[16] [P2583R4](https://isocpp.org/files/papers/P2583R4.pdf) - "Symmetric Transfer" (Mungo Gill, Vinnie Falco, 2026).
 
 [17] [P0443R14](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html) - "A Unified Executors Proposal for C++" (Jared Hoberock, Michael Garland, Chris Kohlhoff, Chris Mysen, Carter Edwards, Gordon Brown, Michael Wong, 2020).
 
@@ -1140,7 +1140,7 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [33] [P4035R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4035r0.pdf) - "Support: The Need for Escape Hatches" (Vinnie Falco, 2026).
 
-[34] [P4127R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4127r0.pdf) - "The Coroutine Frame Allocator Timing Problem" (Vinnie Falco, 2026).
+[34] [P4127R0](https://isocpp.org/files/papers/P4127R0.pdf) - "The Coroutine Frame Allocator Timing Problem" (Vinnie Falco, 2026).
 
 [35] [P2464R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html) - "Ruminations on networking and executors" (Ville Voutilainen, 2021).
 
@@ -1152,12 +1152,12 @@ The authors would like to thank Chris Kohlhoff for Boost.Asio and Lewis Baker fo
 
 [39] [P4093R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4093r0.pdf) - "Info: Producing Senders from Coroutine-Native Code" (Vinnie Falco, Steve Gerbino, 2026).
 
-[40] [P4133R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4133r0.pdf) - "What Every Proposal Must Contain" (Vinnie Falco, 2026).
+[40] [D4133R0](https://isocpp.org/files/papers/D4133R0.pdf) - "What Every Proposal Must Contain" (Vinnie Falco, 2026).
 
-[41] [P4007R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4007r0.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
+[41] [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf) - "Senders and Coroutines" (Vinnie Falco, Mungo Gill, 2026).
 
-[42] [P4014R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4014r0.pdf) - "The Sender Sub-Language" (Vinnie Falco, Mungo Gill, 2026).
+[42] [P4014R2](https://isocpp.org/files/papers/P4014R2.pdf) - "The Sender Sub-Language" (Vinnie Falco, Mungo Gill, 2026).
 
-[43] [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf) - "Report: Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).
+[43] [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf) - "Report: Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).
 
 [44] [The C10K problem](http://www.kegel.com/c10k.html) - Scalable network programming (Dan Kegel).

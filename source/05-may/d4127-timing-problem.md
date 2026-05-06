@@ -38,7 +38,7 @@ The author developed and maintains [Corosio](https://github.com/cppalliance/coro
 
 Coroutine-native I/O and `std::execution` are complementary. Each serves the domain where its design choices pay off.
 
-[P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[4]</sup>, "Coroutines for I/O," uses thread-local propagation for the frame allocator. This paper documents why that choice is one of exactly two possibilities, not a preference among many. The analysis stands independent of the author's library work.
+[P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup>, "A Minimal Coroutine Execution Model," uses thread-local propagation for the frame allocator. This paper documents why that choice is one of exactly two possibilities, not a preference among many. The analysis stands independent of the author's library work.
 
 This paper asks for nothing.
 
@@ -135,13 +135,13 @@ struct promise_type {
 };
 ```
 
-This works. The allocator reaches `operator new` at the right time. The cost is that every coroutine in a call chain must carry the allocator in its parameter list. [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[4]</sup> Section 5.2 documents the ergonomic consequences.
+This works. The allocator reaches `operator new` at the right time. The cost is that every coroutine in a call chain must carry the allocator in its parameter list. [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup> Section 5.2 documents the ergonomic consequences.
 
 ### 4.2 Path B: Ambient State
 
 If the allocator is not in the parameter list, `operator new` must read it from somewhere else. The only "somewhere else" available to a function at call time is ambient state: global, thread-local, or fiber-local storage.
 
-Global state is too coarse - a single allocator for every coroutine chain in the process. Thread-local state scoped per-chain is the minimum viable mechanism. [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[4]</sup> Section 5.3 documents the thread-local write-through cache that delivers the allocator to `operator new` and restores it on every resume.
+Global state is too coarse - a single allocator for every coroutine chain in the process. Thread-local state scoped per-chain is the minimum viable mechanism. [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup> Section 5.3 documents the thread-local write-through cache that delivers the allocator to `operator new` and restores it on every resume.
 
 ---
 
@@ -409,7 +409,7 @@ The consequences:
 - **Users who want clean signatures** use the IoAwaitable protocol as-is. The ambient state propagates the allocator transparently. They never touch `allocator_arg_t`.
 - **Users who want both** can pass `allocator_arg_t` at specific boundaries and let ambient state handle the rest of the chain.
 
-Both overloads live in the same promise type. A conforming promise mixin ([P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf)<sup>[4]</sup> Section 7) provides both paths. Task types that inherit from the mixin support both paths automatically. No ecosystem fragmentation occurs because the choice is per-call-site, not per-task-type.
+Both overloads live in the same promise type. A conforming promise mixin ([P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup> Section 7) provides both paths. Task types that inherit from the mixin support both paths automatically. No ecosystem fragmentation occurs because the choice is per-call-site, not per-task-type.
 
 ---
 
@@ -540,7 +540,7 @@ The author thanks Michael Hava for identifying that R0 failed to distinguish lea
 
 [3] [cppalliance/capy](https://github.com/cppalliance/capy) - Coroutine I/O primitives library.
 
-[4] [P4003R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r1.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+[4] [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf) - "A Minimal Coroutine Execution Model" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
 
 [5] [Freestanding and hosted implementations](https://en.cppreference.com/w/cpp/freestanding) - cppreference.com. `<memory_resource>` is not required for freestanding implementations.
 
