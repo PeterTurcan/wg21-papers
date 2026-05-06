@@ -100,14 +100,14 @@ Ranges create a byte consumption problem. Consider a JSON stream arriving in two
 range<span<byte>> input = { chunk1, chunk2 };
 
 // parser finds first complete object: {"name":"Alice","age":30}
-// that is 26 bytes - consume them
+// that is 25 bytes - consume them
 //
 // views::drop(input, 1) drops all of chunk1 (100 bytes) - too much
 // views::drop(input, 0) drops nothing - too little
-// no standard range operation removes exactly 26 bytes
+// no standard range operation removes exactly 25 bytes
 ```
 
-The parse boundary (26 bytes) does not align with the buffer boundary (100 bytes). Consuming 26 bytes means advancing chunk 1 by 26 bytes - 74 remain - without touching chunk 2. No range adaptor does this. [`std::ranges`](https://eel.is/c++draft/ranges)<sup>[5]</sup> operates on elements. Parsing operates on bytes, not elements.
+The parse boundary (25 bytes) does not align with the buffer boundary (100 bytes). Consuming 25 bytes means advancing chunk 1 by 25 bytes - 75 remain - without touching chunk 2. No range adaptor does this. [`std::ranges`](https://eel.is/c++draft/ranges)<sup>[5]</sup> operates on elements. Parsing operates on bytes, not elements.
 
 Incremental parsers with this need - JSON, XML, CSV, protobuf - go unserved.
 
@@ -134,18 +134,18 @@ Each time `span<byte>` appears in a function signature, it loses the safety capa
 
 ## 7. Six Ecosystems Already Arrived Here
 
-Six I/O ecosystems, designed independently, all arrived at similar solutions:
+Six I/O ecosystems, designed independently, all defined dedicated buffer descriptors rather than reusing a generic pointer type:
 
 | Ecosystem | Buffer Type                       | Layout                                                          |
 | --------- | --------------------------------- | --------------------------------------------------------------- |
 | POSIX     | `iovec`                           | `void*` + `size_t`                                              |
 | Windows   | `WSABUF`                          | `ULONG` + `char*`                                               |
 | Asio      | `const_buffer` / `mutable_buffer` | `void const*` + `size_t`, with range concepts<sup>[2]</sup>     |
-| libuv     | `uv_buf_t`                        | `char*` + `size_t`<sup>[6]</sup>                                |
+| libuv     | `uv_buf_t`                        | `char*` + `size_t` (POSIX); reversed on Windows<sup>[6]</sup>   |
 | Go        | `net.Buffers`                     | scatter/gather over `[][]byte`<sup>[7]</sup>                    |
 | .NET      | `ReadOnlySequence<T>`             | linked list of discontiguous `Memory<T>` segments<sup>[8]</sup> |
 
-Everybody converged on custom types independently.
+Every ecosystem defined a dedicated buffer descriptor rather than reusing a generic pointer type. The C ecosystems (POSIX, Windows, libuv) use named structs; Go uses a typed slice of slices (`[][]byte` - the `range<span<byte>>` shape from Section 5); Asio and .NET built rich class types with sequence algorithms.
 
 ## 8. The Final Straw
 
@@ -210,6 +210,8 @@ public:
         : p_(static_cast<unsigned char*>(data)), n_(size) { }
     constexpr void* data() const noexcept { return p_; }
     constexpr std::size_t size() const noexcept { return n_; }
+    constexpr mutable_buffer& operator+=(std::size_t n) noexcept
+        { p_ += n; n_ -= n; return *this; }
 };
 
 class const_buffer {
@@ -234,20 +236,24 @@ These are the [Networking TS](https://www.open-std.org/jtc1/sc22/wg21/docs/paper
 
 | Task                  | `span<byte>`                                         | `mutable_buffer`                     |
 | --------------------- | ---------------------------------------------------- | ------------------------------------ |
-| Construct from vector | `span<byte>{reinterpret_cast<byte*>(v.data()), ...}` | `mutable_buffer{v.data(), v.size()}` |
-| Consume N bytes       | `buf = span<byte>{buf.data() + n, buf.size() - n}`   | `buf += n`                           |
+| Construct from vector | `as_writable_bytes(span(v))`                         | `mutable_buffer{v.data(), v.size()}` |
+| Consume N bytes       | `buf = buf.subspan(n)`                               | `buf += n`                           |
 | Detect dangling       | Requires ABI Break                                   | *see-below*                          |
 
-Safety feature:
+Note: `as_writable_bytes` is not required for `vector<byte>` (where `span<byte>{v}` suffices), but is needed for `vector<char>` and `vector<unsigned char>` - the common I/O buffer types.
+
+Safety feature (adds 8 bytes on 64-bit platforms):
 
 ```cpp
 class mutable_buffer {
-    void* p_ = nullptr;
-    size_t n_ = 0;
-    void(*check_)() = nullptr;
+    unsigned char* p_ = nullptr;
+    std::size_t n_ = 0;
+    bool(*check_)(void const*, std::size_t) = nullptr;
 public:
-    void* data() const { if(check_) check_(); return p_; }
-    size_t size() const noexcept { return n_; }
+    void* data() const { if(check_) check_(p_, n_); return p_; }
+    std::size_t size() const noexcept { return n_; }
+    mutable_buffer& operator+=(std::size_t n) noexcept
+        { p_ += n; n_ -= n; return *this; }
 };
 ```
 
@@ -299,7 +305,7 @@ The buffer model described here draws on twenty years of Asio's buffer sequence 
 
 [7] [Go standard library: net.Buffers](https://pkg.go.dev/net#Buffers).
 
-[8] [.NET System.IO.Pipelines](https://learn.microsoft.com/en-us/dotnet/api/system.io.pipelines) - `ReadOnlySequence<T>`.
+[8] [.NET System.Buffers](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.readonlysequence-1) - `ReadOnlySequence<T>`.
 
 [9] [P0298R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0298r3.pdf) - "A byte type definition" (Neil MacIntosh, 2017).
 
