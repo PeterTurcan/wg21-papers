@@ -1213,14 +1213,21 @@ class ASTRenderer:
             return children
         return f'<a href="{escape_xml(href)}" color="{self.link_color}">{children}</a>'
 
-    def _inline_image(self, tok):
+    def _img_src(self, tok):
         attrs = tok.get("attrs", {})
-        src = attrs.get("src", "") or attrs.get("url", "")
-        alt = attrs.get("alt", "")
+        return attrs.get("src", "") or attrs.get("url", "")
+
+    def _img_alt(self, tok):
+        alt = tok.get("attrs", {}).get("alt", "")
         if not alt:
             children = tok.get("children", [])
             if children and children[0].get("type") == "text":
                 alt = children[0].get("raw", "")
+        return alt
+
+    def _inline_image(self, tok):
+        src = self._img_src(tok)
+        alt = self._img_alt(tok)
         return escape_xml(alt or f"[image: {src}]")
 
     def _inline_strikethrough(self, tok):
@@ -1274,8 +1281,7 @@ class ASTRenderer:
         return ""
 
     def _render_image(self, tok):
-        attrs = tok.get("attrs", {})
-        src = attrs.get("src", "") or attrs.get("url", "")
+        src = self._img_src(tok)
         resolved = Path(src)
         if not resolved.is_absolute():
             resolved = self.md_dir / src
@@ -1284,7 +1290,7 @@ class ASTRenderer:
                 img = RLImage(str(resolved))
                 iw, ih = img.imageWidth, img.imageHeight
                 if iw and ih:
-                    max_h = self._page_h if hasattr(self, "_page_h") else 600
+                    max_h = self._page_h
                     scale = min(self.content_width / iw, max_h / ih, 1.0)
                     if scale < 1.0:
                         img = RLImage(str(resolved),

@@ -1,7 +1,9 @@
 """Shared test fixtures for scrivener test suite."""
 
 import copy
+import struct
 import sys
+import zlib
 from pathlib import Path
 
 import pytest
@@ -48,6 +50,32 @@ def font_registered():
     register_fonts(style)
     register_families()
     _fonts_ready = True
+
+
+# 1x1 transparent PNG (67 bytes) - shared across test modules
+MINIMAL_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
+    b"\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89"
+    b"\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01"
+    b"\r\n\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def make_png(width, height):
+    """Build a minimal RGBA PNG of the given dimensions."""
+    raw_row = b"\x00" + b"\x00\x00\x00\xff" * width
+    raw_data = raw_row * height
+    compressed = zlib.compress(raw_data)
+
+    def chunk(ctype, data):
+        c = ctype + data
+        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c) & 0xffffffff)
+
+    ihdr_data = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    return (b"\x89PNG\r\n\x1a\n"
+            + chunk(b"IHDR", ihdr_data)
+            + chunk(b"IDAT", compressed)
+            + chunk(b"IEND", b""))
 
 
 @pytest.fixture

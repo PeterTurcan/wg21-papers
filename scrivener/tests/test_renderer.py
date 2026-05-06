@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from reportlab.platypus import (
     HRFlowable,
+    Image as RLImage,
     ListFlowable,
     PageBreak,
     Paragraph,
@@ -23,6 +24,9 @@ from reportlab.platypus import (
 
 from lib.flowables import AccentBox, TitleEnd
 from lib.renderer import ASTRenderer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from conftest import MINIMAL_PNG, make_png
 
 
 @pytest.fixture
@@ -371,6 +375,59 @@ def test_render_image_missing(renderer):
     flows = renderer._render_token(tok)
     assert len(flows) == 1
     assert isinstance(flows[0], Paragraph)
+
+
+def test_render_image_found(font_registered, min_style, tmp_path):
+    png = tmp_path / "test.png"
+    png.write_bytes(MINIMAL_PNG)
+    r = ASTRenderer(
+        min_style, body_cmap={}, fallback_chain=[],
+        content_width=468, md_dir=tmp_path, has_fm_title=True)
+    tok = {
+        "type": "paragraph",
+        "children": [{"type": "image", "attrs": {"url": "test.png"},
+                      "children": [{"type": "text", "raw": "alt"}]}],
+    }
+    flows = r._render_token(tok)
+    assert len(flows) == 3
+    assert isinstance(flows[0], Spacer)
+    assert isinstance(flows[1], RLImage)
+    assert isinstance(flows[2], Spacer)
+
+
+def test_render_image_scales_to_fit(font_registered, min_style, tmp_path):
+    png = tmp_path / "wide.png"
+    png.write_bytes(make_png(200, 200))
+
+    narrow_width = 100.0
+    r = ASTRenderer(
+        min_style, body_cmap={}, fallback_chain=[],
+        content_width=narrow_width, md_dir=tmp_path, has_fm_title=True)
+    tok = {
+        "type": "paragraph",
+        "children": [{"type": "image", "attrs": {"url": "wide.png"},
+                      "children": [{"type": "text", "raw": ""}]}],
+    }
+    flows = r._render_token(tok)
+    img = flows[1]
+    assert isinstance(img, RLImage)
+    assert img.drawWidth <= narrow_width + 0.01
+    assert img.drawHeight <= r._page_h + 0.01
+
+
+def test_render_image_url_attr(font_registered, min_style, tmp_path):
+    png = tmp_path / "v3.png"
+    png.write_bytes(MINIMAL_PNG)
+    r = ASTRenderer(
+        min_style, body_cmap={}, fallback_chain=[],
+        content_width=468, md_dir=tmp_path, has_fm_title=True)
+    tok = {
+        "type": "paragraph",
+        "children": [{"type": "image", "attrs": {"url": "v3.png"},
+                      "children": [{"type": "text", "raw": ""}]}],
+    }
+    flows = r._render_token(tok)
+    assert isinstance(flows[1], RLImage)
 
 
 def test_render_newpage(renderer):

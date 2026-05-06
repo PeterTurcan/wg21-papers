@@ -16,6 +16,9 @@ sys.path.insert(0, str(ROOT))
 from lib.config import load_style, resolve_style_path
 from lib.html_renderer import HTMLRenderer
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from conftest import MINIMAL_PNG
+
 
 @pytest.fixture
 def style():
@@ -151,7 +154,23 @@ class TestBlockTokens:
         tok = {"type": "image", "attrs": {"src": "photo.png", "alt": "A photo"}}
         html = renderer._render_token(tok)
         assert "<figure>" in html
-        assert 'src="photo.png"' in html
+        assert "photo.png" in html
+
+    def test_image_embed_found(self, style, tmp_path):
+        png = tmp_path / "test.png"
+        png.write_bytes(MINIMAL_PNG)
+        r = HTMLRenderer(style, tmp_path, has_fm_title=True)
+        tok = {"type": "image", "attrs": {"url": "test.png"},
+               "children": [{"type": "text", "raw": "alt text"}]}
+        html = r._render_token(tok)
+        assert "data:image/png;base64," in html
+        assert "test.png" not in html
+
+    def test_image_embed_missing(self, renderer):
+        tok = {"type": "image", "attrs": {"url": "nope.png"},
+               "children": [{"type": "text", "raw": ""}]}
+        html = renderer._render_token(tok)
+        assert "nope.png" in html
 
     def test_block_html_comment(self, renderer):
         tok = {"type": "block_html", "raw": "<!-- comment -->"}
@@ -223,7 +242,26 @@ class TestInlineTokens:
     def test_inline_image(self, renderer):
         tok = {"type": "image", "attrs": {"src": "img.png", "alt": "pic"}}
         result = renderer._inline(tok)
-        assert 'src="img.png"' in result
+        assert "img.png" in result
+
+    def test_inline_image_embed_found(self, style, tmp_path):
+        png = tmp_path / "inline.png"
+        png.write_bytes(MINIMAL_PNG)
+        r = HTMLRenderer(style, tmp_path, has_fm_title=True)
+        tok = {"type": "image", "attrs": {"url": "inline.png"},
+               "children": [{"type": "text", "raw": "pic"}]}
+        result = r._inline(tok)
+        assert "data:image/png;base64," in result
+        assert "inline.png" not in result
+
+    def test_image_embed_svg(self, style, tmp_path):
+        svg = tmp_path / "icon.svg"
+        svg.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
+        r = HTMLRenderer(style, tmp_path, has_fm_title=True)
+        tok = {"type": "image", "attrs": {"url": "icon.svg"},
+               "children": [{"type": "text", "raw": ""}]}
+        html = r._render_token(tok)
+        assert "data:image/svg+xml;base64," in html
 
     # -- entity-encoded tags stay literal --
 

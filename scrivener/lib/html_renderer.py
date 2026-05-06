@@ -1,8 +1,11 @@
 """AST-to-HTML conversion. Mirrors ASTRenderer's token dispatch but
 emits HTML strings instead of ReportLab flowables."""
 
+import base64
+import mimetypes
 import re
 from html import escape, unescape
+from pathlib import Path
 
 from .highlight import highlight_html
 
@@ -28,6 +31,7 @@ class HTMLRenderer:
         self.cfg = cfg
         self.md_dir = md_dir
         self.has_fm_title = has_fm_title
+        self._img_cache = {}
         self.headings = []
         self.seen_h1 = False
         self._wording_context = None
@@ -153,7 +157,10 @@ class HTMLRenderer:
         return f'<h{level} id="{anchor}">{text}</h{level}>\n'
 
     def _render_paragraph(self, tok):
-        text = self._inline_children(tok.get("children", []))
+        children = tok.get("children", [])
+        if len(children) == 1 and children[0].get("type") == "image":
+            return self._render_image(children[0])
+        text = self._inline_children(children)
         if text.strip() == "\\newpage":
             return '<hr class="page-break">\n'
         return f"<p>{text}</p>\n"
@@ -258,9 +265,39 @@ class HTMLRenderer:
             return ""
         return raw + "\n"
 
-    def _render_image(self, tok):
-        src = tok.get("attrs", {}).get("src", "")
+    def _img_src(self, tok):
+        attrs = tok.get("attrs", {})
+        return attrs.get("src", "") or attrs.get("url", "")
+
+    def _img_alt(self, tok):
         alt = tok.get("attrs", {}).get("alt", "")
+        if not alt:
+            children = tok.get("children", [])
+            if children and children[0].get("type") == "text":
+                alt = children[0].get("raw", "")
+        return alt
+
+    def _embed_img_src(self, src):
+        """Resolve image path and return a data URI, or the raw src if not found."""
+        resolved = Path(src)
+        if not resolved.is_absolute():
+            resolved = self.md_dir / src
+        key = str(resolved)
+        if key in self._img_cache:
+            return self._img_cache[key]
+        if resolved.is_file():
+            mime = mimetypes.guess_type(key)[0] or "image/png"
+            data = resolved.read_bytes()
+            b64 = base64.b64encode(data).decode("ascii")
+            result = f"data:{mime};base64,{b64}"
+        else:
+            result = src
+        self._img_cache[key] = result
+        return result
+
+    def _render_image(self, tok):
+        src = self._embed_img_src(self._img_src(tok))
+        alt = self._img_alt(tok)
         return f'<figure><img src="{escape(src)}" alt="{escape(alt)}"></figure>\n'
 
     def _inline_children(self, children):
@@ -309,8 +346,8 @@ class HTMLRenderer:
         return f'<a href="{escape(href)}">{children}</a>'
 
     def _inline_image(self, tok):
-        src = tok.get("attrs", {}).get("src", "")
-        alt = tok.get("attrs", {}).get("alt", "")
+        src = self._embed_img_src(self._img_src(tok))
+        alt = self._img_alt(tok)
         return f'<img src="{escape(src)}" alt="{escape(alt)}">'
 
     def _inline_strikethrough(self, tok):
