@@ -13,6 +13,8 @@ import re
 import threading
 import uuid
 
+from pathlib import Path as _Path
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -21,6 +23,9 @@ _log = logging.getLogger(__name__)
 LOGIN_URL = "https://isocpp.org/member/login"
 PAPERS_URL = "https://isocpp.org/papers"
 BASE_URL = "https://isocpp.org"
+DEFAULT_TIMEOUT = 15
+UPLOAD_TIMEOUT = 30
+_NOT_AUTHENTICATED = "Not authenticated"
 
 _ALL_OF_WG21 = "All of WG21"
 
@@ -154,7 +159,7 @@ class IsoCppSession:
             self._username = None
 
             try:
-                login_page = self._session.get(LOGIN_URL, timeout=15)
+                login_page = self._session.get(LOGIN_URL, timeout=DEFAULT_TIMEOUT)
                 login_page.raise_for_status()
             except Exception as e:
                 return False, f"Failed to reach login page: {e}"
@@ -183,7 +188,7 @@ class IsoCppSession:
             fields["password"] = password
 
             try:
-                r = self._session.post(action, data=fields, timeout=15,
+                r = self._session.post(action, data=fields, timeout=DEFAULT_TIMEOUT,
                                        allow_redirects=True)
             except Exception as e:
                 return False, f"Login request failed: {e}"
@@ -213,10 +218,10 @@ class IsoCppSession:
         """
         with self._lock:
             if not self._authenticated:
-                return [], "Not authenticated"
+                return [], _NOT_AUTHENTICATED
 
             try:
-                r = self._session.get(PAPERS_URL, timeout=15)
+                r = self._session.get(PAPERS_URL, timeout=DEFAULT_TIMEOUT)
                 r.raise_for_status()
             except Exception as e:
                 return [], str(e)
@@ -286,11 +291,6 @@ class IsoCppSession:
         while True:
             job = self._queue.get()
             job_id = job["job_id"]
-
-            with self._pending_lock:
-                if job_id not in self._pending:
-                    continue
-
             self._active_job = job
             self._emit({
                 "event": "job_started",
@@ -346,7 +346,7 @@ class IsoCppSession:
         (None, None, None) if the form is not found.
         submit_buttons is a list of (name, value) for all submit inputs.
         """
-        page = self._session.get(f"{BASE_URL}/papers/form/{form_id}", timeout=15)
+        page = self._session.get(f"{BASE_URL}/papers/form/{form_id}", timeout=DEFAULT_TIMEOUT)
         if not page.ok:
             _log.warning("Form %s returned HTTP %d", form_id, page.status_code)
             return None, None, None
@@ -401,7 +401,7 @@ class IsoCppSession:
                 return (name, value)
         return submits[0] if submits else None
 
-    def _post_form(self, form_id, fields, checked, files=None, timeout=15):
+    def _post_form(self, form_id, fields, checked, files=None, timeout=DEFAULT_TIMEOUT):
         """Post form fields to the form-update endpoint.
 
         Builds the data list, appends audience checkboxes, and posts.
@@ -418,7 +418,7 @@ class IsoCppSession:
     def _do_upload(self, job):
         with self._lock:
             if not self._authenticated:
-                return False, "Not authenticated"
+                return False, _NOT_AUTHENTICATED
 
             form_id = job["form_id"]
             pdf_path = job["pdf_path"]
@@ -454,9 +454,9 @@ class IsoCppSession:
                 no_btn = True
 
             with open(pdf_path, "rb") as f:
-                fname = pdf_path.split("/")[-1].split("\\")[-1]
+                fname = _Path(pdf_path).name
                 files = {"document": (fname, f, "application/pdf")}
-                r = self._post_form(form_id, fields, checked, files=files, timeout=30)
+                r = self._post_form(form_id, fields, checked, files=files, timeout=UPLOAD_TIMEOUT)
 
             if r.status_code < 400:
                 extra = f" (synced {', '.join(synced)})" if synced else ""
@@ -467,7 +467,7 @@ class IsoCppSession:
     def _do_transition(self, job):
         with self._lock:
             if not self._authenticated:
-                return False, "Not authenticated"
+                return False, _NOT_AUTHENTICATED
 
             form_id = job["form_id"]
             target = job["target"]

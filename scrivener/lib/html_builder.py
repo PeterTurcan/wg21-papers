@@ -17,6 +17,10 @@ from .css import generate_css
 from .html_renderer import HTMLRenderer
 
 
+def _style_slug(cfg):
+    return cfg.get("name", "default").lower().replace(" ", "-")
+
+
 def build_html(md_path, output_path, cli_cfg, style,
                mode="full", inline_css=False):
     """Render a markdown file to HTML.
@@ -81,7 +85,7 @@ def build_html(md_path, output_path, cli_cfg, style,
 
     parts.append(body_html)
 
-    style_name = cfg.get("name", "default").lower().replace(" ", "-")
+    style_name = _style_slug(cfg)
     article_content = "".join(parts)
     article = f'<article class="scrivener {escape(style_name)}">\n{article_content}</article>\n'
 
@@ -122,7 +126,7 @@ def build_css(style, output_path=None, mode="fragment"):
     resolve_colors(style, None)
     css_text = generate_css(style, mode=mode)
 
-    style_name = style.get("name", "default").lower().replace(" ", "-")
+    style_name = _style_slug(style)
     if output_path is None:
         CSS_DIR.mkdir(parents=True, exist_ok=True)
         output_path = CSS_DIR / f"{style_name}.css"

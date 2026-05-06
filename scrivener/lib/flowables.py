@@ -27,7 +27,7 @@ class AccentBox(Flowable):
         self.box_width = width
         self.cap_shift = cap_shift
         self.top_rule = top_rule
-        self.top_rule_thickness = top_rule_thickness if top_rule_thickness is not None else 1.5
+        self.top_rule_thickness = top_rule_thickness or 0
 
     def wrap(self, availWidth, availHeight):
         w = self.box_width if self.box_width is not None else availWidth

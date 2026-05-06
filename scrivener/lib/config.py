@@ -8,7 +8,7 @@ import yaml
 from reportlab.lib.pagesizes import (
     A3, A4, A5, A6,
     B4, B5,
-    HALF_LETTER, JUNIOR_LEGAL, LEDGER, LEGAL, LETTER, TABLOID,
+    HALF_LETTER, JUNIOR_LEGAL, LEDGER, TABLOID,
     GOV_LEGAL, GOV_LETTER,
     legal, letter,
 )

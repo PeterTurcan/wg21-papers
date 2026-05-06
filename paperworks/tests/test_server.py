@@ -64,9 +64,12 @@ class TestUploadEndpoint(unittest.TestCase):
     def test_upload_queues_job_and_returns_job_id(self):
         """Returns 200 with job_id and submits correct fields to the queue."""
         captured = []
+        def _capture(j):
+            captured.append(j)
+            return "test-job-id"
         with _auth(True), \
              patch.object(self._server._isocpp, "submit",
-                          side_effect=lambda j: captured.append(j) or "test-job-id"):
+                          side_effect=_capture):
             r = self._post({
                 "form_id": "42",
                 "doc_number": "D1234R0",

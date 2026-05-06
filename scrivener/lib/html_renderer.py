@@ -7,16 +7,14 @@ import re
 from html import escape, unescape
 from pathlib import Path
 
+from . import _is_sup_or_sub_open
 from .highlight import highlight_html
 
 _SAFE_SCHEMES = {"http", "https", "mailto", ""}
 
 
-def _is_sup_or_sub_open(tok):
-    if tok.get("type") == "inline_html":
-        raw = tok.get("raw", tok.get("text", ""))
-        return raw.startswith("<sup>") or raw.startswith("<sub>")
-    return False
+def _raw(tok):
+    return tok.get("raw", tok.get("text", ""))
 
 
 class HTMLRenderer:
@@ -34,9 +32,6 @@ class HTMLRenderer:
         self._img_cache = {}
         self.headings = []
         self.seen_h1 = False
-        self._wording_context = None
-        self._in_ins = False
-        self._in_del = False
 
     def render(self, tokens):
         """Render top-level AST tokens to an HTML string."""
@@ -61,12 +56,9 @@ class HTMLRenderer:
 
         parts = []
         for div_class, toks in segments:
-            if div_class and div_class.startswith("wording"):
-                self._wording_context = div_class
             inner = []
             for tok in toks:
                 inner.append(self._render_token(tok))
-            self._wording_context = None
             if div_class and div_class.startswith("wording"):
                 parts.append(f'<div class="wording {div_class}">\n{"".join(inner)}</div>\n')
             else:
@@ -129,7 +121,7 @@ class HTMLRenderer:
     def _only_text(self, tok):
         children = tok.get("children", [])
         if len(children) == 1 and children[0].get("type") == "text":
-            return children[0].get("raw", children[0].get("text", ""))
+            return _raw(children[0])
         return ""
 
     def _render_token(self, tok):
@@ -139,7 +131,7 @@ class HTMLRenderer:
             return handler(tok)
         text = self._inline_children(tok.get("children", []))
         if not text:
-            text = escape(tok.get("raw", tok.get("text", "")))
+            text = escape(_raw(tok))
         return f"<p>{text}</p>\n"
 
     def _render_heading(self, tok):
@@ -166,7 +158,7 @@ class HTMLRenderer:
         return f"<p>{text}</p>\n"
 
     def _render_block_code(self, tok):
-        raw = tok.get("raw", tok.get("text", ""))
+        raw = _raw(tok)
         raw = unescape(raw)
         lang = tok.get("attrs", {}).get("info", "")
         if lang:
@@ -318,11 +310,10 @@ class HTMLRenderer:
         handler = getattr(self, f"_inline_{t}", None)
         if handler:
             return handler(tok)
-        raw = tok.get("raw", tok.get("text", ""))
-        return escape(unescape(raw))
+        return escape(unescape(_raw(tok)))
 
     def _inline_text(self, tok):
-        raw = tok.get("raw", tok.get("text", ""))
+        raw = _raw(tok)
         return escape(unescape(raw))
 
     def _inline_emphasis(self, tok):
@@ -334,7 +325,7 @@ class HTMLRenderer:
         return f"<strong>{inner}</strong>"
 
     def _inline_codespan(self, tok):
-        raw = tok.get("raw", tok.get("text", ""))
+        raw = _raw(tok)
         return f"<code>{escape(unescape(raw))}</code>"
 
     def _inline_link(self, tok):
@@ -361,16 +352,7 @@ class HTMLRenderer:
         return "<br>"
 
     def _inline_inline_html(self, tok):
-        raw = tok.get("raw", tok.get("text", ""))
-        if raw.startswith("<ins>"):
-            self._in_ins = True
-        elif raw.startswith("</ins>"):
-            self._in_ins = False
-        elif raw.startswith("<del>"):
-            self._in_del = True
-        elif raw.startswith("</del>"):
-            self._in_del = False
-        return raw
+        return _raw(tok)
 
     def _fm_value(self, text):
         """Format a front-matter value, turning Name <email> into a link."""

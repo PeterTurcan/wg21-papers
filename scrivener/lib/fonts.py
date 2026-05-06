@@ -29,13 +29,10 @@ def _resolve(file_name):
     return _fonts_dir / file_name
 
 
-def _axes_key(axes):
-    return "-".join(f"{k}{v}" for k, v in sorted(axes.items()))
-
-
 def _cache_path(name, axes, var_path=None):
     src = Path(var_path).stem if var_path else ""
-    return _fonts_dir / "cache" / f"{name}-{src}-{_axes_key(axes)}.ttf"
+    ak = "-".join(f"{k}{v}" for k, v in sorted(axes.items()))
+    return _fonts_dir / "cache" / f"{name}-{src}-{ak}.ttf"
 
 
 def ensure_font(name, var_path, axes):

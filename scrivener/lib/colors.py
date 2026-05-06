@@ -9,6 +9,10 @@ from reportlab.lib.colors import HexColor, toColor
 _FALLBACK_ACCENT = "#8b1a1a"
 
 
+def _rgb_to_hex(r, g, b):
+    return "#{:02x}{:02x}{:02x}".format(int(r), int(g), int(b))
+
+
 def parse_color(value):
     """Parse a color from hex (#rrggbb) or ReportLab named color."""
     if not isinstance(value, str):
@@ -27,7 +31,7 @@ def hex_to_hsl(hex_str):
 
 def hsl_to_hex(h, s, l):
     r, g, b = colorsys.hls_to_rgb(h, l, s)
-    return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
+    return _rgb_to_hex(r * 255, g * 255, b * 255)
 
 
 def dominant_chromatic_color(image_path):
@@ -39,7 +43,7 @@ def dominant_chromatic_color(image_path):
     for count, (r, g, b) in colors:
         h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
         if s > 0.15 and 0.1 < l < 0.9:
-            return "#{:02x}{:02x}{:02x}".format(r, g, b)
+            return _rgb_to_hex(r, g, b)
     return _FALLBACK_ACCENT
 
 

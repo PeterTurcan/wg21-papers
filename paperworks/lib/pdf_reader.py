@@ -9,8 +9,7 @@ _log = logging.getLogger(__name__)
 
 _DOC_NUM_RE = re.compile(
     r"\b([DPN]\d{3,5}R\d+)\b"
-    r"|\b([DPN]\d{3,5})\b"
-    r"|\b(N\d{3,5})\b",
+    r"|\b([DPN]\d{3,5})\b",
     re.IGNORECASE,
 )
 

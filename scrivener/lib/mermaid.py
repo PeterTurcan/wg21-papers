@@ -5,6 +5,7 @@ arrowheads, edge labels, and subgraphs using ReportLab drawing primitives
 with the document's own registered fonts.
 """
 
+import functools
 import logging
 import math
 
@@ -24,16 +25,30 @@ from reportlab.platypus import Spacer
 
 log = logging.getLogger(__name__)
 
+try:
+    from merm.parser.flowchart import ParseError as _MermParseError
+except ImportError:
+    _MermParseError = None
+
 # ---------------------------------------------------------------------------
 # Colour helpers
 # ---------------------------------------------------------------------------
+
+_DEFAULT_FG = "#333333"
+_SUBGRAPH_ACCENT = HexColor("#AAAA33")
+
 
 def _parse_color(value):
     if isinstance(value, str) and value.startswith("#"):
         return HexColor(value)
     if isinstance(value, Color):
         return value
-    return HexColor("#333333")
+    return HexColor(_DEFAULT_FG)
+
+
+def _split_label_lines(text):
+    """Split a merm label on literal \\n or real newlines."""
+    return text.split("\\n") if "\\n" in text else text.split("\n")
 
 
 def _lighten(color, amount=0.85):
@@ -63,9 +78,14 @@ def draw_mermaid(code, content_width, page_h, style,
         if drawing is None:
             return None
         return [Spacer(1, gap_sm), drawing, Spacer(1, gap_sm * 2)]
-    except Exception as e:
+    except (ValueError, KeyError, AttributeError, IndexError, TypeError) as e:
         log.warning("mermaid native render failed: %s", e)
         return None
+    except Exception as e:
+        if _MermParseError and isinstance(e, _MermParseError):
+            log.warning("mermaid native render failed: %s", e)
+            return None
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +141,7 @@ def _parse_and_layout(code, body_font, font_size):
 
         def measure_fn(text, fs):
             """Return raw text dimensions — merm adds padding separately."""
-            lines = text.split("\\n") if "\\n" in text else text.split("\n")
+            lines = _split_label_lines(text)
             if not lines:
                 lines = [""]
             max_w = max(stringWidth(ln.strip(), body_font, fs) for ln in lines)
@@ -157,14 +177,14 @@ def _build_drawing(diagram, layout, content_width, page_h, style,
 
     canvas_h = layout.height
 
-    stroke_color = _parse_color(style.get("heading_rule_color", "#333333"))
+    stroke_color = _parse_color(style.get("heading_rule_color", _DEFAULT_FG))
     text_color = _parse_color(style.get("text_color",
-                              style.get("body_fg", "#333333")))
+                              style.get("body_fg", _DEFAULT_FG)))
     accent = _parse_color(style.get("accent_color", "#9370DB"))
     node_fill = _lighten(accent, 0.85)
     node_stroke = stroke_color
-    sg_fill = _lighten(HexColor("#AAAA33"), 0.92)
-    sg_stroke = HexColor("#AAAA33")
+    sg_fill = _lighten(_SUBGRAPH_ACCENT, 0.92)
+    sg_stroke = _SUBGRAPH_ACCENT
 
     fs = font_size * scale
 
@@ -244,6 +264,7 @@ def _draw_subgraphs(drawing, subgraphs, canvas_h, scale, fill, stroke,
                                fillColor=text_color))
 
 
+@functools.lru_cache(maxsize=16)
 def _font_exists(name):
     try:
         from reportlab.pdfbase.pdfmetrics import getFont
@@ -403,7 +424,7 @@ _SHAPE_DISPATCH = {
 def _draw_node_label(drawing, label, cx, cy, font, fs, text_color):
     if not label:
         return
-    lines = label.split("\\n") if "\\n" in label else label.split("\n")
+    lines = _split_label_lines(label)
     n = len(lines)
     line_h = fs * 1.3
     start_y = cy - fs * 0.25 + (n - 1) * line_h / 2
@@ -528,6 +549,7 @@ def _draw_edge_overlay(drawing, edge_layout, ir_edge, canvas_h, scale,
         return
 
     scaled = _scaled_points(points, canvas_h, scale)
+    arrow_sz = 6 * scale
 
     has_target_arrow = et in (EdgeType.arrow, EdgeType.dotted_arrow,
                               EdgeType.thick_arrow)
@@ -536,15 +558,13 @@ def _draw_edge_overlay(drawing, edge_layout, ir_edge, canvas_h, scale,
         at = ta if ta and ta != ArrowType.none else ArrowType.arrow
         x2, y2 = scaled[-2], scaled[-1]
         x1, y1 = scaled[-4], scaled[-3]
-        _draw_arrowhead(drawing, x1, y1, x2, y2, at, stroke_color,
-                        6 * scale)
+        _draw_arrowhead(drawing, x1, y1, x2, y2, at, stroke_color, arrow_sz)
 
     sa = ir_edge.source_arrow
     if sa and sa != ArrowType.none:
         x1, y1 = scaled[2], scaled[3]
         x2, y2 = scaled[0], scaled[1]
-        _draw_arrowhead(drawing, x1, y1, x2, y2, sa, stroke_color,
-                        6 * scale)
+        _draw_arrowhead(drawing, x1, y1, x2, y2, sa, stroke_color, arrow_sz)
 
     if ir_edge.label:
         label = _strip_label_quotes(ir_edge.label)

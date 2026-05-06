@@ -18,7 +18,6 @@ from lib.font_manifest import (
     resolve_font_files,
 )
 from lib.fonts import (
-    build_body_cmap,
     register_families,
     register_fonts,
     set_fonts_dir,
@@ -32,15 +31,9 @@ def min_style():
     return copy.deepcopy(load_style(style_path))
 
 
-_fonts_ready = False
-
-
 @pytest.fixture(scope="session")
 def font_registered():
     """Download, register, and cache fonts once per test session."""
-    global _fonts_ready
-    if _fonts_ready:
-        return
     style_path = resolve_style_path(None)
     style = load_style(style_path)
     manifest = load_font_manifest()
@@ -49,7 +42,6 @@ def font_registered():
     set_fonts_dir(fonts_dir)
     register_fonts(style)
     register_families()
-    _fonts_ready = True
 
 
 # 1x1 transparent PNG (67 bytes) - shared across test modules

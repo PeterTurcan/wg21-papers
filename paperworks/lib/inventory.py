@@ -23,6 +23,17 @@ _log = logging.getLogger(__name__)
 
 _DOC_RE = re.compile(r"([DPN])(\d{3,5})(R(\d+))?", re.IGNORECASE)
 
+
+def _first(field, *sources, default=""):
+    """Return the first truthy value for field across sources."""
+    for src in sources:
+        if src:
+            v = src.get(field)
+            if v:
+                return v
+    return default
+
+
 _MD_STRIP_RE = re.compile(
     r"\[([^\]]*)\]\([^)]*\)"    # [text](url) -> text
     r"|<[^>]+>"                  # strip HTML tags
@@ -248,34 +259,36 @@ def build_inventory(watch_dirs, output_dir, remote_papers=None):
     all_keys.update(md_by_base.keys())
     all_keys.update(remote_by_base.keys())
 
-    # Add PDF-only keys (orphans with no markdown or remote)
-    bases_covered = {
-        _parse_doc_number(k)[1] for k in all_keys
-        if _parse_doc_number(k)[1]
-    }
+    # Cache parse results for all keys to avoid redundant regex work
+    _parsed = {k: _parse_doc_number(k) for k in all_keys}
+    for k in list(pdf_papers):
+        if k not in _parsed:
+            _parsed[k] = _parse_doc_number(k)
+
+    bases_covered = {_parsed[k][1] for k in all_keys if _parsed[k][1]}
     for k, v in pdf_papers.items():
-        _, base, rev = _parse_doc_number(k)
+        _, base, rev = _parsed[k]
         if base and base not in bases_covered:
             all_keys.add(f"{base}R{rev}")
+            _parsed[f"{base}R{rev}"] = _parse_doc_number(f"{base}R{rev}")
 
     records = {}
     for key in all_keys:
         md = md_by_base.get(key)
         remote = remote_by_base.get(key)
 
-        full, base, rev = _parse_doc_number(key)
+        full, base, rev = _parsed.get(key) or _parse_doc_number(key)
         if not base:
             continue
 
         pdf = pdf_by_base_only.get(base)
 
-        # Markdown is source of truth for metadata
-        title = (md or {}).get("title") or (pdf or {}).get("title") or (remote or {}).get("title", "")
-        authors = (md or {}).get("authors") or (pdf or {}).get("authors") or (remote or {}).get("author", "")
-        date = (md or {}).get("date") or (pdf or {}).get("date") or (remote or {}).get("date", "")
-        audience = (md or {}).get("audience") or (pdf or {}).get("audience", "")
+        title = _first("title", md, pdf, remote)
+        authors = _first("authors", md, pdf) or _first("author", remote)
+        date = _first("date", md, pdf, remote)
+        audience = _first("audience", md, pdf)
         intent = (md or {}).get("intent", "")
-        brutal_summary = (md or {}).get("brutal_summary") or (pdf or {}).get("brutal_summary")
+        brutal_summary = _first("brutal_summary", md, pdf)
 
         warnings = []
         if md and not brutal_summary:

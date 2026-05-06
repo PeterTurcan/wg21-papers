@@ -43,7 +43,7 @@ def _read_scrivener_config():
     try:
         with open(SCRIVENER_CONFIG, encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except (json.JSONDecodeError, OSError):
         _log.debug("Could not read scrivener config", exc_info=True)
         return {}
 
@@ -55,7 +55,7 @@ def load_config():
         try:
             with open(CONFIG_PATH, encoding="utf-8") as f:
                 data = json.load(f)
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             _log.warning("Could not read %s", CONFIG_PATH, exc_info=True)
             cfg = dict(DEFAULTS)
         else:

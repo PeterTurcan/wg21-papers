@@ -7,15 +7,17 @@ highlight_html() - HTML with class-based spans (HTML path)
 from html import escape as _html_escape
 
 from . import escape_xml
+from .css import _PYGMENTS_CLASS_MAP
 
 try:
     from pygments import highlight as _hl
     from pygments.formatter import Formatter
     from pygments.lexers import get_lexer_by_name, guess_lexer
     from pygments.token import (
-        Comment, Error, Generic, Keyword, Literal, Name,
-        Number, Operator, Punctuation, String, Token,
+        Comment, Keyword, Literal, Name,
+        Number, Operator, Punctuation, String,
     )
+    from pygments.util import ClassNotFound
     HAS_PYGMENTS = True
 except ImportError:
     HAS_PYGMENTS = False
@@ -50,6 +52,16 @@ def _resolve(tok, colors):
     return None
 
 
+def _get_lexer(code, lang):
+    """Return a Pygments lexer or None if unrecognized."""
+    try:
+        if lang:
+            return get_lexer_by_name(lang, stripall=True)
+        return guess_lexer(code)
+    except (ClassNotFound, ValueError):
+        return None
+
+
 class _RLFormatter(Formatter):
     """Pygments formatter that emits ReportLab paragraph XML."""
     def __init__(self, colors, **kw):
@@ -75,12 +87,8 @@ def highlight(code, lang, colors):
     if not HAS_PYGMENTS or not colors:
         return escape_xml(code)
 
-    try:
-        if lang:
-            lexer = get_lexer_by_name(lang, stripall=True)
-        else:
-            lexer = guess_lexer(code)
-    except Exception:
+    lexer = _get_lexer(code, lang)
+    if not lexer:
         return escape_xml(code)
 
     fmt = _RLFormatter(colors)
@@ -99,25 +107,6 @@ class _HtmlClassFormatter(Formatter):
                 outfile.write(text)
 
 
-_PYGMENTS_CLASS_MAP = {
-    Keyword:            "hl-k",
-    Keyword.Type:       "hl-kt",
-    Name.Builtin:       "hl-kt",
-    Name.Class:         "hl-kt",
-    Name.Function:      "hl-nf",
-    Name.Decorator:     "hl-nf",
-    Name.Namespace:     "hl-kt",
-    String:             "hl-s",
-    Literal.String:     "hl-s",
-    Number:             "hl-m",
-    Literal.Number:     "hl-m",
-    Comment:            "hl-c",
-    Comment.Preproc:    "hl-cp",
-    Operator:           "hl-o",
-    Punctuation:        "hl-o",
-}
-
-
 def highlight_html(code, lang):
     """Highlight code, returning HTML with class-based spans.
 
@@ -127,12 +116,8 @@ def highlight_html(code, lang):
     if not HAS_PYGMENTS:
         return _html_escape(code, quote=False)
 
-    try:
-        if lang:
-            lexer = get_lexer_by_name(lang, stripall=True)
-        else:
-            lexer = guess_lexer(code)
-    except Exception:
+    lexer = _get_lexer(code, lang)
+    if not lexer:
         return _html_escape(code, quote=False)
 
     fmt = _HtmlClassFormatter()

@@ -1,5 +1,6 @@
 """Paperworks - unified Flask server for paper management."""
 
+import collections
 import importlib.util
 import json
 import logging
@@ -60,9 +61,8 @@ _sse_queues: list[queue.Queue] = []
 _sse_lock = threading.Lock()
 
 # -- Activity log --
-_activity_log: list[dict] = []
+_activity_log: collections.deque[dict] = collections.deque(maxlen=200)
 _log_lock = threading.Lock()
-MAX_LOG = 200
 
 # -- Render state --
 _render_queue: queue.Queue = queue.Queue()
@@ -105,8 +105,6 @@ def _add_log(action, detail, status="ok"):
     }
     with _log_lock:
         _activity_log.append(entry)
-        while len(_activity_log) > MAX_LOG:
-            _activity_log.pop(0)
     _broadcast("log", entry)
 
 
@@ -245,11 +243,11 @@ def _on_md_changed(path: str):
     global _md_debounce_timer
     with _md_pending_lock:
         _md_pending.add(path)
-    if _md_debounce_timer is not None:
-        _md_debounce_timer.cancel()
-    _md_debounce_timer = threading.Timer(MD_DEBOUNCE, _flush_md_pending)
-    _md_debounce_timer.daemon = True
-    _md_debounce_timer.start()
+        if _md_debounce_timer is not None:
+            _md_debounce_timer.cancel()
+        _md_debounce_timer = threading.Timer(MD_DEBOUNCE, _flush_md_pending)
+        _md_debounce_timer.daemon = True
+        _md_debounce_timer.start()
 
 
 def _start_md_watchdog(watch_dirs):
@@ -302,10 +300,10 @@ def _on_pdf_changed(path: str):
     with _pdf_pending_lock:
         _pdf_pending[path] = time.time()
         already_scheduled = _pdf_debounce_timer is not None and _pdf_debounce_timer.is_alive()
-    if not already_scheduled:
-        _pdf_debounce_timer = threading.Timer(PDF_DEBOUNCE, _flush_pdf_pending)
-        _pdf_debounce_timer.daemon = True
-        _pdf_debounce_timer.start()
+        if not already_scheduled:
+            _pdf_debounce_timer = threading.Timer(PDF_DEBOUNCE, _flush_pdf_pending)
+            _pdf_debounce_timer.daemon = True
+            _pdf_debounce_timer.start()
 
 
 def _start_pdf_watchdog(output_dir):

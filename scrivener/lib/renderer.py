@@ -26,20 +26,20 @@ from reportlab.platypus import (
 
 from bs4 import BeautifulSoup
 
-from . import escape_xml
+from . import escape_xml, _is_sup_or_sub_open
+
+_ZERO_PAD_STYLE = TableStyle([
+    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+    ("TOPPADDING", (0, 0), (-1, -1), 0),
+    ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+])
 from .colors import parse_color
 from .config import sp
 from .logo import load_logo
 from .flowables import AccentBox, TitleEnd
 from .fonts import ensure_lazy, ensure_code_family
 from .highlight import highlight
-
-
-def _is_sup_or_sub_open(tok):
-    if tok.get("type") == "inline_html":
-        raw = tok.get("raw", tok.get("text", ""))
-        return raw.startswith("<sup>") or raw.startswith("<sub>")
-    return False
 
 
 class ASTRenderer:
@@ -130,6 +130,12 @@ class ASTRenderer:
 
         self.link_color = s["link_color"]
         self.heading_rule_color = s["heading_rule_color"]
+        self.box_gap = self.ps["h1"].fontSize
+        self._heading_code_scale = s.get("code_inline", {}).get("heading_scale", 0.85)
+        self._hr_thickness = s.get("thematic_break", {}).get("thickness", 1)
+        self._c_heading_rule = parse_color(self.heading_rule_color)
+        self._c_accent = parse_color(s["accent_saturated"])
+        self._c_code_bg = parse_color(s["code_bg"])
 
         from reportlab.pdfbase.pdfmetrics import getFont
         face = getFont("Body").face
@@ -154,6 +160,45 @@ class ASTRenderer:
         fonts_cfg = s.get("fonts", {})
         italic_adj = fonts_cfg.get("body_italic", {}).get("size_adjust")
         self._italic_size = round(bs * italic_adj, 2) if italic_adj and italic_adj != 1.0 else None
+
+    def _keep_spacer(self):
+        """Spacer with keepWithNext set, used before AccentBoxes and tables."""
+        s = Spacer(1, self.gap_sm)
+        s.keepWithNext = True
+        return s
+
+    def _apply_ins_del_markup(self, markup):
+        """Replace <ins>/<del> HTML tags with ReportLab color markup."""
+        markup = re.sub(
+            r'<ins>(.*?)</ins>',
+            lambda m: f'<u><font color="{self.ins_color}">{m.group(1)}</font></u>',
+            markup, flags=re.DOTALL)
+        markup = re.sub(
+            r'<del>(.*?)</del>',
+            lambda m: f'<strike><font color="{self.del_color}">{m.group(1)}</font></strike>',
+            markup, flags=re.DOTALL)
+        return markup
+
+    def _ensure_table_header_style(self):
+        """Lazily create the table_header paragraph style."""
+        hdr_fg = self.style.get("table_header_fg")
+        if hdr_fg and "table_header" not in self.ps:
+            self.ps["table_header"] = ParagraphStyle(
+                "table_header", parent=self.ps["table_body"],
+                textColor=parse_color(hdr_fg),
+                fontName="Body-Bold",
+                spaceBefore=0, spaceAfter=0)
+        return self.ps.get("table_header", self.ps["table_body"])
+
+    def _build_code_accent_box(self, pre):
+        """Wrap an XPreformatted in a code-block AccentBox with keep spacers."""
+        cb = self.style["code_block"]
+        box = AccentBox(
+            pre, self._c_code_bg, self._c_accent, cb["bar_width"],
+            cb["left_padding"], cb["right_padding"],
+            cb["vertical_padding"],
+            cap_shift=self.cap_shift)
+        return [self._keep_spacer(), box, Spacer(1, self.box_gap)]
 
     def _resolve_fallback(self, cp):
         """Return the first fallback font name whose cmap contains cp."""
@@ -299,12 +344,7 @@ class ASTRenderer:
         inner_w = self.content_width - left_pad - right_pad
 
         tbl = Table([[f] for f in flows], colWidths=[inner_w])
-        tbl.setStyle(TableStyle([
-            ("LEFTPADDING", (0, 0), (-1, -1), 0),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-            ("TOPPADDING", (0, 0), (-1, -1), 0),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-        ]))
+        tbl.setStyle(_ZERO_PAD_STYLE)
 
         box = AccentBox(
             tbl, bg, bar, bar_w,
@@ -312,13 +352,7 @@ class ASTRenderer:
             width=self.content_width,
             cap_shift=self.cap_shift)
 
-        spacer_before = Spacer(1, self.gap_sm)
-        spacer_before.keepWithNext = True
-        return [
-            spacer_before,
-            box,
-            Spacer(1, self.ps["h1"].fontSize),
-        ]
+        return [self._keep_spacer(), box, Spacer(1, self.box_gap)]
 
     def _render_token(self, tok):
         t = tok.get("type", "")
@@ -344,9 +378,8 @@ class ASTRenderer:
             if not self.has_fm_title:
                 return self.title_block(text)
 
-        if level >= 1:
-            anchor = f"h_{len(self.headings)}"
-            self.headings.append((level, text, anchor))
+        anchor = f"h_{len(self.headings)}"
+        self.headings.append((level, text, anchor))
 
         hs = self.ps[style_key]
         body_lines = self.style["body_size"] * self.style["line_height"] * 2
@@ -360,7 +393,7 @@ class ASTRenderer:
         if hcfg.get("rule"):
             rule = HRFlowable(
                 width="100%", thickness=headings_cfg["rule_thickness"],
-                color=parse_color(self.heading_rule_color),
+                color=self._c_heading_rule,
                 spaceBefore=self.gap_sm,
                 spaceAfter=self.gap,
                 lineCap='butt')
@@ -368,7 +401,7 @@ class ASTRenderer:
             flows.append(rule)
         return flows
 
-    def title_block(self, title_markup):
+    def title_block(self, title_markup, hide_rule=False):
         from reportlab.pdfbase.pdfmetrics import stringWidth, getFont
 
         flows = []
@@ -394,7 +427,7 @@ class ASTRenderer:
                 logo_img = load_logo(logo_path, logo_h)
                 if logo_img:
                     logo_img.hAlign = "RIGHT"
-            except Exception as e:
+            except (FileNotFoundError, OSError, ValueError) as e:
                 log.warning("failed to load logo %s: %s", logo_path, e)
                 logo_img = None
 
@@ -435,7 +468,7 @@ class ASTRenderer:
             spaceBefore=0, spaceAfter=0)
         title_para = Paragraph(title_markup, title_style)
 
-        rule_color = parse_color(self.style["heading_rule_color"])
+        rule_color = self._c_heading_rule
 
         if logo_img:
             actual_logo_w = logo_img.width if hasattr(logo_img, 'width') else logo_col_w
@@ -454,7 +487,7 @@ class ASTRenderer:
         else:
             flows.append(title_para)
 
-        if thickness:
+        if thickness and not hide_rule:
             flows.append(HRFlowable(
                 width="100%", thickness=thickness,
                 color=rule_color,
@@ -502,7 +535,6 @@ class ASTRenderer:
 
         bg = parse_color(fm_cfg["bg"])
         bar_w = fm_cfg["bar_width"]
-        accent = parse_color(self.style["accent_saturated"])
         inner_pad = fm_cfg["inner_pad"]
         label_col = fm_cfg["label_col"]
         cell_v = fm_cfg["cell_v_pad"]
@@ -521,14 +553,13 @@ class ASTRenderer:
             ("BOTTOMPADDING", (0, 0), (-1, -1), cell_v),
         ]))
 
-        rule_color = parse_color(self.style["heading_rule_color"])
         rule_thickness = self.style.get("title", {}).get("rule_thickness", 3)
         flows.append(AccentBox(
-            tbl, bg, accent, bar_w,
+            tbl, bg, self._c_accent, bar_w,
             left_pad, right_pad, inner_pad,
             width=self.content_width,
             cap_shift=self.cap_shift,
-            top_rule=rule_color,
+            top_rule=self._c_heading_rule,
             top_rule_thickness=rule_thickness))
         flows.append(Spacer(1, fm_space))
         return flows
@@ -540,9 +571,7 @@ class ASTRenderer:
         fm_cfg = self.style.get("front_matter", {})
         bg = parse_color(fm_cfg.get("bg", self.style["blockquote_bg"]))
         bar_w = fm_cfg.get("bar_width", 3)
-        accent = parse_color(self.style["accent_saturated"])
         inner_pad = fm_cfg.get("inner_pad", 12)
-        rule_color = parse_color(self.heading_rule_color)
         rule_thickness = self.style.get("title", {}).get("rule_thickness", 3)
 
         toc_fg = parse_color(self.style["page_number_color"])
@@ -553,7 +582,7 @@ class ASTRenderer:
             spaceAfter=0)
         toc_rule = HRFlowable(
             width="100%", thickness=self.style.get("toc_rule_thickness", 2),
-            color=parse_color(self.heading_rule_color),
+            color=self._c_heading_rule,
             spaceBefore=self.gap_sm,
             spaceAfter=self.gap * 2,
             lineCap='butt')
@@ -572,12 +601,7 @@ class ASTRenderer:
 
         inner_w = self.content_width - inner_pad * 2
         tbl = Table([[f] for f in inner_flows], colWidths=[inner_w])
-        tbl.setStyle(TableStyle([
-            ("LEFTPADDING", (0, 0), (-1, -1), 0),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-            ("TOPPADDING", (0, 0), (-1, -1), 0),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-        ]))
+        tbl.setStyle(_ZERO_PAD_STYLE)
 
         box = AccentBox(
             tbl, bg, bg, 0,
@@ -585,8 +609,7 @@ class ASTRenderer:
             width=self.content_width,
             cap_shift=self.cap_shift)
 
-        h1_h = self.ps["h1"].fontSize
-        return [Spacer(1, h1_h), box, Spacer(1, self.gap * 2)]
+        return [Spacer(1, self.box_gap), box, Spacer(1, self.gap * 2)]
 
     def _wording_text_color(self):
         """Return the text color for the current wording context, or None."""
@@ -657,22 +680,8 @@ class ASTRenderer:
 
         syntax = self.style.get("syntax", {})
         markup = highlight(raw, lang, syntax)
-        cb = self.style["code_block"]
-        bg = parse_color(self.style["code_bg"])
-        accent = parse_color(self.style["accent_saturated"])
-        bar_w = cb["bar_width"]
-        lpad = cb["left_padding"]
-        rpad = cb["right_padding"]
-        vpad = cb["vertical_padding"]
-
         pre = XPreformatted(markup, self.ps["code_block"])
-        box = AccentBox(
-            pre, bg, accent, bar_w,
-            lpad, rpad, vpad,
-            cap_shift=self.cap_shift)
-        spacer_before = Spacer(1, self.gap_sm)
-        spacer_before.keepWithNext = True
-        return [spacer_before, box, Spacer(1, self.ps["h1"].fontSize)]
+        return self._build_code_accent_box(pre)
 
     def _render_block_quote(self, tok, depth=0):
         ensure_lazy("Body-Italic")
@@ -740,10 +749,8 @@ class ASTRenderer:
 
         flows = [box]
         if depth == 0:
-            spacer_before = Spacer(1, self.gap_sm)
-            spacer_before.keepWithNext = True
-            flows.insert(0, spacer_before)
-            flows.append(Spacer(1, self.ps["h1"].fontSize))
+            flows.insert(0, self._keep_spacer())
+            flows.append(Spacer(1, self.box_gap))
         return flows
 
     def _fm_value(self, text):
@@ -905,13 +912,7 @@ class ASTRenderer:
         headers = []
         for child in tok.get("children", []):
             if child.get("type") == "table_head":
-                if hdr_fg and "table_header" not in self.ps:
-                    self.ps["table_header"] = ParagraphStyle(
-                        "table_header", parent=self.ps["table_body"],
-                        textColor=parse_color(hdr_fg),
-                        fontName="Body-Bold",
-                        spaceBefore=0, spaceAfter=0)
-                hdr_style = self.ps.get("table_header", self.ps["table_body"])
+                hdr_style = self._ensure_table_header_style()
                 head_children = child.get("children", [])
                 self._in_table_header = True
                 if head_children and head_children[0].get("type") == "table_cell":
@@ -1026,13 +1027,7 @@ class ASTRenderer:
         tbl.setStyle(TableStyle(style_cmds))
         if nhead > 0:
             tbl.repeatRows = nhead
-        spacer_before = Spacer(1, self.gap_sm)
-        spacer_before.keepWithNext = True
-        return [
-            spacer_before,
-            tbl,
-            Spacer(1, self.ps["h1"].fontSize),
-        ]
+        return [self._keep_spacer(), tbl, Spacer(1, self.box_gap)]
 
     def _render_html_table(self, raw):
         """Render an HTML <table> block using BeautifulSoup for DOM parsing
@@ -1044,13 +1039,7 @@ class ASTRenderer:
             return []
 
         hdr_fg = self.style.get("table_header_fg")
-        if hdr_fg and "table_header" not in self.ps:
-            self.ps["table_header"] = ParagraphStyle(
-                "table_header", parent=self.ps["table_body"],
-                textColor=parse_color(hdr_fg),
-                fontName="Body-Bold",
-                spaceBefore=0, spaceAfter=0)
-        hdr_style = self.ps.get("table_header", self.ps["table_body"])
+        hdr_style = self._ensure_table_header_style()
 
         headers = []
         rows = []
@@ -1071,17 +1060,7 @@ class ASTRenderer:
                     pre = td.find("pre")
                     if pre and pre.find("code"):
                         code_el = pre.find("code")
-                        markup = code_el.decode_contents()
-                        markup = re.sub(
-                            r'<ins>(.*?)</ins>',
-                            lambda m: (f'<u><font color="{self.ins_color}">'
-                                       f'{m.group(1)}</font></u>'),
-                            markup, flags=re.DOTALL)
-                        markup = re.sub(
-                            r'<del>(.*?)</del>',
-                            lambda m: (f'<strike><font color="{self.del_color}">'
-                                       f'{m.group(1)}</font></strike>'),
-                            markup, flags=re.DOTALL)
+                        markup = self._apply_ins_del_markup(code_el.decode_contents())
                         cells.append(XPreformatted(markup, self.ps["code_block"]))
                     else:
                         text = escape_xml(td.get_text())
@@ -1092,8 +1071,8 @@ class ASTRenderer:
 
     def _render_thematic_break(self, tok):
         return [HRFlowable(
-            width="100%", thickness=1,
-            color=parse_color(self.style["heading_rule_color"]),
+            width="100%", thickness=self._hr_thickness,
+            color=self._c_heading_rule,
             spaceBefore=self.gap,
             spaceAfter=self.gap,
             lineCap='butt')]
@@ -1121,15 +1100,7 @@ class ASTRenderer:
         with <ins>/<del> converted to ReportLab color markup. HTML entities
         like &lt; &gt; &amp; pass through as valid XML."""
         ensure_code_family()
-        markup = inner
-        markup = re.sub(
-            r'<ins>(.*?)</ins>',
-            lambda m: f'<u><font color="{self.ins_color}">{m.group(1)}</font></u>',
-            markup, flags=re.DOTALL)
-        markup = re.sub(
-            r'<del>(.*?)</del>',
-            lambda m: f'<strike><font color="{self.del_color}">{m.group(1)}</font></strike>',
-            markup, flags=re.DOTALL)
+        markup = self._apply_ins_del_markup(inner)
 
         if self._wording_context:
             color = self._wording_text_color()
@@ -1143,17 +1114,7 @@ class ASTRenderer:
         if self._wording_context:
             return [Spacer(1, self.gap_sm), pre, Spacer(1, self.gap_sm)]
 
-        cb = self.style["code_block"]
-        bg = parse_color(self.style["code_bg"])
-        accent = parse_color(self.style["accent_saturated"])
-        box = AccentBox(
-            pre, bg, accent, cb["bar_width"],
-            cb["left_padding"], cb["right_padding"],
-            cb["vertical_padding"],
-            cap_shift=self.cap_shift)
-        spacer_before = Spacer(1, self.gap_sm)
-        spacer_before.keepWithNext = True
-        return [spacer_before, box, Spacer(1, self.ps["h1"].fontSize)]
+        return self._build_code_accent_box(pre)
 
     def _inline_children(self, children):
         if not children:
@@ -1194,8 +1155,8 @@ class ASTRenderer:
         ensure_code_family()
         raw = tok.get("raw", tok.get("text", ""))
         raw = escape_xml(unescape(raw))
-        if getattr(self, '_in_heading', False):
-            sz = self.ps[f"h{self._heading_level}"].fontSize * 0.85
+        if self._in_heading:
+            sz = self.ps[f"h{self._heading_level}"].fontSize * self._heading_code_scale
             return f'<font name="Code-Bold" size="{sz}">{raw}</font>'
         sz = self.ps["code_block"].fontSize
         if self._wording_context or self._in_ins or self._in_del or self._in_table_header:
@@ -1301,6 +1262,6 @@ class ASTRenderer:
                     img,
                     Spacer(1, self.gap_sm),
                 ]
-            except Exception as e:
+            except (FileNotFoundError, OSError, ValueError) as e:
                 log.warning("failed to load image %s: %s", resolved, e)
         return [Paragraph(f"[image: {escape_xml(src)}]", self.ps["body"])]

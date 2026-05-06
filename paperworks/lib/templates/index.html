@@ -365,6 +365,15 @@ let _statusTimer=null;
 function setStatus(s,t) { if(_statusTimer){clearTimeout(_statusTimer);_statusTimer=null;} document.getElementById('status-dot').className=s; document.getElementById('status-text').textContent=t; }
 function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 function safeUrl(u){if(!u)return '';try{const p=new URL(u);return['http:','https:'].includes(p.protocol)?u:'';}catch{return /^\//.test(u)?u:'';}}
+async function postJson(url, data) {
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data),
+  });
+  if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+  return r.json();
+}
 
 
 // -- Log --
@@ -392,7 +401,7 @@ function badgeHtml(status,idx) {
   const map={draft:['badge-draft','draft'],review:['badge-review','review'],local:['badge-local','local'],needs_render:['badge-render','render'],orphan:['badge-local','orphan']};
   const [,shortLabel]= map[status]||['','?'];
   if(p&&_workingSet.has(p.doc_number)) return `<span class="badge badge-working">${shortLabel}</span>`;
-  const [cls,label]=map[status]||['badge-local',status||'?'];
+  const [cls,label]=map[status]||['badge-local',esc(status||'?')];
   if((status==='draft'||status==='review')&&p&&p.remote){
     const tgt=status==='draft'?'review':'draft';
     return `<span class="badge ${cls}" style="cursor:pointer" onclick="event.stopPropagation();submitTransition(${idx},'${tgt}')" title="Click: ${tgt}">${label}</span>`;
@@ -490,11 +499,11 @@ function applyFilter() { _filter=document.getElementById('filter-input').value; 
 
 function updateSummary(s) {
   const el=document.getElementById('summary-pills'), pills=[];
-  pills.push(`<span class="pill"><span class="n">${s.total||0}</span> papers</span>`);
-  if(s.draft) pills.push(`<span class="pill"><span class="n">${s.draft}</span> draft</span>`);
-  if(s.review) pills.push(`<span class="pill good"><span class="n">${s.review}</span> review</span>`);
-  if(s.needs_render) pills.push(`<span class="pill warn"><span class="n">${s.needs_render}</span> need render</span>`);
-  if(s.local) pills.push(`<span class="pill"><span class="n">${s.local}</span> local</span>`);
+  pills.push(`<span class="pill"><span class="n">${esc(''+(s.total||0))}</span> papers</span>`);
+  if(s.draft) pills.push(`<span class="pill"><span class="n">${esc(''+s.draft)}</span> draft</span>`);
+  if(s.review) pills.push(`<span class="pill good"><span class="n">${esc(''+s.review)}</span> review</span>`);
+  if(s.needs_render) pills.push(`<span class="pill warn"><span class="n">${esc(''+s.needs_render)}</span> need render</span>`);
+  if(s.local) pills.push(`<span class="pill"><span class="n">${esc(''+s.local)}</span> local</span>`);
   el.innerHTML=pills.join('');
 }
 
@@ -553,18 +562,15 @@ function renderSingle(idx) {
   if (!p || !p.md_path || !p.doc_number || _workingSet.has(p.doc_number)) return;
   startWork(null, p.doc_number);
   setStatus('working', `Rendering ${p.doc_number}...`);
-  fetch('/api/render', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({md_path: p.md_path})})
-    .then(r=>{if(!r.ok){endWork(null, p.doc_number);setStatus('error',p.doc_number+': render failed');showToast(p.doc_number+': render failed');}})
+  postJson('/api/render', {md_path: p.md_path})
     .catch(()=>{endWork(null, p.doc_number);setStatus('error',p.doc_number+': render failed');showToast(p.doc_number+': render failed');});
 }
 async function renderAll() {
   startWork('btn-render', null);
   setStatus('working', 'Rendering all...');
   try {
-    const r = await fetch('/api/render-all', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({force:true})});
-    const d = await r.json();
-    if (r.ok) showToast(`Queued ${d.queued} files`, true);
-    else { showToast(d.error || 'Nothing to render'); setStatus('error',d.error||'Nothing to render'); endWork('btn-render', null); }
+    const d = await postJson('/api/render-all', {force:true});
+    showToast(`Queued ${d.queued} files`, true);
   } catch (e) {
     showToast('Render failed'); setStatus('error','Render failed'); endWork('btn-render', null);
   }
@@ -587,17 +593,19 @@ async function _doLoadInventory(){try{const r=await fetch('/api/inventory');cons
 function loadInventory(){if(_invTimer)clearTimeout(_invTimer);if(_invResolve){_invResolve();_invResolve=null;}return new Promise(r=>{_invResolve=r;_invTimer=setTimeout(()=>{_invTimer=null;_invResolve=null;_doLoadInventory().then(r);},500);});}
 
 async function doLogin(){
-  const cfg=await(await fetch('/api/config')).json();
-  if(!cfg.isocpp_username||!cfg.has_password){showToast('Set credentials in Settings first');return;}
-  startWork('tb-login', null);
-  setStatus('working','Logging in...');
   try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
-    const d=await r.json();updateAuth(d);
-    if(d.success){setStatus('working','Fetching papers...');await loadInventory();setStatus('ready','Ready');}
-    else{setStatus('error',d.message||'Login failed');showToast(d.message||'Login failed');}
+    const cr=await fetch('/api/config');
+    if(!cr.ok) throw new Error('Failed to load config');
+    const cfg=await cr.json();
+    if(!cfg.isocpp_username||!cfg.has_password){showToast('Set credentials in Settings first');return;}
+    startWork('tb-login', null);
+    setStatus('working','Logging in...');
+    try{
+      const d=await postJson('/api/login',{});updateAuth(d);
+      if(d.success){setStatus('working','Fetching papers...');await loadInventory();setStatus('ready','Ready');}
+      else{setStatus('error',d.message||'Login failed');showToast(d.message||'Login failed');}
+    }finally{endWork('tb-login', null);}
   }catch(e){setStatus('error','Login failed');showToast('Login failed');}
-  finally{endWork('tb-login', null);}
 }
 async function doLogout(){await fetch('/api/logout',{method:'POST'});updateAuth({authenticated:false});setStatus('ready','Logged out');loadInventory();}
 function updateAuth(d){
@@ -617,7 +625,7 @@ function renderDirs(dirs){
     const badge=!d.exists?'<span class="dir-badge paused">missing</span>':d.enabled?`<span class="dir-badge active" data-action="toggle" data-field="enabled" data-value="false">active</span>`:`<span class="dir-badge paused" data-action="toggle" data-field="enabled" data-value="true">paused</span>`;
     return `<tr data-path="${esc(d.path)}">
       <td style="width:55px">${badge}</td>
-      <td style="width:30px;text-align:right;padding-right:14px;font-family:var(--mono);color:var(--text-muted)">${d.md_count}</td>
+      <td style="width:30px;text-align:right;padding-right:14px;font-family:var(--mono);color:var(--text-muted)">${esc(''+d.md_count)}</td>
       <td class="dir-path">${esc(d.path)}</td>
       <td style="width:70px"><label class="rec-label"><input type="checkbox" ${d.recursive?'checked':''} data-action="toggle" data-field="recursive">recursive</label></td>
       <td style="width:24px"><button class="btn-x" data-action="remove">&times;</button></td>
@@ -640,7 +648,7 @@ function renderDirs(dirs){
   });
 }
 function populateStyleSelect(selId,styles){const sel=document.getElementById(selId);const cur=sel.value||sel.dataset.cur||'default';sel.innerHTML=styles.map(s=>`<option value="${esc(s.id)}" ${s.id===cur?'selected':''}>${esc(s.name||s.id)}</option>`).join('');}
-async function postConfig(fields){const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)});if(!r.ok){showToast('Save failed');return;}showToast('Saved',true);}
+async function postConfig(fields){try{await postJson('/api/config',fields);showToast('Saved',true);}catch(e){showToast('Save failed');}}
 async function saveOutputDirs(){postConfig({output_dir:document.getElementById('output-dir').value.trim(),render_output_dir:document.getElementById('render-output-dir').value.trim()});}
 async function saveStyle(){postConfig({style:document.getElementById('style-select').value});}
 async function loadCatalog(){
@@ -656,7 +664,7 @@ async function loadCatalog(){
     ftb.innerHTML=(c.fonts||[]).map(f=>{
       const sample=f.preview||'Aa Bb Cc 123';
       const sz=f.preview?18:14;
-      const preview=f.cached?`<span style="font-family:'pv-${f.id}';font-size:${sz}px">${esc(sample)}</span>`:'<span class="muted">not downloaded</span>';
+      const preview=f.cached?`<span style="font-family:'pv-${esc(f.id)}';font-size:${sz}px">${esc(sample)}</span>`:'<span class="muted">not downloaded</span>';
       const dot=f.cached?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 4px var(--green-glow);margin-right:5px;vertical-align:middle"></span>Cached':'<span class="muted">-</span>';
       return `<tr><td><div class="mono" style="font-size:12px">${esc(f.id)}</div><div class="mono" style="font-size:10px;color:var(--text-muted)">${esc(f.file)}</div></td><td>${preview}</td><td style="text-align:right;white-space:nowrap">${dot}</td></tr>`;
     }).join('');
@@ -667,9 +675,9 @@ async function loadCatalog(){
   }catch(e){showToast('Failed to load catalog');}
 }
 async function saveCreds(){const body={isocpp_username:document.getElementById('cred-user').value.trim()};const pass=document.getElementById('cred-pass').value;if(pass)body.isocpp_password=pass;postConfig(body);}
-async function addDir(){const inp=document.getElementById('add-dir-input');const val=inp.value.trim();if(!val)return;const r=await fetch('/api/dirs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:val})});if(!r.ok){const d=await r.json();showToast(d.error||'Failed');return;}const d=await r.json();renderDirs(d.watch_dirs);inp.value='';}
+async function addDir(){const inp=document.getElementById('add-dir-input');const val=inp.value.trim();if(!val)return;try{const d=await postJson('/api/dirs',{dir:val});renderDirs(d.watch_dirs);inp.value='';}catch(e){showToast(e.message||'Failed');}}
 async function removeDir(path){const r=await fetch('/api/dirs',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:path})});if(r.ok){const d=await r.json();renderDirs(d.watch_dirs);}}
-async function toggleDir(path,field,value){const r=await fetch('/api/dirs/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:path,field,value})});if(r.ok){const d=await r.json();renderDirs(d.watch_dirs);}}
+async function toggleDir(path,field,value){try{const d=await postJson('/api/dirs/toggle',{dir:path,field,value});renderDirs(d.watch_dirs);}catch(e){showToast(e.message||'Toggle failed');}}
 async function browseDir(inputId){try{const r=await fetch('/api/pick-dir');const d=await r.json();if(d.path)document.getElementById(inputId).value=d.path;}catch(e){showToast('Browse failed');}}
 let _autoRender=true;
 function toggleAutoRender(){_autoRender=!_autoRender;document.getElementById('auto-render-toggle').className='toggle'+(_autoRender?' on':'');postConfig({auto_render:_autoRender});}
@@ -782,10 +790,11 @@ async function clearLog(){await fetch('/api/log',{method:'DELETE'});document.get
 async function shutDown(){await fetch('/api/shutdown',{method:'POST'});document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#8b949e;font-size:13px;">Server shut down.</div>';}
 
 // -- SSE --
+let sseDelay=1000;
 function connectSSE(){
   const es=new EventSource('/api/events');
-  es.addEventListener('connected',()=>{_workingSet.clear();_queueDepth=0;updateQueue();endWork('btn-render',null);endWork('btn-upload-all',null);setStatus('ready','Ready');loadInventory();});
-  es.addEventListener('log',e=>{try{const d=JSON.parse(e.data);addLog(d);if(d.status==='working')setStatus('working',d.detail||d.action||'Working...');else if(d.status==='done'&&d.action==='startup')setStatus('ready',d.detail||'Ready');}catch(ex){console.error('SSE log parse error',ex);}});
+  es.addEventListener('connected',()=>{sseDelay=1000;_workingSet.clear();_queueDepth=0;updateQueue();endWork('btn-render',null);endWork('btn-upload-all',null);setStatus('ready','Ready');loadInventory();});
+  es.addEventListener('log',e=>{try{sseDelay=1000;const d=JSON.parse(e.data);addLog(d);if(d.status==='working')setStatus('working',d.detail||d.action||'Working...');else if(d.status==='done'&&d.action==='startup')setStatus('ready',d.detail||'Ready');}catch(ex){console.error('SSE log parse error',ex);}});
   es.addEventListener('job',e=>{try{
     const d=JSON.parse(e.data),doc=d.doc_number;
     if(d.event==='job_queued'){_queueDepth=d.queue_depth!=null?d.queue_depth:_queueDepth+1;updateQueue();}
@@ -817,7 +826,7 @@ function connectSSE(){
     loadInventory();
     debouncedCatalog();
   }catch(ex){console.error('SSE render_done parse error',ex);}});
-  es.onerror=()=>{setStatus('','Reconnecting...');es.close();setTimeout(connectSSE,3000);};
+  es.onerror=()=>{setStatus('','Reconnecting...');es.close();setTimeout(connectSSE,sseDelay);sseDelay=Math.min(sseDelay*2,30000);};
 }
 
 // -- Key handlers --
@@ -831,23 +840,27 @@ document.addEventListener('drop',e=>e.preventDefault());
 // -- Init --
 connectSSE();
 (async()=>{
-  const cfg=await(await fetch('/api/config')).json();
-  document.getElementById('output-dir').value=cfg.output_dir||'';
-  document.getElementById('render-output-dir').value=cfg.render_output_dir||'';
-  _autoRender=cfg.auto_render!==false;
-  document.getElementById('auto-render-toggle').className='toggle'+(_autoRender?' on':'');
-  document.getElementById('style-select').dataset.cur=cfg.style||'default';
-  document.getElementById('render-style-select').dataset.cur=cfg.render_style||'default';
-  document.getElementById('cred-user').value=cfg.isocpp_username||'';
-  if(cfg.has_password) document.getElementById('cred-pass').placeholder='(saved)';
-  renderDirs(cfg.watch_dirs||[]);
-  await loadCatalog();
-  ensureEmptyCard();
-  const entries=await(await fetch('/api/log')).json();
-  entries.forEach(e=>addLog(e));
-  const auth=await(await fetch('/api/auth-status')).json();
-  updateAuth(auth);
-  await loadInventory();
+  try{
+    const cr=await fetch('/api/config');
+    if(!cr.ok) throw new Error('Config fetch failed');
+    const cfg=await cr.json();
+    document.getElementById('output-dir').value=cfg.output_dir||'';
+    document.getElementById('render-output-dir').value=cfg.render_output_dir||'';
+    _autoRender=cfg.auto_render!==false;
+    document.getElementById('auto-render-toggle').className='toggle'+(_autoRender?' on':'');
+    document.getElementById('style-select').dataset.cur=cfg.style||'default';
+    document.getElementById('render-style-select').dataset.cur=cfg.render_style||'default';
+    document.getElementById('cred-user').value=cfg.isocpp_username||'';
+    if(cfg.has_password) document.getElementById('cred-pass').placeholder='(saved)';
+    renderDirs(cfg.watch_dirs||[]);
+    await loadCatalog();
+    ensureEmptyCard();
+    const lr=await fetch('/api/log');
+    if(lr.ok){const entries=await lr.json();entries.forEach(e=>addLog(e));}
+    const ar=await fetch('/api/auth-status');
+    if(ar.ok){const auth=await ar.json();updateAuth(auth);}
+    await loadInventory();
+  }catch(e){setStatus('error','Init failed');showToast('Initialization failed');}
 })();
 </script>
 </body>

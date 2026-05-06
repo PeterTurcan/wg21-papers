@@ -41,8 +41,8 @@ article.scrivener code {
   font-family: "Source Code Pro", monospace;
   color: var(--code-inline-fg);
   background: var(--code-inline-bg);
-  border-radius: 3px;
-  padding: 1px 4px;
+  border-radius: calc(var(--u) * 0.3);
+  padding: calc(var(--u) * 0.1) calc(var(--u) * 0.4);
 }
 
 article.scrivener h1 {
@@ -163,7 +163,7 @@ article.scrivener tbody tr:nth-child(even) { background: var(--table-stripe-bg);
 article.scrivener dl.front-matter {
   font-size: calc(var(--u) * 0.9);
   line-height: 1.2;
-  background: #f7f7f7;
+  background: var(--blockquote-bg, #f7f7f7);
   border-left: calc(var(--u) * 0.3) solid var(--accent);
   border-top: calc(var(--u) * 0.3) solid var(--heading-rule-color);
   padding: calc(var(--u) * 1.2) calc(var(--u) * 1.2) calc(var(--u) * 1.2) calc(var(--u) * 1.2);
@@ -216,8 +216,8 @@ article.scrivener .hl-c { color: #6e6e6e; }
 article.scrivener .hl-cp { color: #882936; }
 article.scrivener .hl-o { color: #444444; }
 
-article.scrivener hr { border: none; border-top: 1px solid var(--heading-rule-color); margin: calc(var(--u) * 0.8) 0; }
-article.scrivener hr.page-break { border-top-width: 3px; margin: calc(var(--u) * 1.6) 0; }
+article.scrivener hr { border: none; border-top: calc(var(--u) * 0.1) solid var(--heading-rule-color); margin: calc(var(--u) * 0.8) 0; }
+article.scrivener hr.page-break { border-top-width: calc(var(--u) * 0.3); margin: calc(var(--u) * 1.6) 0; }
 article.scrivener .title-block { margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; }
 article.scrivener .title-block h1 { margin: 0; flex: 1; }
 article.scrivener .title-logo { height: calc(var(--u) * 3.6); margin-left: var(--u); }
@@ -227,7 +227,7 @@ article.scrivener nav.toc {
   margin-top: calc(var(--u) * 1.6);
   margin-bottom: calc(var(--u) * 3.2);
   font-size: calc(var(--u) * 0.9);
-  background: #f7f7f7;
+  background: var(--blockquote-bg, #f7f7f7);
   padding: calc(var(--u) * 1.2);
   color: #6b6b6b;
 }
@@ -235,7 +235,6 @@ article.scrivener nav.toc h2 {
   font-size: var(--u);
   color: #6b6b6b;
   margin-top: 0;
-  border-bottom: none;
 }
 article.scrivener nav.toc h2 { padding-bottom: calc(var(--u) * 0.5333); border-bottom: calc(var(--u) * 0.2) solid var(--heading-rule-color); margin-bottom: calc(var(--u) * 1.6); }
 article.scrivener nav.toc ul { list-style: none; padding-left: 0; }

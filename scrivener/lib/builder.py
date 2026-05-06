@@ -6,7 +6,6 @@ from pathlib import Path
 
 import mistune
 from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate
-from reportlab.platypus.flowables import HRFlowable
 
 from . import escape_xml
 from .colors import resolve_colors
@@ -97,9 +96,7 @@ def build_pdf(md_path, output_path, cli_cfg, style):
 
     if has_fm_title:
         title_text = escape_xml(unescape(display_title))
-        title_flows = renderer.title_block(title_text)
-        if fm_flows:
-            title_flows = [f for f in title_flows if not isinstance(f, HRFlowable)]
+        title_flows = renderer.title_block(title_text, hide_rule=bool(fm_flows))
     else:
         in_title = True
         title_flows = []
@@ -124,15 +121,10 @@ def build_pdf(md_path, output_path, cli_cfg, style):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    top_m = margin
-    bot_m = margin
-    left_m = margin
-    right_m = margin
-
     frame = Frame(
-        left_m, bot_m,
-        page_w - left_m - right_m,
-        page_h - top_m - bot_m,
+        margin, margin,
+        page_w - 2 * margin,
+        page_h - 2 * margin,
         leftPadding=0, rightPadding=0,
         topPadding=0, bottomPadding=0,
         id="content")
@@ -142,10 +134,10 @@ def build_pdf(md_path, output_path, cli_cfg, style):
     doc = BaseDocTemplate(
         str(output_path),
         pagesize=page_size,
-        topMargin=top_m,
-        bottomMargin=bot_m,
-        leftMargin=left_m,
-        rightMargin=right_m,
+        topMargin=margin,
+        bottomMargin=margin,
+        leftMargin=margin,
+        rightMargin=margin,
         title=display_title,
         author=", ".join(fm.get("reply-to", []))
                if isinstance(fm.get("reply-to"), list)

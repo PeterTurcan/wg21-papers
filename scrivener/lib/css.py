@@ -4,6 +4,16 @@ from html import escape
 
 
 _PT_TO_PX = 96 / 72
+_TIGHT_GAP = 0.8 * 2 / 3
+_PARA_GAP = 0.8
+
+
+def _bold_wght(cfg):
+    return cfg.get("fonts", {}).get("body_bold", {}).get("axes", {}).get("wght", 700)
+
+
+def _body_wght(cfg):
+    return cfg.get("fonts", {}).get("body", {}).get("axes", {}).get("wght", 400)
 
 
 def su(r):
@@ -114,16 +124,18 @@ def generate_css(cfg, mode="fragment"):
     lines.append(f"{sel} > * {{ margin: 0; padding: 0; }}")
     lines.append("")
 
+    h1_scale = cfg.get("headings", {}).get("h1", {}).get("scale", 1.6)
+
     _emit_body(lines, sel, cfg)
     _emit_headings(lines, sel, cfg)
-    _emit_code_block(lines, sel, cfg)
-    _emit_blockquote(lines, sel, cfg)
+    _emit_code_block(lines, sel, cfg, h1_scale)
+    _emit_blockquote(lines, sel, cfg, h1_scale)
     _emit_list(lines, sel, cfg)
-    _emit_table(lines, sel, cfg)
+    _emit_table(lines, sel, cfg, h1_scale)
     _emit_front_matter(lines, sel, cfg)
     _emit_wording(lines, sel, cfg)
     _emit_syntax(lines, sel, cfg)
-    _emit_misc(lines, sel, cfg)
+    _emit_misc(lines, sel, cfg, h1_scale)
 
     return "\n".join(lines) + "\n"
 
@@ -222,15 +234,14 @@ def _resolve_italic_family(cfg):
 
 
 def _emit_body(lines, sel, cfg):
-    bold_wght = cfg.get("fonts", {}).get("body_bold", {}).get("axes", {}).get("wght", 700)
-    lines.append(f"{sel} strong, {sel} b {{ font-weight: {bold_wght}; }}")
+    lines.append(f"{sel} strong, {sel} b {{ font-weight: {_bold_wght(cfg)}; }}")
 
     italic_family = _resolve_italic_family(cfg)
     if italic_family:
         italic_wght = cfg.get("fonts", {}).get("body_italic", {}).get("axes", {}).get("wght", 400)
         lines.append(f"{sel} em, {sel} i {{ font-family: {italic_family}; font-weight: {italic_wght}; }}")
 
-    lines.append(f"{sel} p {{ margin-bottom: {su(0.8)}; }}")
+    lines.append(f"{sel} p {{ margin-bottom: {su(_PARA_GAP)}; }}")
     lines.append(f"{sel} a {{ color: var(--link-color); }}")
     code_family = _resolve_font_family(cfg, "code")
     font_decl = f"  font-family: {code_family};\n" if code_family else ""
@@ -241,17 +252,15 @@ def _emit_body(lines, sel, cfg):
         lines.append(font_decl.rstrip())
     lines.append(f"  color: var(--code-inline-fg);")
     lines.append(f"  background: var(--code-inline-bg);")
-    lines.append(f"  border-radius: 3px;")
-    lines.append(f"  padding: 1px 4px;")
+    lines.append(f"  border-radius: {su(3 / cfg['body_size'])};")
+    lines.append(f"  padding: {su(1 / cfg['body_size'])} {su(4 / cfg['body_size'])};")
     lines.append(f"}}")
     lines.append("")
 
 
 def _emit_headings(lines, sel, cfg):
-    bs = cfg["body_size"]
     hcfg = cfg.get("headings", {})
-    bold_wght = cfg.get("fonts", {}).get("body_bold", {}).get("axes", {}).get("wght", 700)
-    body_wght = cfg.get("fonts", {}).get("body", {}).get("axes", {}).get("wght", 400)
+    bw = _bold_wght(cfg)
     rt = hcfg.get("rule_thickness", 0)
     for level in range(1, 7):
         key = f"h{level}"
@@ -265,18 +274,16 @@ def _emit_headings(lines, sel, cfg):
         lines.append(f"  line-height: {lead};")
         lines.append(f"  margin-top: {su(sb)};")
         lines.append(f"  margin-bottom: {su(sa)};")
-        lines.append(f"  font-weight: {bold_wght};")
+        lines.append(f"  font-weight: {bw};")
         if h.get("rule") and rt:
             lines.append(f"  border-bottom: {_su_abs(cfg, rt)} solid var(--heading-rule-color);")
-            lines.append(f"  padding-bottom: {su(0.8 * 2 / 3)};")
+            lines.append(f"  padding-bottom: {su(_TIGHT_GAP)};")
         lines.append(f"}}")
     lines.append("")
 
 
-def _emit_code_block(lines, sel, cfg):
-    bs = cfg["body_size"]
+def _emit_code_block(lines, sel, cfg, h1_scale):
     cb = cfg["code_block"]
-    h1_scale = cfg.get("headings", {}).get("h1", {}).get("scale", 1.6)
     lines.append(f"{sel} pre.code-block {{")
     lines.append(f"  font-size: {su(cb['font_scale'])};")
     lines.append(f"  line-height: {cb['leading_scale']};")
@@ -284,7 +291,7 @@ def _emit_code_block(lines, sel, cfg):
     lines.append(f"  border-left: {_su_abs(cfg, cb['bar_width'])} solid var(--accent);")
     lines.append(f"  padding: {_su_abs(cfg, cb['vertical_padding'])} {_su_abs(cfg, cb['right_padding'])} {_su_abs(cfg, cb['vertical_padding'])} {_su_abs(cfg, cb['left_padding'])};")
     lines.append(f"  overflow-x: auto;")
-    lines.append(f"  margin-top: {su(0.8 * 2 / 3)};")
+    lines.append(f"  margin-top: {su(_TIGHT_GAP)};")
     lines.append(f"  margin-bottom: {su(h1_scale)};")
     lines.append(f"}}")
     lines.append(f"{sel} pre.code-block code {{")
@@ -295,20 +302,18 @@ def _emit_code_block(lines, sel, cfg):
     lines.append("")
 
 
-def _emit_blockquote(lines, sel, cfg):
-    bs = cfg["body_size"]
+def _emit_blockquote(lines, sel, cfg, h1_scale):
     bq = cfg.get("blockquote", {})
-    h1_scale = cfg.get("headings", {}).get("h1", {}).get("scale", 1.6)
     lines.append(f"{sel} blockquote {{")
     lines.append(f"  border-left: {_su_abs(cfg, bq.get('bar_width', 3))} solid var(--accent);")
     lines.append(f"  background: var(--blockquote-bg);")
     lines.append(f"  color: var(--blockquote-fg);")
     lines.append(f"  font-style: italic;")
     lines.append(f"  padding: {_su_abs(cfg, bq.get('vertical_padding', 10))} {_su_abs(cfg, bq.get('right_padding', 15))} {_su_abs(cfg, bq.get('vertical_padding', 10))} {_su_abs(cfg, bq.get('left_padding', 15))};")
-    lines.append(f"  margin-top: {su(0.8 * 2 / 3)};")
+    lines.append(f"  margin-top: {su(_TIGHT_GAP)};")
     lines.append(f"  margin-bottom: {su(h1_scale)};")
     lines.append(f"}}")
-    lines.append(f"{sel} blockquote p {{ margin-bottom: {su(0.8)}; }}")
+    lines.append(f"{sel} blockquote p {{ margin-bottom: {su(_PARA_GAP)}; }}")
     lines.append(f"{sel} blockquote p:last-child {{ margin-bottom: 0; }}")
 
     variants = bq.get("variants", {})
@@ -321,7 +326,6 @@ def _emit_blockquote(lines, sel, cfg):
 
 
 def _emit_list(lines, sel, cfg):
-    bs = cfg["body_size"]
     lc = cfg.get("list", {})
     indent = lc.get("left_indent", 20)
     sb = lc.get("space_before", 4)
@@ -335,34 +339,32 @@ def _emit_list(lines, sel, cfg):
     lines.append("")
 
 
-def _emit_table(lines, sel, cfg):
-    bs = cfg["body_size"]
+def _emit_table(lines, sel, cfg, h1_scale):
     tc = cfg.get("table", {})
     tfs = tc.get("font_scale", 0.92)
     pad = tc.get("cell_padding", {})
     brw = tc.get("body_rule_width", 0.5)
     hrw = tc.get("header_rule_width", 0)
-    h1_scale = cfg.get("headings", {}).get("h1", {}).get("scale", 1.6)
-    body_wght = cfg.get("fonts", {}).get("body", {}).get("axes", {}).get("wght", 400)
+    cell_pad = (f"{_su_abs(cfg, pad.get('top', 5))} {_su_abs(cfg, pad.get('right', 10))} "
+                f"{_su_abs(cfg, pad.get('bottom', 5))} {_su_abs(cfg, pad.get('left', 10))}")
     lines.append(f"{sel} table {{")
     lines.append(f"  font-size: {su(tfs)};")
-    lines.append(f"  font-weight: {body_wght};")
+    lines.append(f"  font-weight: {_body_wght(cfg)};")
     lines.append(f"  border-collapse: collapse;")
     lines.append(f"  width: 100%;")
-    lines.append(f"  margin-top: {su(0.8 * 2 / 3)};")
+    lines.append(f"  margin-top: {su(_TIGHT_GAP)};")
     lines.append(f"  margin-bottom: {su(h1_scale)};")
     lines.append(f"}}")
     lines.append(f"{sel} td {{")
-    lines.append(f"  padding: {_su_abs(cfg, pad.get('top', 5))} {_su_abs(cfg, pad.get('right', 10))} {_su_abs(cfg, pad.get('bottom', 5))} {_su_abs(cfg, pad.get('left', 10))};")
+    lines.append(f"  padding: {cell_pad};")
     lines.append(f"  text-align: left;")
     lines.append(f"  vertical-align: top;")
     if brw:
         lines.append(f"  border-bottom: {_su_abs(cfg, brw)} solid var(--table-rule-color);")
     lines.append(f"}}")
-    bold_wght = cfg.get("fonts", {}).get("body_bold", {}).get("axes", {}).get("wght", 700)
-    thw = cfg.get("table_header_weight", bold_wght)
+    thw = cfg.get("table_header_weight", _bold_wght(cfg))
     lines.append(f"{sel} th {{")
-    lines.append(f"  padding: {_su_abs(cfg, pad.get('top', 5))} {_su_abs(cfg, pad.get('right', 10))} {_su_abs(cfg, pad.get('bottom', 5))} {_su_abs(cfg, pad.get('left', 10))};")
+    lines.append(f"  padding: {cell_pad};")
     lines.append(f"  text-align: left;")
     lines.append(f"  vertical-align: top;")
     lines.append(f"  background: var(--table-header-bg);")
@@ -381,7 +383,6 @@ def _emit_table(lines, sel, cfg):
 
 
 def _emit_front_matter(lines, sel, cfg):
-    bs = cfg["body_size"]
     fm = cfg.get("front_matter", {})
     if not fm:
         return
@@ -396,7 +397,7 @@ def _emit_front_matter(lines, sel, cfg):
     lines.append(f"{sel} dl.front-matter {{")
     lines.append(f"  font-size: {su(fs)};")
     lines.append(f"  line-height: {fm.get('leading_scale', 1.2)};")
-    lines.append(f"  background: {fm_bg};")
+    lines.append(f"  background: var(--blockquote-bg, {fm_bg});")
     lines.append(f"  border-left: {_su_abs(cfg, bar_w)} solid var(--accent);")
     if title_rt:
         lines.append(f"  border-top: {_su_abs(cfg, title_rt)} solid var(--heading-rule-color);")
@@ -404,14 +405,13 @@ def _emit_front_matter(lines, sel, cfg):
     lines.append(f"  margin-top: 0;")
     lines.append(f"  margin-bottom: {_su_abs(cfg, fm.get('space_after', 0))};")
     lines.append(f"}}")
-    body_wght = cfg.get("fonts", {}).get("body", {}).get("axes", {}).get("wght", 400)
     lines.append(f"{sel} dl.front-matter dt {{")
     lines.append(f"  float: left;")
     lines.append(f"  width: {_su_abs(cfg, label_col)};")
     lines.append(f"  clear: left;")
     lines.append(f"  margin: 0;")
     lines.append(f"  padding: {_su_abs(cfg, cell_v)} 0;")
-    lines.append(f"  font-weight: {body_wght};")
+    lines.append(f"  font-weight: {_body_wght(cfg)};")
     lines.append(f"}}")
     lines.append(f"{sel} dl.front-matter dd {{")
     lines.append(f"  margin: 0 0 0 {_su_abs(cfg, label_col)};")
@@ -421,7 +421,6 @@ def _emit_front_matter(lines, sel, cfg):
 
 
 def _emit_wording(lines, sel, cfg):
-    bs = cfg["body_size"]
     wcfg = cfg.get("wording", {})
     if not wcfg:
         return
@@ -436,8 +435,8 @@ def _emit_wording(lines, sel, cfg):
         lines.append(f"  background: {v.get('bg', 'transparent')};")
         lines.append(f"  border-left: {_su_abs(cfg, bw)} solid {v.get('bar_color', '#999')};")
         lines.append(f"  padding: {_su_abs(cfg, pad)};")
-        lines.append(f"  margin-top: {su(0.8 * 2 / 3)};")
-        lines.append(f"  margin-bottom: {su(0.8)};")
+        lines.append(f"  margin-top: {su(_TIGHT_GAP)};")
+        lines.append(f"  margin-bottom: {su(_PARA_GAP)};")
         lines.append(f"}}")
 
     lines.append(f"{sel} ins, {sel} .wording-add {{ color: var(--ins-color); text-decoration: underline; }}")
@@ -456,9 +455,11 @@ def _emit_syntax(lines, sel, cfg):
     lines.append("")
 
 
-def _emit_misc(lines, sel, cfg):
-    lines.append(f"{sel} hr {{ border: none; border-top: 1px solid var(--heading-rule-color); margin: {su(0.8)} 0; }}")
-    lines.append(f"{sel} hr.page-break {{ border-top-width: 3px; margin: {su(1.6)} 0; }}")
+def _emit_misc(lines, sel, cfg, h1_scale):
+    hr_thickness = cfg.get("thematic_break", {}).get("thickness", 1)
+    lines.append(f"{sel} hr {{ border: none; border-top: {_su_abs(cfg, hr_thickness)} solid var(--heading-rule-color); margin: {su(_PARA_GAP)} 0; }}")
+    title_rt = cfg.get("title", {}).get("rule_thickness", 3)
+    lines.append(f"{sel} hr.page-break {{ border-top-width: {_su_abs(cfg, title_rt)}; margin: {su(1.6)} 0; }}")
     lines.append(f"{sel} .title-block {{ margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; }}")
     lines.append(f"{sel} .title-block h1 {{ margin: 0; flex: 1; }}")
     logo_h = cfg.get("title", {}).get("logo_height", 36)
@@ -476,12 +477,11 @@ def _emit_misc(lines, sel, cfg):
     toc_pad = fm_cfg.get("inner_pad", 12)
     pn_color = cfg.get("page_number_color", "#888")
     toc_rt = cfg.get("toc_rule_thickness", 2)
-    h1_scale = cfg.get("headings", {}).get("h1", {}).get("scale", 1.6)
     lines.append(f"{sel} nav.toc {{")
     lines.append(f"  margin-top: {su(h1_scale)};")
     lines.append(f"  margin-bottom: {su(h1_scale * 2)};")
     lines.append(f"  font-size: {su(toc_fs)};")
-    lines.append(f"  background: {toc_bg};")
+    lines.append(f"  background: var(--blockquote-bg, {toc_bg});")
     lines.append(f"  padding: {_su_abs(cfg, toc_pad)};")
     lines.append(f"  color: {pn_color};")
     lines.append(f"}}")
@@ -489,14 +489,13 @@ def _emit_misc(lines, sel, cfg):
     lines.append(f"  font-size: var(--u);")
     lines.append(f"  color: {pn_color};")
     lines.append(f"  margin-top: 0;")
-    lines.append(f"  border-bottom: none;")
     lines.append(f"}}")
     if toc_rt:
-        lines.append(f"{sel} nav.toc h2 {{ padding-bottom: {su(0.8 * 2 / 3)}; border-bottom: {_su_abs(cfg, toc_rt)} solid var(--heading-rule-color); margin-bottom: {su(0.8 * 2)}; }}")
+        lines.append(f"{sel} nav.toc h2 {{ padding-bottom: {su(_TIGHT_GAP)}; border-bottom: {_su_abs(cfg, toc_rt)} solid var(--heading-rule-color); margin-bottom: {su(_PARA_GAP * 2)}; }}")
     lines.append(f"{sel} nav.toc ul {{ list-style: none; padding-left: 0; }}")
     toc_indent = cfg.get("toc_indent", 18)
     lines.append(f"{sel} nav.toc li {{ padding-left: {_su_abs(cfg, toc_indent)}; }}")
     lines.append(f"{sel} nav.toc a {{ color: {pn_color}; text-decoration: none; }}")
-    lines.append(f"{sel} figure {{ margin: {su(0.8 * 2 / 3)} 0 {su(0.8)} 0; }}")
+    lines.append(f"{sel} figure {{ margin: {su(_TIGHT_GAP)} 0 {su(_PARA_GAP)} 0; }}")
     lines.append(f"{sel} figure img {{ max-width: 100%; height: auto; }}")
     lines.append("")
