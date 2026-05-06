@@ -123,6 +123,8 @@ struct read_operation
 
 One anonymous commenter during the 2021 electronic ballot [wrote](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/)<sup>[29]</sup>: *"I don't think it's fair to consider standardizing S&R until there are at least a thousand codebases that use S&R. The probability of missing an important use-case, or an important gotcha is very very high if the actual quantity of 'Junior engineer + intern' experience in the field is low."*
 
+The only published production I/O field report as of 2026 ([P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[30]</sup>) describes a derivatives exchange that evaluated and rejected sender/receivers before choosing coroutine-native I/O. The partner's rationale: sender/receivers' structured concurrency trade-offs are at odds with their message-passing architecture, adoption would force a rewrite rather than an incremental port, and the pipeline expression syntax does not scale to their domain (Section 7.2).
+
 ---
 
 ## 6. Anticipated Objections
@@ -135,7 +137,7 @@ The evidence gap was also noticed contemporaneously. M&uuml;ller [wrote](https:/
 
 **Q: P2300 will eventually cover networking.**
 
-A: It might. Prototype implementations exist - Kühl's [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[18]</sup> work and experimental library, Voutilainen's Qt + P2300R0 networking integration - but no production networking deployment on senders has been published as of 2026. The committee now has two models to evaluate. Time will tell which serves networking better, or whether both do.
+A: It might. Prototype implementations exist - K&uuml;hl's [P2762R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[18]</sup> work and experimental library, Voutilainen's Qt + P2300R0 networking integration - but no production networking deployment on senders has been published as of 2026. The one published production evaluation ([P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[30]</sup>) rejected sender/receivers as architecturally incompatible with their domain. The committee now has two models to evaluate. Time will tell which serves networking better, or whether both do.
 
 **Q: Two models fragment the ecosystem.**
 
@@ -214,3 +216,5 @@ The effort to bring async programming to C++ has been genuine, sustained, and co
 [28] [Trip Report: Summer ISO C++ Meeting in St. Louis, USA](https://www.think-cell.com/en/career/devblog/trip-report-summer-iso-cpp-meeting-in-st-louis-usa) - Jonathan M&uuml;ller, July 2024.
 
 [29] [r/cpp: C++ committee polling results for asynchronous programming](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/) - Oct 2021.
+
+[30] [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).

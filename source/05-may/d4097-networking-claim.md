@@ -151,7 +151,7 @@ The `NN::` namespace prefix is a placeholder. The example is a hypothetical illu
 
 | Category                                    | Evidence in the published record at the time of the vote                                                                                                                                                                  |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sender-based networking deployment          |                                                                                                                                                                                                                           |
+| Sender-based networking deployment          | None published. The production exchange described in [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[25]</sup> considered and rejected sender/receivers for architectural incompatibility (Section 7.2). |
 | Sender-based networking prototype           |                                                                                                                                                                                                                           |
 | Sender-based networking code example        | One hypothetical example in [P2300R2](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html)<sup>[8]</sup> Section 1.4 using placeholder `NN::` namespace                                                                                           |
 | Published analysis of sender model for I/O  | [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021): compound I/O results cannot use `set_error` without information loss. Published before the poll.                                             |
@@ -176,7 +176,7 @@ The concern [P2430R0](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2
 | [N4985](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4985.pdf)<sup>[11]</sup>                | 2024 | St. Louis minutes: national body raised concerns about P2300R10 at the adoption vote.                 |
 | [P3801R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3801r0.html)<sup>[12]</sup>            | 2025 | "Concerns about the design of std::execution::task." Urges the committee to reconsider P3552R3.       |
 | [P3796R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3796r1.html)<sup>[13]</sup>            | 2025 | "Coroutine Task Issues." Documents stack overflow, cancellation, and wording problems in the task.     |
-| Published sender-based networking deployment                    | 2026 |                                                                                                       |
+| Published sender-based networking deployment                    | 2026 | None. The only published production I/O evaluation ([P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[25]</sup>) chose coroutines; sender/receivers rejected as architecturally incompatible. |
 
 [N4985](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4985.pdf)<sup>[11]</sup>, the St. Louis 2024 minutes, records the moment [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> was adopted into the C++ working paper:
 
@@ -292,3 +292,5 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 [23] [Trip Report: Summer ISO C++ Meeting in St. Louis, USA](https://www.think-cell.com/en/career/devblog/trip-report-summer-iso-cpp-meeting-in-st-louis-usa) - Jonathan M&uuml;ller, July 2024.
 
 [24] [r/cpp: C++ committee polling results for asynchronous programming](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/) - Oct 2021.
+
+[25] [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).

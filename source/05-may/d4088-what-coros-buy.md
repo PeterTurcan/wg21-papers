@@ -495,6 +495,8 @@ Jonathan M&uuml;ller [wrote](https://www.think-cell.com/en/career/devblog/trip-r
 
 One anonymous r/cpp commenter [reported](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/)<sup>[30]</sup>: *"I seriously investigated [libunifex] for roughly 2 work-days. I didn't like it, and couldn't use it to do what I wanted. That doesn't mean that libunifex couldn't - it means that I couldn't. The cognitive load was too high."*
 
+Independent production confirmation: the derivatives exchange described in [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf)<sup>[31]</sup> - a team with a mature message-passing pipeline architecture - reported that the sender/receiver expression syntax caused many mental "trips" when reasoning about behaviour, and did not scale beyond simple examples (Section 7.2).
+
 **Q: Coroutines were not designed for I/O.**
 
 A: Correct. The five properties were designed for generality - async patterns, lazy evaluation, generators. Section 7 documents what they produce when applied to I/O. The substrate is emergent.
@@ -653,3 +655,5 @@ The author thanks Chris Kohlhoff for Asio's stream model, buffer sequences, and 
 [29] [Trip Report: Summer ISO C++ Meeting in St. Louis, USA](https://www.think-cell.com/en/career/devblog/trip-report-summer-iso-cpp-meeting-in-st-louis-usa) - Jonathan M&uuml;ller, July 2024.
 
 [30] [r/cpp: C++ committee polling results for asynchronous programming](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/) - Oct 2021.
+
+[31] [P4125R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4125r1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).

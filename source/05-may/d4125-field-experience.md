@@ -1,7 +1,7 @@
 ---
 title: "Coroutine-Native I/O at a Derivatives Exchange"
 document: P4125R1
-date: 2026-05-01
+date: 2026-05-19
 intent: info
 audience: SG14, LEWG
 reply-to:
@@ -13,7 +13,7 @@ reply-to:
 
 A derivatives exchange is porting from Asio callbacks to coroutine-native I/O. Early results: it works.
 
-The paper reports qualitative findings from three structured interviews with the engineering team. The results are preliminary - the integration covers a subset of the platform and no performance benchmarks have been completed - but the field evidence is reported here for the committee's consideration.
+The paper reports qualitative findings from three structured interviews with the engineering team and early quantitative results from the integration partner's matching facility benchmark suite. The qualitative findings were reported in R0; this revision adds scenario-based latency and throughput comparisons between Corosio and Asio. The results are preliminary - the integration covers a subset of the platform and full production deployment has not occurred - but the field evidence is reported here for the committee's consideration.
 
 ---
 
@@ -21,7 +21,8 @@ The paper reports qualitative findings from three structured interviews with the
 
 ### R1: May 2026 (pre-Brno mailing)
 
-- Formatting corrections.
+- Added Section 7 (Viability Assessment) with early quantitative benchmark results from the integration partner's matching facility scenarios.
+- Updated scope description and limitations to reflect progress since R0.
 
 ### R0: April 2026 (post-Croydon mailing)
 
@@ -33,11 +34,11 @@ The paper reports qualitative findings from three structured interviews with the
 
 The author provides information and serves at the pleasure of the committee.
 
-This paper is part of the [Network Endeavor](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) ([P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf)), a project to bring coroutine-native I/O to C++.
+This paper is part of the Network Endeavor ([P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf)<sup>[4]</sup>), a project to bring coroutine-native I/O to C++.
 
 Falco developed and maintains [Capy](https://github.com/cppalliance/capy)<sup>[1]</sup> and [Corosio](https://github.com/cppalliance/corosio)<sup>[2]</sup> and believes coroutine-native I/O is a practical foundation for networking in C++.
 
-The author is affiliated with the C++ Alliance, which develops the libraries under test. The integration partner is an independent commercial entity. The evidence is early-stage and the authors acknowledge its limitations explicitly in Section 7.
+The author is affiliated with the C++ Alliance, which develops the libraries under test. The integration partner is an independent commercial entity. The evidence is early-stage and the authors acknowledge its limitations explicitly in Section 8.
 
 This paper asks for nothing.
 
@@ -59,13 +60,15 @@ Capy is a C++ library providing async/coroutine building blocks and executor mod
 
 ### 2.3 Scope and Limitations of the Integration
 
-The initial port focuses on a subset of repositories needed to re-run the partner's matching facility benchmark tests with Corosio replacing Asio. The scope covers core executor, IO context, and TCP socket functionality. UDP and WebSocket support - required for market data feeds and external client connectivity respectively - are not yet available in Corosio and are excluded from this evaluation.
+The port focuses on a subset of repositories needed to re-run the partner's matching facility benchmark tests with Corosio replacing Asio. The scope covers core executor, IO context, and TCP socket functionality. UDP and WebSocket support - required for market data feeds and external client connectivity respectively - are not yet available in Corosio and are excluded from this evaluation.
 
-The project is structured in phases: foundational library porting first, then TCP client/server components, then benchmark execution. The central research question is whether a coroutine-native I/O library can match or exceed Asio's performance in a mission-critical production system. The benchmarking phase has not yet begun.
+The project is structured in phases: foundational library porting first, then TCP client/server components, then benchmark execution. The central research question is whether a coroutine-native I/O library can match or exceed Asio's performance in a mission-critical production system. The benchmarking phase for the matching facility component has completed and results are reported in Section 7. Broader system components (order entry gateways, market data distributors) have not yet been benchmarked.
 
 ---
 
 ## 3. Methodology
+
+### 3.1 Qualitative Interviews
 
 Three structured interviews were conducted with members of the integration partner's engineering team in March 2026:
 
@@ -75,9 +78,15 @@ Three structured interviews were conducted with members of the integration partn
 
 Engineers A and B had been working with Capy and Corosio for approximately two weeks at the time of their interviews. Engineer C was interviewed one week later. All quotes are from interview transcriptions, lightly edited for readability. A project journal maintained by the engineering team provided supplementary context.
 
-The interviews were qualitative. No metrics, benchmarks, or automated measurements are reported. The findings represent the subjective assessments of three engineers at the early stage of an ongoing integration. They carry the weight appropriate to their scope.
+The interviews were qualitative. No metrics, benchmarks, or automated measurements are reported in Sections 4-6. The findings represent the subjective assessments of three engineers at the early stage of an ongoing integration. They carry the weight appropriate to their scope.
 
 All interviews were conducted remotely over video call; the Capy/Corosio author was present for technical questions but did not participate in the assessment discussions.
+
+### 3.2 Scenario Benchmarks
+
+Following the qualitative interview phase, the integration partner completed a porting effort sufficient to run their matching facility benchmark suite against both backends. The benchmarks use representative (not realistic) scenarios - deterministic, canned message sequences designed to exercise specific code paths under controlled conditions. Each scenario was run at multiple message injection rates and with both an empty and a pre-filled order book.
+
+The same hardware and deployment configuration was used for both backends. Results are reported as percentage deltas (Corosio relative to Asio) rather than absolute values, both because the delta directly answers the viability question and because absolute values are proprietary. The integration partner computed and provided the delta figures.
 
 ---
 
@@ -187,31 +196,344 @@ Engineer A also noted the library's accessibility:
 
 > "This library is probably something a new user could turn to and use pretty much directly." - Engineer A
 
-These assessments are based on two to three weeks of integration work covering a subset of the platform. No performance benchmarks have been completed. These are early indicators, not final verdicts.
+These assessments were based on two to three weeks of integration work covering a subset of the platform. At the time of the interviews, no performance benchmarks had been completed. The qualitative assessments above are early indicators, not final verdicts. The quantitative evidence that followed is reported in Section 7.
 
 ---
 
-## 7. Limitations of This Study
+## 7. Viability Assessment
 
-This paper reports early-stage, qualitative findings. The following limitations apply:
+This section extends the qualitative findings reported above with early quantitative evidence from the integration partner's matching facility benchmark suite. The content has been distilled from conversations with, and write-ups provided by, the partner's engineering and delivery teams. A direct experience report authored by the partner is planned; the purpose of this section is to share their findings after having completed a significant phase of the porting effort.
+
+### 7.1 Rationale and Drivers
+
+The integration partner reports that the porting exercise is not a theoretical evaluation but a pathway to addressing long-standing architectural constraints in their codebase.
+
+The platform is architected as an ultra-low latency message passing stack. It uses Asio as the core networking library - a choice the partner describes as the "gold standard" for such systems. The callback approach is the primary implementation mechanism, largely because it was the main approach available when the code was initially written (pre-C++20 coroutines). In some cases the codebase uses Asio coroutines where performance and readability benefits justified that decision.
+
+The partner has a layered architecture implementing networking, transport, session management, and application pipeline protocol layers. One challenge they have faced over the years is separating these implementations to allow re-use across transport layers (TCP, WebSocket, UDP) without the difficulties imposed by weaving that into a layer-traversing callback architecture. In the partner's assessment, this has resulted in increasingly hard-to-reason-about abstractions and difficulty testing those abstractions.
+
+The partner's goals for the port are twofold: (a) establish that performance and capability criteria are met, and (b) assess whether the layering benefits of a coroutine-first approach can unlock their ability to normalise layered code across the codebase. The partner reports that their inability to achieve this refactoring within the callback architecture - without taking on significant time commitment and producing something "similar but different" with no real benefit - has postponed such work continually, resulting in hard-to-remove technical debt.
+
+### 7.2 Why Not Sender/Receivers?
+
+For additional context on why the coroutine-native path was chosen, we asked the integration partner why they had not previously considered sender/receivers given the attention it has received in the committee as a potential foundational building block. The following is a summary of their response. The partner states that it should be considered opinion only, and notes that they have not been keeping up-to-date with all the latest changes to sender/receivers - some things may have changed.
+
+The partner's architecture is essentially a message passing architecture, which is the norm for high performance financial market systems targeting ultra-low latency and high message throughput. In the partner's view, sender/receivers is an opinionated structured concurrency model that chooses specific trade-offs which are at odds with their existing architecture. They acknowledge that those choices have their benefits in other domains and in more general applications, but state that they create friction in the context of their architecture.
+
+The partner also expressed the view that the sender/receivers model does not scale across their architecture as a whole - for example, across multiple deployed components - and forces a set of design choices that make porting more of a rewrite than an incremental refactoring. In their assessment, the approach conflates a number of concerns, such as providing a pipeline model that is not equivalent to a full-fledged message passing pipeline (for which the partner has its own mature library).
+
+Regardless of the complexity of any potential port (which the partner characterises as closer to a complete rewrite), the trade-off choices already represent a forced compromise on the existing architecture. This removed any potential performance motivation from the outset. Further, the invasive nature of such a change would impact too many libraries to make the effort feasible to validate from a behavioural point of view, as there would be fundamental changes required to message pathways.
+
+Lastly, the partner expressed concern over the expression syntax used to compose pipelines in sender/receivers, stating that it caused many mental "trips" when trying to reason about what was happening. In their view, it may be adequate for simple examples but does not appear to scale, and is not comparable or compatible with the kind of pipeline architecture they use.
+
+### 7.3 Migration Approach
+
+The partner identified two key code paths affected by the port:
+
+- **Application Management pathway**: delivers each component's core application and process behaviours (timers, thread model, signal handling, process management). Not performance-critical; the emphasis is on correctness.
+- **Application Pipeline pathway**: delivers each component's main application pipeline and is responsible for all networking activities and message passing within the system. Performance-critical.
+
+The migration approach was the same for each pathway:
+
+1. Develop a parallel Corosio/Capy implementation mirroring behaviour of each library in the dependency tree.
+2. Update and augment tests for existing Asio code paths so that the same tests run for both backends, proving feature parity and correctness.
+3. Augment type management to allow specification and use of Corosio/Capy types over Asio types, offering an incremental migration path.
+4. Update build processes to allow testing all code paths and choosing to build Corosio/Capy-based components.
+
+For the Application Management pathway, correctness alone was sufficient to establish viability. For the Application Pipeline pathway, the partner established that the appropriate viability test was to port their Matching Facility scenario benchmark suite - allowing them to spike through the architecture and make a quantitative assessment of whether Corosio could serve as a viable replacement for Asio.
+
+### 7.4 Results and Assessment
+
+Across all eight tested scenarios, the Corosio port of the Application Pipeline pathway produces consistently comparable latency and throughput results to Asio. In the partner's assessment:
+
+- On balance, the Corosio port is very marginally faster in many scenarios at the median and higher percentiles, but not to any level of significance or confidence given the test setup.
+- Asio appears to provide marginally lower jitter overall (smaller variance in tail latencies), but this too is marginal and the partner notes that no tuning or configuration has been applied to the Corosio build.
+- The one exception is Scenario 8 (mass cancellation across 100 filled markets), where Corosio shows measurably higher latency under sustained load. The partner considers this a tuning target rather than a fundamental limitation.
+
+The partner has decided that the initial quantitative evidence backs up the initial qualitative evidence. They plan to continue their migration effort and explore the refactoring benefits described in Section 7.1. Further analysis - including jitter characterisation, tuning, and testing of additional components (order entry gateways, market data distributors) - will be the subject of a future paper.
+
+The comparative data for all scenarios is presented in Section 7.6.
+
+### 7.5 Scenario Descriptions
+
+The scenarios are scoped to the Matching Facility component of the system. In a typical deployment, Order Entry Gateways fan messages into the Matching Facility, which publishes derived messages to Market Data Distributors for dissemination to participants. The Matching Facility is the most complex part of the stack: one inbound message may result in many outbound messages.
+
+Each scenario was executed with both an empty order book and a pre-filled order book so that the impact of book state can be assessed. The results are intended solely to determine whether the change from Asio to Corosio is viable. The partner notes that there are many further tests that could drill into why differences exist, how impactful they are, and whether they are blockers.
+
+#### Scenario 1 - Place GTC Order and then Cancel
+
+An order is entered using `enter_order` and immediately cancelled (by sequencing ID) before receipt of the `order_entered` acknowledgement. The latency measured spans from the first `enter_order` to the last `top_of_book` update resulting from both messages.
+
+![Scenario 1 message flow](d4125_images/flow-scenario-1.png)
+
+#### Scenario 2 - Enter IOC, No Execution
+
+An Immediate-or-Cancel order is entered. In the empty book case, the order is rejected as invalid (no counterparty). In the filled book case, the Matching Facility must inspect the book to determine whether execution is possible. The empty book case should be significantly faster because no book inspection occurs.
+
+![Scenario 2 message flow (filled book)](d4125_images/flow-scenario-2.png)
+
+#### Scenario 3 - Order Amends, Quantity Only
+
+A previously entered order is amended by varying quantity only. Priority is retained in the book and no reordering is required. The difference between empty and filled book cases is the time taken to locate the order in the relevant book.
+
+![Scenario 3 message flow](d4125_images/flow-scenario-3.png)
+
+#### Scenario 4 - Two Orders Resulting in a Trade
+
+One order is entered, then a second is entered to match and trigger an execution resulting in a trade. The processing time is measured from receipt of the triggering order until the last derived message (trade report, price updates, book updates) is published.
+
+![Scenario 4 message flow](d4125_images/flow-scenario-4.png)
+
+#### Scenarios 5, 6, 7 - Sweep 10 Orders
+
+Three sweep scenarios test the same basic flow with different book configurations:
+
+- **Scenario 5**: 10 orders at the same price level.
+- **Scenario 6**: 10 orders at close but different price levels.
+- **Scenario 7**: 10 orders at sparse (widely separated) price levels.
+
+In each case the book is pre-loaded with 10 orders and then a single order sweeps all of them. One triggering order produces 10 trades and 100 derived messages. The latency measured is the processing time from the triggering execution to the last derived message.
+
+![Sweep scenarios - book loading](d4125_images/flow-scenario-5-loading.png)
+
+![Sweep scenarios - execution](d4125_images/flow-scenario-5-sweep.png)
+
+#### Scenario 8 - Mass Cancel Orders across 100 Markets
+
+One hundred tradeable markets are loaded with quotes (buy and sell orders) from a single account. A `cancel_orders` message for that account triggers mass cancellation across all markets. The latency measured includes the triggering message and all derived messages: 4 messages per order cancelled, 2 orders per book, 100 books = 800 derived messages.
+
+![Scenario 8 - book loading](d4125_images/flow-scenario-8-loading.png)
+
+![Scenario 8 - mass cancellation](d4125_images/flow-scenario-8.png)
+
+### 7.6 Comparative Data
+
+The tables below show the percentage difference in latency and throughput between Corosio and Asio for each scenario. All values compare the `corosio_io_context` backend against the `asio_io_context` backend under identical conditions.
+
+**Reading the tables:**
+
+- **Feed Rate**: the rate at which messages are injected into the system under test. An infinity symbol indicates unbounded (as fast as the system can process).
+- **Count**: the number of events processed in the test run.
+- **Min, Max, Mean**: percentage difference in minimum, maximum, and mean end-to-end processing latency.
+- **P50, P95, P99**: percentage difference in latency at the 50th, 95th, and 99th percentiles of the latency distribution - i.e. the latency at or below which that percentage of events completed.
+- **Avg Rate**: percentage difference in sustained throughput (events processed per second).
+
+**Interpretation:**
+
+- For latency columns, a **negative** value means Corosio was faster (lower latency).
+- For the Avg Rate column, a **positive** value means Corosio had higher throughput.
+- The Max column tends to be noisy due to test setup and should not be given significant weight.
+
+---
+
+#### Scenario 1 - Place GTC Order and then Cancel
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | +3.6% | -0.4% | +0.3% | +0.6% | +3.1% | +3.2% | -0.3% |
+| 10,000 | 100,000 | +1.4% | +31.3% | +0.6% | +0.2% | +1.8% | +2.4% | -0.6% |
+| 100,000 | 1,000,000 | +0.8% | -7.0% | +0.2% | +0.2% | +0.5% | +0.6% | -0.2% |
+| 200,000 | 2,000,000 | -0.8% | +6.0% | +0.2% | +0.2% | +0.7% | +1.0% | -0.2% |
+| &#8734; | 2,000,000 | -1.8% | -0.2% | -0.8% | -0.5% | -0.6% | +0.5% | +0.8% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | -1.0% | +1.5% | +1.0% | +0.8% | +3.5% | +5.1% | -1.0% |
+| 10,000 | 100,000 | -2.4% | +86.4% | +0.2% | +0.1% | +2.5% | +4.8% | -0.2% |
+| 100,000 | 1,000,000 | +0.0% | +175.9% | +0.7% | +0.7% | +1.0% | +1.6% | -0.7% |
+| 200,000 | 1,000,000 | -0.6% | +6.4% | +0.9% | +0.8% | +1.4% | +2.2% | -0.9% |
+| &#8734; | 1,000,000 | -3.4% | +13.1% | -2.4% | -2.3% | -2.1% | -1.5% | +2.4% |
+
+---
+
+#### Scenario 2 - Enter IOC, No Execution
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | +2.9% | +4.6% | +0.6% | +0.2% | +2.0% | +3.9% | -0.6% |
+| 10,000 | 100,000 | -2.1% | +0.8% | -0.2% | -0.2% | +0.5% | +0.9% | +0.2% |
+| 100,000 | 1,000,000 | -1.2% | -4.8% | -0.2% | -0.1% | +0.1% | -0.3% | +0.2% |
+| 200,000 | 1,000,000 | +0.2% | -11.9% | +0.4% | +0.2% | +0.4% | +0.0% | -0.3% |
+| &#8734; | 1,000,000 | -0.6% | +64.6% | -0.2% | -0.3% | +0.1% | +0.5% | +0.3% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | +1.3% | +16.5% | -0.4% | -0.4% | -1.3% | -0.9% | +0.4% |
+| 10,000 | 100,000 | +0.4% | +878.6% | +0.7% | +0.6% | -0.1% | +0.8% | -0.6% |
+| 100,000 | 1,000,000 | -0.4% | +197.8% | +0.2% | +0.3% | +0.4% | +0.7% | -0.2% |
+| 200,000 | 1,000,000 | -1.5% | -64.9% | +0.4% | +0.5% | +0.7% | +0.9% | -0.4% |
+| &#8734; | 1,000,000 | -0.8% | -73.8% | +0.2% | +0.2% | +0.1% | +0.4% | -0.2% |
+
+---
+
+#### Scenario 3 - Order Amends, Quantity Only
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | +4.2% | -20.4% | +1.4% | +4.8% | -1.0% | -2.0% | -1.4% |
+| 10,000 | 100,000 | +1.8% | -28.8% | +3.4% | +2.6% | +1.8% | +1.7% | -3.3% |
+| 100,000 | 1,000,000 | +5.8% | -51.8% | +4.9% | +3.6% | +4.2% | +3.8% | -4.7% |
+| 200,000 | 1,000,000 | +4.0% | -75.0% | +4.2% | +3.4% | +3.5% | +3.1% | -4.1% |
+| &#8734; | 1,000,000 | +5.5% | -76.4% | +3.7% | +2.4% | +2.5% | +2.0% | -3.6% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | +1.8% | +3.9% | +3.0% | -11.0% | +2.8% | +3.4% | -2.9% |
+| 10,000 | 100,000 | +3.7% | -8.2% | +1.5% | -3.5% | +0.3% | +1.6% | -1.5% |
+| 100,000 | 1,000,000 | +3.5% | -85.2% | +2.7% | -4.1% | +2.1% | +1.8% | -2.6% |
+| 200,000 | 1,000,000 | +4.0% | +610.2% | +2.5% | +13.4% | +1.7% | +0.8% | -2.5% |
+| &#8734; | 1,000,000 | +2.5% | +602.0% | +3.0% | -8.5% | +2.0% | +1.2% | -2.9% |
+
+---
+
+#### Scenario 4 - Two Orders Resulting in a Trade
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | -1.1% | -37.8% | -1.2% | -0.5% | -2.6% | -21.2% | +1.2% |
+| 10,000 | 100,000 | -0.7% | +18.3% | -3.6% | -3.2% | -3.6% | -26.1% | +3.7% |
+| 100,000 | 1,000,000 | -1.8% | -100.0% | -6.4% | -2.2% | -2.5% | -27.2% | +6.9% |
+| 200,000 | 1,000,000 | +0.7% | -70.0% | -0.8% | -0.5% | -0.3% | -25.3% | +0.8% |
+| &#8734; | 1,000,000 | -0.5% | +5.2% | +0.2% | -1.1% | +1.7% | +36.5% | -0.2% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 10,000 | +0.6% | +287.5% | +0.9% | +1.2% | -1.7% | -8.4% | -0.8% |
+| 10,000 | 100,000 | +2.8% | +0.0% | -2.3% | -1.2% | -4.7% | -21.8% | +2.4% |
+| 100,000 | 1,000,000 | -0.1% | +620.0% | -0.5% | +0.3% | -2.6% | -22.5% | +0.5% |
+| 200,000 | 1,000,000 | +1.3% | -3.2% | -0.3% | +0.3% | -1.7% | -23.7% | +0.2% |
+| &#8734; | 1,000,000 | +2.0% | -65.8% | +2.3% | +1.9% | +2.8% | +31.2% | -2.3% |
+
+---
+
+#### Scenario 5 - Sweep 10 Orders at Same Level
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 2,000 | -4.2% | +25.5% | -6.4% | -6.9% | -6.4% | -3.4% | +6.8% |
+| 10,000 | 50,000 | -1.6% | -20.4% | -0.9% | -0.9% | -1.1% | +7.0% | +0.9% |
+| 100,000 | 100,000 | -0.8% | +3.5% | -1.3% | -1.5% | -0.4% | +1.4% | +1.4% |
+| 200,000 | 100,000 | -0.2% | +108.0% | -0.9% | -1.0% | -0.2% | -3.6% | +0.9% |
+| &#8734; | 100,000 | -1.8% | +115.5% | -1.2% | -1.2% | -0.4% | -4.1% | +1.2% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 2,000 | +2.1% | +248.3% | +1.0% | +0.7% | -0.6% | +8.5% | -1.0% |
+| 10,000 | 50,000 | +0.0% | +1559.3% | +1.0% | +0.8% | +0.8% | -1.1% | -1.0% |
+| 100,000 | 100,000 | -0.7% | +3.1% | -0.1% | -0.2% | +0.8% | -5.0% | +0.1% |
+| 200,000 | 100,000 | -1.6% | +679.6% | -2.0% | -2.0% | -1.5% | -8.6% | +2.0% |
+| &#8734; | 100,000 | -1.8% | +7.0% | -2.4% | -2.4% | -1.8% | -8.2% | +2.5% |
+
+---
+
+#### Scenario 6 - Sweep 10 Close Orders at Different Levels
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 2,000 | -3.4% | +18.6% | -3.2% | -3.0% | -4.7% | -5.7% | +3.3% |
+| 10,000 | 50,000 | -1.2% | +3.7% | -0.2% | -0.1% | -1.4% | -3.2% | +0.2% |
+| 100,000 | 100,000 | +1.3% | -77.8% | -0.2% | -0.2% | -1.3% | -2.7% | +0.2% |
+| 200,000 | 100,000 | +0.7% | -17.3% | -0.5% | -0.4% | -1.2% | -2.4% | +0.5% |
+| &#8734; | 100,000 | +0.4% | +503.1% | +0.4% | +0.4% | +0.1% | -1.3% | -0.4% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 2,000 | -0.2% | +0.4% | -2.0% | -2.2% | -2.5% | +2.1% | +2.1% |
+| 10,000 | 50,000 | -0.0% | +578.6% | -0.6% | -0.8% | -0.1% | -0.2% | +0.6% |
+| 100,000 | 100,000 | -0.4% | +6.3% | -0.5% | -0.4% | -1.3% | -2.9% | +0.5% |
+| 200,000 | 100,000 | -0.9% | -15.7% | -0.6% | -0.6% | -1.1% | -2.3% | +0.6% |
+| &#8734; | 100,000 | -1.5% | +11.4% | -0.9% | -0.8% | -1.1% | -2.2% | +0.9% |
+
+---
+
+#### Scenario 7 - Sweep 10 Sparse Orders at Different Levels
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 2,000 | -1.8% | -58.9% | -3.6% | -3.4% | -4.6% | -1.2% | +3.7% |
+| 10,000 | 50,000 | -3.0% | +1.4% | -2.4% | -2.1% | -4.1% | -6.7% | +2.5% |
+| 100,000 | 100,000 | -0.4% | -78.8% | -1.8% | -1.6% | -2.2% | -5.3% | +1.8% |
+| 200,000 | 100,000 | -2.5% | -3.4% | -3.0% | -2.8% | -3.6% | -6.1% | +3.0% |
+| &#8734; | 100,000 | -1.6% | -1.0% | -2.1% | -2.2% | -2.5% | -3.4% | +2.1% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 2,000 | -2.7% | +2.0% | -3.5% | -3.6% | -4.1% | +0.8% | +3.6% |
+| 10,000 | 50,000 | -2.4% | -60.3% | -3.6% | -3.3% | -5.8% | -12.8% | +3.7% |
+| 100,000 | 100,000 | -1.1% | +516.3% | -2.0% | -1.8% | -2.4% | -6.3% | +2.0% |
+| 200,000 | 100,000 | -0.9% | +9.3% | -2.4% | -2.2% | -2.9% | -6.9% | +2.5% |
+| &#8734; | 100,000 | -2.9% | +0.5% | -2.8% | -2.7% | -3.3% | -6.2% | +2.9% |
+
+---
+
+#### Scenario 8 - Mass Cancel Orders across 100 Markets
+
+##### Empty Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 500 | +0.9% | +80.1% | +2.7% | +2.6% | +1.8% | +2.0% | -2.6% |
+| 10,000 | 10,000 | +1.3% | +150.8% | +2.4% | +2.2% | +2.1% | +2.7% | -2.4% |
+| &#8734; | 20,000 | +2.9% | -33.2% | +2.7% | +2.6% | +2.6% | +3.0% | -2.6% |
+
+##### Filled Book
+
+| Feed Rate (msg/s) | Count | Min | Max | Mean | P50 | P95 | P99 | Avg Rate |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1,000 | 500 | +14.8% | +25.7% | +18.2% | +18.1% | +22.3% | +21.5% | -15.4% |
+| 10,000 | 10,000 | +9.3% | +11.9% | +12.8% | +11.6% | +15.6% | +19.1% | -11.4% |
+| &#8734; | 20,000 | +7.7% | +22.7% | +9.5% | +12.4% | +16.4% | +14.5% | -8.7% |
+
+---
+
+## 8. Limitations of This Study
+
+This paper reports early-stage findings. The following limitations apply:
 
 - **Small sample.** Three engineers from one organisation. Their experience may not generalise.
-- **Early stage.** Approximately two to three weeks of integration work. The porting covers a subset of the platform. No production traffic has been routed through the coroutine-native code.
-- **No benchmarks.** The central research question - whether coroutine-native I/O can match or exceed Asio's performance - remains unanswered. The benchmarking phase has not begun.
-- **Qualitative, not quantitative.** All findings are based on interview responses. No automated measurements, code metrics, or defect counts are reported.
+- **Early stage.** The porting covers a subset of the platform. No production traffic has been routed through the coroutine-native code.
+- **Limited benchmarks.** Initial benchmarks have been completed for the Matching Facility component only. Order entry gateways, market data distributors, and end-to-end system benchmarks remain pending. The Matching Facility benchmarks use representative (canned, deterministic) scenarios, not production traffic profiles.
+- **No tuning.** The Corosio build has had no performance tuning or configuration applied. The Asio build represents a mature, tuned deployment.
+- **Qualitative methodology.** The interview findings in Sections 4-6 are based on subjective assessments. No automated measurements, code metrics, or defect counts are reported for those sections.
 - **Author affiliation.** The libraries under test were developed by the author's organisation. The integration partner is independent, but the study design and reporting are not.
 - **Author presence.** The Capy/Corosio author was present during all interviews for technical clarification. While the author did not participate in assessment discussions, the author's presence may have influenced responses. No interviews were conducted without the author present.
 - **Incomplete feature coverage.** UDP and WebSocket support are not yet available. The evaluation covers TCP socket operations only.
 
-A follow-up paper with benchmark results and broader feature coverage is planned when the integration reaches that stage.
-
-The qualitative question - whether a coroutine-native library is feasible for this domain - has an early answer. The quantitative question remains open.
+A follow-up paper with broader benchmark coverage, tuning results, and the partner's own experience report is planned when the integration reaches that stage.
 
 ---
 
 ## Acknowledgements
 
-The author thanks the engineering team at the integration partner for their time, candour, and willingness to share their experience. Their structured feedback on documentation, API design, and migration strategy has informed improvements to both Capy and Corosio.
+The author thanks the engineering team at the integration partner for their time, candour, and willingness to share their experience. Their structured feedback on documentation, API design, and migration strategy has informed improvements to both Capy and Corosio. The benchmark data and viability assessment reported in Section 7 were produced by the partner's engineering and delivery teams.
 
 Thanks to Vinnie Falco for developing Capy and Corosio and for supporting this evaluation. Thanks to Steve Gerbino for technical contributions to both libraries.
 
@@ -224,3 +546,5 @@ Thanks to Vinnie Falco for developing Capy and Corosio and for supporting this e
 [2] [Corosio](https://github.com/cppalliance/corosio) - Coroutine-native networking library.
 
 [3] [P4003R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r0.pdf) - "Coroutines for I/O" (Vinnie Falco, Steve Gerbino, Mungo Gill, 2026).
+
+[4] [P4100R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4100r0.pdf) - "The Network Endeavor" (Mungo Gill, 2026).
