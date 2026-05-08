@@ -60,7 +60,7 @@ Capy is a C++ library providing async/coroutine building blocks and executor mod
 
 ### 2.3 Scope and Limitations of the Integration
 
-The port focuses on a subset of repositories needed to re-run the partner's matching facility benchmark tests with Corosio replacing Asio. The scope covers core executor, IO context, and TCP socket functionality. UDP and WebSocket support - required for market data feeds and external client connectivity respectively - are not yet available in Corosio and are excluded from this evaluation.
+The port focuses on a subset of repositories needed to re-run the partner's matching facility benchmark tests with Corosio replacing Asio. The scope covers core executor, IO context, and TCP socket functionality. WebSocket support - required for external client connectivity - is not yet available in Corosio and is excluded from this evaluation.
 
 The project is structured in phases: foundational library porting first, then TCP client/server components, then benchmark execution. The central research question is whether a coroutine-native I/O library can match or exceed Asio's performance in a mission-critical production system. The benchmarking phase for the matching facility component has completed and results are reported in Section 7. Broader system components (order entry gateways, market data distributors) have not yet been benchmarked.
 
@@ -84,7 +84,7 @@ All interviews were conducted remotely over video call; the Capy/Corosio author 
 
 ### 3.2 Scenario Benchmarks
 
-Following the qualitative interview phase, the integration partner completed a porting effort sufficient to run their matching facility benchmark suite against both backends. The benchmarks use representative (not realistic) scenarios - deterministic, canned message sequences designed to exercise specific code paths under controlled conditions. Each scenario was run at multiple message injection rates and with both an empty and a pre-filled order book.
+Following the qualitative interview phase, the integration partner completed a porting effort sufficient to run their matching facility benchmark suite against both backends. The benchmarks use representative (not realistic) scenarios - deterministic, canned message sequences designed to exercise specific code paths under consistent conditions. Each scenario was run at multiple message injection rates and with both an empty and a pre-filled order book.
 
 The same hardware and deployment configuration was used for both backends. Results are reported as percentage deltas (Corosio relative to Asio) rather than absolute values, both because the delta directly answers the viability question and because absolute values are proprietary. The integration partner computed and provided the delta figures.
 
@@ -206,13 +206,13 @@ This section extends the qualitative findings reported above with early quantita
 
 ### 7.1 Rationale and Drivers
 
-The integration partner reports that the porting exercise is not a theoretical evaluation but a pathway to addressing long-standing architectural constraints in their codebase.
+The integration partner reports that the porting exercise is not a theoretical evaluation but a pathway to addressing specific refactorability constraints in their codebase.
 
 The platform is architected as an ultra-low latency message passing stack. It uses Asio as the core networking library - a choice the partner describes as the "gold standard" for such systems. The callback approach is the primary implementation mechanism, largely because it was the main approach available when the code was initially written (pre-C++20 coroutines). In some cases the codebase uses Asio coroutines where performance and readability benefits justified that decision.
 
 The partner has a layered architecture implementing networking, transport, session management, and application pipeline protocol layers. One challenge they have faced over the years is separating these implementations to allow re-use across transport layers (TCP, WebSocket, UDP) without the difficulties imposed by weaving that into a layer-traversing callback architecture. In the partner's assessment, this has resulted in increasingly hard-to-reason-about abstractions and difficulty testing those abstractions.
 
-The partner's goals for the port are twofold: (a) establish that performance and capability criteria are met, and (b) assess whether the layering benefits of a coroutine-first approach can unlock their ability to normalise layered code across the codebase. The partner reports that their inability to achieve this refactoring within the callback architecture - without taking on significant time commitment and producing something "similar but different" with no real benefit - has postponed such work continually, resulting in hard-to-remove technical debt.
+The partner's goals for the port are twofold: (a) establish that performance and capability criteria are met, and (b) assess whether the layering benefits of a coroutine-first approach can unlock their ability to improve the ability to encapsulate and decouple the layered code across the codebase. The partner reports that their inability to achieve this refactoring within the callback architecture - without taking on significant time commitment and producing something "similar but different" with no real benefit - has postponed such work continually, resulting in hard-to-remove technical debt.
 
 ### 7.2 Why Not Sender/Receivers?
 
@@ -248,9 +248,16 @@ Across all eight tested scenarios, the Corosio port of the Application Pipeline 
 
 - On balance, the Corosio port is very marginally faster in many scenarios at the median and higher percentiles, but not to any level of significance or confidence given the test setup.
 - Asio appears to provide marginally lower jitter overall (smaller variance in tail latencies), but this too is marginal and the partner notes that no tuning or configuration has been applied to the Corosio build.
-- The one exception is Scenario 8 (mass cancellation across 100 filled markets), where Corosio shows measurably higher latency under sustained load. The partner considers this a tuning target rather than a fundamental limitation.
+- Across most scenarios, deltas shrink as feed rate increases from 1,000 to unbounded. At the highest rates the backends are nearly indistinguishable. This implies the I/O layer cost becomes a smaller fraction of total processing time under heavy load - the matching logic dominates as expected.
 
-The partner has decided that the initial quantitative evidence backs up the initial qualitative evidence. They plan to continue their migration effort and explore the refactoring benefits described in Section 7.1. Further analysis - including jitter characterisation, tuning, and testing of additional components (order entry gateways, market data distributors) - will be the subject of a future paper.
+The per-scenario data also reveals some directional patterns worth noting:
+
+- **Scenario 3 (Order Amends)** showed a mean latency penalty of +2.5% to +4.9% across all rates (empty book), making it the only scenario with a sustained directional cost outside of Scenario 8.
+- **Scenario 4 (Trade)** showed a P99 advantage for Corosio at sustained rates. At 10k-200k msg/s, P99 latency is 21-27% lower for Corosio (empty book) and 8-24% lower (filled book). The partner noted that although trade-to-quote ratios are usually low, a strong tail-latency profile during sustained trade activity is desirable. The effect reverses at unbounded (saturation) rate, which suggests a difference in how the two backends handle queuing under sustained but sub-saturation load.
+- **Sweep scenarios (5, 6, and 7)** showed Corosio's advantage scaling with book traversal complexity. Scenario 5 (same level) had a modest advantage, Scenario 6 (close levels) a smaller one, and Scenario 7 (sparse levels) the strongest and most consistent (mean -2.1% to -3.6%, P99 -3.4% to -6.7%). These results may indicate that coroutine frame locality or reduced callback overhead compounds over complex traversals, but they remain indicative rather than conclusive.
+- **Scenario 8 (Mass Cancellation)** showed measurably higher latency for Corosio (-8.7% to -15.4%) under sustained load. The partner considers this a tuning target rather than a fundamental limitation.
+
+The partner has decided that the initial quantitative evidence supports the initial qualitative evidence. They plan to continue their migration effort and explore the refactoring benefits described in Section 7.1. Further analysis - including jitter characterisation, tuning, and testing of additional components (order entry gateways, market data distributors) - will be the subject of a future paper.
 
 The comparative data for all scenarios is presented in Section 7.6.
 
@@ -268,7 +275,11 @@ An order is entered using `enter_order` and immediately cancelled (by sequencing
 
 #### Scenario 2 - Enter IOC, No Execution
 
-An Immediate-or-Cancel order is entered. In the empty book case, the order is rejected as invalid (no counterparty). In the filled book case, the Matching Facility must inspect the book to determine whether execution is possible. The empty book case should be significantly faster because no book inspection occurs.
+An Immediate-or-Cancel order is entered. In the empty book case, the order is rejected as invalid (no counterparty).
+
+![Scenario 2 message flow (empty book)](d4125_images/flow-scenario-2-empty.png)
+
+In the filled book case, the Matching Facility must inspect the book to determine whether execution is possible. The empty book case should be significantly faster because no book inspection occurs.
 
 ![Scenario 2 message flow (filled book)](d4125_images/flow-scenario-2.png)
 
@@ -308,7 +319,7 @@ One hundred tradeable markets are loaded with quotes (buy and sell orders) from 
 
 ### 7.6 Comparative Data
 
-The tables below show the percentage difference in latency and throughput between Corosio and Asio for each scenario. All values compare the `corosio_io_context` backend against the `asio_io_context` backend under identical conditions.
+The tables below show the percentage difference in latency and throughput between Corosio and Asio for each scenario. All values compare the `corosio_io_context` backend against the `asio_io_context` backend on identical hardware and consistent conditions.
 
 **Reading the tables:**
 
@@ -528,7 +539,7 @@ This paper reports early-stage findings. The following limitations apply:
 - **Qualitative methodology.** The interview findings in Sections 4-6 are based on subjective assessments. No automated measurements, code metrics, or defect counts are reported for those sections.
 - **Author affiliation.** The libraries under test were developed by the author's organisation. The integration partner is independent, but the study design and reporting are not.
 - **Author presence.** The Capy/Corosio author was present during all interviews for technical clarification. While the author did not participate in assessment discussions, the author's presence may have influenced responses. No interviews were conducted without the author present.
-- **Incomplete feature coverage.** UDP and WebSocket support are not yet available. The evaluation covers TCP socket operations only.
+- **Incomplete feature coverage.** WebSocket support is not yet available. The evaluation covers TCP socket operations only.
 
 A follow-up paper with broader benchmark coverage, tuning results, and the partner's own experience report is planned when the integration reaches that stage.
 
