@@ -259,13 +259,13 @@ The committee's published record contains hundreds of polls across three decades
 
 ## Acknowledgements
 
-The R1 revision is substantially shaped by the critique of Joaqu&iacute;n M L&oacute;pez Mu&ntilde;oz and Peter Dimov.
+This paper is substantially shaped by the critique of Joaqu&iacute;n M L&oacute;pez Mu&ntilde;oz and Peter Dimov.
 
 L&oacute;pez Mu&ntilde;oz identified that Arrow's Impossibility Theorem does not apply to WG21's single-question approval scale, proposed the Condorcet Jury Theorem as a potentially applicable framework for analyzing poll convergence, and proposed the dataset methodology described in Section 7.
 
 Dimov demonstrated that the Condorcet Jury Theorem is inapplicable because committee members do not form opinions independently - the preceding presentation and Q&A session are designed to influence votes. He established that bimodal vote distributions are the expected result for contentious topics, not evidence of voter correlation. He clarified the distinction between Neutral votes (informed indecision) and abstention (choosing not to express an opinion). He confirmed that chair control of poll wording is a significant structural factor in outcomes.
 
-R0 attempted a theoretical approach: apply social choice theory as a predictive framework, derive predictions, and test them against the data. That approach was tested by peer review and found wanting. R1 presents the published record without interpretive claims. The paper is stronger for the critique.
+An earlier draft attempted a theoretical approach: apply social choice theory as a predictive framework, derive predictions, and test them against the data. That approach was tested by peer review and found wanting. This paper presents the published record without interpretive claims. It is stronger for the critique.
 
 ---
 
