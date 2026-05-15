@@ -106,7 +106,7 @@ concept DynamicBuffer =
 
 `const_buffers_type` is what `data()` returns. `mutable_buffers_type` is what `prepare(n)` returns. They are member typedefs because the concrete sequence type depends on the buffer.
 
-A flat buffer returns a single `const_buffer`. A circular buffer returns a `const_buffer_pair` because the readable region may wrap around the storage. A linked-list buffer returns a range of regions. The associated types let the concept express this without naming a single sequence shape.
+A flat buffer returns a single `const_buffer`. A circular buffer returns a `std::array<const_buffer, 2>` because the readable region may wrap around the storage. A linked-list buffer returns a range of regions. The associated types let the concept express this without naming a single sequence shape.
 
 ```cpp
 class flat_dynamic_buffer
@@ -120,8 +120,8 @@ public:
 class circular_dynamic_buffer
 {
 public:
-    using const_buffers_type   = const_buffer_pair;
-    using mutable_buffers_type = mutable_buffer_pair;
+    using const_buffers_type   = std::array<const_buffer, 2>;
+    using mutable_buffers_type = std::array<mutable_buffer, 2>;
     // ...
 };
 ```
@@ -139,7 +139,7 @@ The cost of the typedef pattern is one extra name per implementation. The benefi
 | Implementation              | Storage                                   | `const_buffers_type` | When to use                                |
 | --------------------------- | ----------------------------------------- | -------------------- | ------------------------------------------ |
 | `flat_dynamic_buffer`       | Caller-owned linear array                 | `const_buffer`       | Bounded, single contiguous region          |
-| `circular_dynamic_buffer`   | Caller-owned ring buffer                  | `const_buffer_pair`  | Bounded, FIFO, no-copy reuse on consume    |
+| `circular_dynamic_buffer`   | Caller-owned ring buffer                  | `std::array<const_buffer, 2>` | Bounded, FIFO, no-copy reuse on consume |
 | `vector_dynamic_buffer`     | Adapter over `std::vector<unsigned char>` | `const_buffer`       | Unbounded, allocator-aware via `std::vector` |
 | `string_dynamic_buffer`     | Adapter over `std::basic_string`          | `const_buffer`       | Output buffer where consumer wants `string` |
 
@@ -153,7 +153,7 @@ The caller-owned-storage choice is deliberate: the dynamic buffer is the bookkee
 
 ### 5.2 The Circular Case
 
-`circular_dynamic_buffer` is a ring. The readable region may wrap from the end of the storage to the beginning. `data()` returns a `const_buffer_pair` - two `const_buffer` slices that, concatenated, form the readable bytes. `prepare(n)` similarly returns a `mutable_buffer_pair` that may straddle the wrap point.
+`circular_dynamic_buffer` is a ring. The readable region may wrap from the end of the storage to the beginning. `data()` returns a `std::array<const_buffer, 2>` - two `const_buffer` slices that, concatenated, form the readable bytes. `prepare(n)` similarly returns a `std::array<mutable_buffer, 2>` that may straddle the wrap point.
 
 The pair shape is the reason `mutable_buffers_type` and `const_buffers_type` are member typedefs. A flat buffer returns a single buffer; a ring returns a pair. Generic algorithms write to `typename T::mutable_buffers_type` and the right shape arrives.
 

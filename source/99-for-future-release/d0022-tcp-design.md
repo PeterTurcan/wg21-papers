@@ -496,9 +496,9 @@ namespace std::io {
     IoAwaitable auto connect(
         endpoint const& ep);
     IoAwaitable auto read_some(
-        MutableBufferSequence auto const& buffers);
+        MutableBufferSequence auto buffers);
     IoAwaitable auto write_some(
-        ConstBufferSequence auto const& buffers);
+        ConstBufferSequence auto buffers);
 
     void shutdown(shutdown_type what);
     void close();

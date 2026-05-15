@@ -94,13 +94,13 @@ public:
 class circular_dynamic_buffer
 {
 public:
-    using const_buffers_type   = const_buffer_pair;
-    using mutable_buffers_type = mutable_buffer_pair;
+    using const_buffers_type   = std::array<const_buffer, 2>;
+    using mutable_buffers_type = std::array<mutable_buffer, 2>;
     // ...
 };
 ```
 
-A flat buffer returns a single `const_buffer`. A circular buffer returns a `const_buffer_pair` because the readable region may wrap. Generic algorithms write `typename T::const_buffers_type` and the right shape arrives.
+A flat buffer returns a single `const_buffer`. A circular buffer returns a `std::array<const_buffer, 2>` because the readable region may wrap. Generic algorithms write `typename T::const_buffers_type` and the right shape arrives.
 
 ---
 

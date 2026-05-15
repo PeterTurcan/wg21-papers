@@ -167,13 +167,11 @@ This is the structural departure noted in the disclosure. The convenience is tha
 
 The alternative - require the caller to wrap a single buffer in `std::array<const_buffer, 1>` before passing it - was not selected. The wrapping is friction at every call site. The disjunction in the concept is friction at one point in the type system. Twenty years of Asio practice<sup>[3]</sup> indicates that the friction at the concept is invisible in user code. The friction at the call site would not be.
 
-### 4.4 Ready-Made Sequences (Informative)
+### 4.4 An Implementation-Detail Sequence (Informative)
 
-The vocabulary in this paper is two types and two concepts. In practice, two sequence types recur enough that Capy ships ready-made wrappers. They are informative, not proposed.
+The vocabulary in this paper is two types and two concepts. One internal sequence type used by Capy is described here for completeness; it is not proposed.
 
-`buffer_pair` is a typedef for `std::array<const_buffer, 2>` (and the mutable form). The most common scatter-gather case - one header buffer, one body buffer - has a name.
-
-`buffer_array<N, IsConst>` is a fixed-capacity stack-allocated buffer sequence. It satisfies `ConstBufferSequence` (or `MutableBufferSequence`), it caches its byte total for `O(1)` `buffer_size`, and it is the small-buffer optimization Capy uses to materialize an arbitrary sequence into the contiguous `iovec`-shaped span the platform syscall requires - no heap allocation per scatter/gather call. The shape is in `boost/capy/buffers/buffer_array.hpp`<sup>[1]</sup>. Standardizing it is not part of this paper.
+Capy uses an internal `detail::buffer_array<N, IsConst>` for SBO scatter/gather. It satisfies `ConstBufferSequence` (or `MutableBufferSequence`) and materializes an arbitrary sequence into the contiguous `iovec`-shaped span the platform syscall requires, with no heap allocation per scatter/gather call. The shape is in `boost/capy/detail/buffer_array.hpp`<sup>[1]</sup>. Standardizing it is not part of this paper.
 
 **One concept. Single buffer or bidirectional range. Both are sequences.**
 
@@ -181,7 +179,7 @@ The vocabulary in this paper is two types and two concepts. In practice, two seq
 
 ## 5. Algorithms
 
-Four algorithms operate on `ConstBufferSequence` or `MutableBufferSequence`. They are spelled as customization point objects so that user-defined sequence types may specialize them.
+Four free function templates operate on `ConstBufferSequence` or `MutableBufferSequence`.
 
 ### 5.1 `buffer_size`
 
@@ -192,7 +190,7 @@ template<ConstBufferSequence CB>
 constexpr std::size_t buffer_size(CB const& bs) noexcept;
 ```
 
-The default is `O(n)` in the number of elements. A sequence type that already knows its byte total may report `O(1)` through the customization point. The CPO shape is the reason this is a free algorithm and not a member.
+The complexity is `O(n)` in the number of elements. A sequence type that already knows its byte total may cache it externally; the algorithm itself has no customization hook. The free-function shape is the reason this is not a member: the same algorithm runs over every sequence type that satisfies the concept.
 
 `buffer_size` counts bytes. `std::ranges::size`<sup>[9]</sup> counts elements. Both are useful. They answer different questions.
 
@@ -258,13 +256,13 @@ The shape is in `boost/capy/buffers/buffer_param.hpp`<sup>[1]</sup>. It is menti
 
 ### 5.5 Why Not Member Algorithms
 
-`buffer_size`, `buffer_empty`, `buffer_length`, and `buffer_copy` are CPOs. They are not members of `mutable_buffer`, of `const_buffer`, or of any sequence type. They operate over the concept.
+`buffer_size`, `buffer_empty`, `buffer_length`, and `buffer_copy` are free function templates. They are not members of `mutable_buffer`, of `const_buffer`, or of any sequence type. They operate over the concept.
 
 The reason is that the same algorithm runs over `std::array<const_buffer, 2>`, `std::vector<const_buffer>`, a single `const_buffer`, and any user-defined sequence that satisfies the concept. The algorithm is a property of the concept, not of any one type.
 
-A type that knows a faster answer specializes the CPO. The default does the obvious thing. The user calls one name and gets either the obvious implementation or the specialized one, and the choice is invisible.
+The algorithms have no customization hook. Experience with the Capy implementation showed that a customization path for `O(1)` `buffer_size` was never used in practice. The `O(n)` default is acceptable for I/O-bound code; a user type that needs `O(1)` size can cache it externally.
 
-**Four CPOs. Two questions: how many bytes, and where do they go.**
+**Four algorithms. Two questions: how many bytes, and where do they go.**
 
 ---
 
@@ -290,10 +288,10 @@ A user who wants a range writes `std::array{cb}` or passes a `std::span<const_bu
 
 - No new range adaptors. `std::ranges::views`<sup>[9]</sup> is unchanged.
 - No new view types. There is no `std::io::byte_drop_view`.
-- No byte-granular slicing CPO at the sequence level. Byte slicing happens inside the dynamic buffer's `consume` operation, defined in the companion paper.
+- No byte-granular slicing algorithm at the sequence level. Byte slicing happens inside the dynamic buffer's `consume` operation, defined in the companion paper.
 - No relationship between `mutable_buffer`/`const_buffer` and `std::span<std::byte>` beyond the conversions a user writes themselves.
 
-The extension beyond `std::ranges` is two: a sequence concept that includes a single buffer as a one-element sequence, and a `buffer_size` CPO that sums bytes rather than counting elements. Two extensions. Both narrow.
+The extension beyond `std::ranges` is two: a sequence concept that includes a single buffer as a one-element sequence, and a `buffer_size` function that sums bytes rather than counting elements. Two extensions. Both narrow.
 
 **Ranges count elements. Buffers count bytes. Both are right; neither is the other.**
 
@@ -330,7 +328,7 @@ The bottom row is empty. The empty cells are the finding.
 
 ### 8.2 "But Ranges Already Do This"
 
-`std::ranges`<sup>[9]</sup> operates on elements. Buffer sequences need to be iterated as elements (for scatter/gather syscalls) and consumed as bytes (for parsers, decompressors, and protocol framers). The element-granular operations come from `std::ranges` directly. The byte-granular operations - `buffer_size`, `buffer_copy`, and the dynamic buffer's `consume` - have no equivalent. Ranges does most of the work. The CPOs in this paper add what is missing.
+`std::ranges`<sup>[9]</sup> operates on elements. Buffer sequences need to be iterated as elements (for scatter/gather syscalls) and consumed as bytes (for parsers, decompressors, and protocol framers). The element-granular operations come from `std::ranges` directly. The byte-granular operations - `buffer_size`, `buffer_copy`, and the dynamic buffer's `consume` - have no equivalent. Ranges does most of the work. The algorithms in this paper add what is missing.
 
 ### 8.3 "But the Networking TS Already Standardised These"
 
@@ -443,11 +441,21 @@ namespace std::io {
           std::is_convertible_v<
               std::ranges::range_value_t<T>, mutable_buffer>);
 
-  // 5 Algorithms (customization point objects)
-  inline constexpr /* unspecified */ buffer_size;     // sum of bytes
-  inline constexpr /* unspecified */ buffer_empty;    // bool
-  inline constexpr /* unspecified */ buffer_length;   // element count
-  inline constexpr /* unspecified */ buffer_copy;     // bytes copied
+  // Section 5: Algorithms
+  template<ConstBufferSequence CB>
+  constexpr std::size_t buffer_size(CB const& bs) noexcept;
+
+  template<ConstBufferSequence CB>
+  constexpr bool buffer_empty(CB const& bs) noexcept;
+
+  template<ConstBufferSequence CB>
+  std::size_t buffer_length(CB const& bs);
+
+  template<MutableBufferSequence MB, ConstBufferSequence CB>
+  std::size_t buffer_copy(
+      MB const& dest,
+      CB const& src,
+      std::size_t at_most = std::size_t(-1)) noexcept;
 
 }
 ```
@@ -458,13 +466,12 @@ namespace std::io {
 
 The vocabulary in this paper ships in the following headers in [Capy](https://github.com/cppalliance/capy)<sup>[1]</sup>. The list is a pointer to the implementation for the reader who wants to inspect it. Headers covering dynamic buffers are listed in the companion *Dynamic Buffer: Design Rationale*<sup>[22]</sup> Appendix B.
 
-| Header                                            | Provides                                                                                  |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `boost/capy/buffers.hpp`                          | `const_buffer`, `mutable_buffer`, `ConstBufferSequence`, `MutableBufferSequence`, `buffer_size`, `buffer_empty`, `buffer_length` |
-| `boost/capy/buffers/buffer_copy.hpp`              | `buffer_copy`                                                                             |
-| `boost/capy/buffers/buffer_pair.hpp`              | `const_buffer_pair`, `mutable_buffer_pair`                                                |
-| `boost/capy/buffers/buffer_array.hpp`             | `buffer_array<N, IsConst>` (informative)                                                  |
-| `boost/capy/buffers/buffer_param.hpp`             | `buffer_param<BS>` (informative; deferred to Paper 6)                                     |
+| Header | Provides |
+| --- | --- |
+| `boost/capy/buffers.hpp` | `const_buffer`, `mutable_buffer`, `ConstBufferSequence`, `MutableBufferSequence`, `buffer_size`, `buffer_empty`, `buffer_length` |
+| `boost/capy/buffers/buffer_copy.hpp` | `buffer_copy` |
+| `boost/capy/detail/buffer_array.hpp` | `detail::buffer_array<N, IsConst>` (informative; not proposed) |
+| `boost/capy/buffers/buffer_param.hpp` | `buffer_param<BS>` (informative; deferred to Paper 6) |
 
 ---
 

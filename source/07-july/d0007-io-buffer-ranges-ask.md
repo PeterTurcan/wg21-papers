@@ -10,7 +10,7 @@ reply-to:
 
 ## Abstract
 
-This paper asks the committee to advance a buffer descriptor vocabulary - two byte-region types, two range concepts, and four customization point objects - as standard library vocabulary for I/O.
+This paper asks the committee to advance a buffer descriptor vocabulary - two byte-region types, two range concepts, and four algorithms - as standard library vocabulary for I/O.
 
 The vocabulary is `const_buffer`, `mutable_buffer`, `ConstBufferSequence`, `MutableBufferSequence`, `buffer_size`, `buffer_empty`, `buffer_length`, and `buffer_copy`. It is the [Networking TS](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4771.pdf)<sup>[2]</sup> shape, deployed for over twenty years in [Boost.Asio](https://www.boost.org/doc/libs/release/doc/html/boost_asio.html)<sup>[3]</sup>, shipping today in [Capy](https://github.com/cppalliance/capy)<sup>[1]</sup>, consumed by every Boost library above Capy.
 
@@ -51,15 +51,25 @@ namespace std::io {
   template<class T> concept ConstBufferSequence    = /* see Section 4 */;
   template<class T> concept MutableBufferSequence  = /* see Section 4 */;
 
-  inline constexpr /* unspecified */ buffer_size;     // bytes
-  inline constexpr /* unspecified */ buffer_empty;
-  inline constexpr /* unspecified */ buffer_length;   // element count
-  inline constexpr /* unspecified */ buffer_copy;     // min(dst, src, at_most)
+  template<ConstBufferSequence CB>
+  constexpr std::size_t buffer_size(CB const& bs) noexcept;
+
+  template<ConstBufferSequence CB>
+  constexpr bool buffer_empty(CB const& bs) noexcept;
+
+  template<ConstBufferSequence CB>
+  std::size_t buffer_length(CB const& bs);
+
+  template<MutableBufferSequence MB, ConstBufferSequence CB>
+  std::size_t buffer_copy(
+      MB const& dest,
+      CB const& src,
+      std::size_t at_most = std::size_t(-1)) noexcept;
 
 }
 ```
 
-Two types. Two concepts. Four customization point objects.
+Two types. Two concepts. Four algorithms.
 
 ---
 
@@ -136,19 +146,18 @@ The disjunction admits both single buffers and ranges of buffers under one signa
 
 ## 5. The Algorithms
 
-Four customization point objects. User-defined sequence types may specialize each.
+Four free function templates over `ConstBufferSequence` or `MutableBufferSequence`.
 
 ### 5.1 `buffer_size`
 
 Sums bytes across a buffer sequence.
 
 ```cpp
-inline constexpr /* unspecified */ buffer_size;
+template<ConstBufferSequence CB>
+constexpr std::size_t buffer_size(CB const& bs) noexcept;
 
 // Effects: returns the sum of size() over each buffer in the sequence.
-// Complexity: O(n) in the number of elements by default. A sequence
-// type that knows its byte total may report O(1) through the
-// customization point.
+// Complexity: O(n) in the number of elements.
 ```
 
 ### 5.2 `buffer_empty`
@@ -156,11 +165,12 @@ inline constexpr /* unspecified */ buffer_size;
 Tests whether every buffer in the sequence has zero size.
 
 ```cpp
-inline constexpr /* unspecified */ buffer_empty;
+template<ConstBufferSequence CB>
+constexpr bool buffer_empty(CB const& bs) noexcept;
 
 // Effects: returns true if no buffer in the sequence has nonzero size.
-// Complexity: O(n) in the number of elements by default; may short-circuit
-// on the first nonzero buffer.
+// Complexity: O(n) in the number of elements; may short-circuit on the
+// first nonzero buffer.
 ```
 
 ### 5.3 `buffer_length`
@@ -168,7 +178,8 @@ inline constexpr /* unspecified */ buffer_empty;
 Counts buffer elements (not bytes).
 
 ```cpp
-inline constexpr /* unspecified */ buffer_length;
+template<ConstBufferSequence CB>
+std::size_t buffer_length(CB const& bs);
 
 // Effects: returns the iterator distance from begin to end of the
 // sequence. For a single buffer, returns 1.
@@ -179,7 +190,11 @@ inline constexpr /* unspecified */ buffer_length;
 Copies bytes from a `ConstBufferSequence` into a `MutableBufferSequence`, stopping at the smaller total or at the optional `at_most` limit.
 
 ```cpp
-inline constexpr /* unspecified */ buffer_copy;
+template<MutableBufferSequence MB, ConstBufferSequence CB>
+std::size_t buffer_copy(
+    MB const& dest,
+    CB const& src,
+    std::size_t at_most = std::size_t(-1)) noexcept;
 
 // Effects: copies bytes from src to dest, walking both sequences with
 // cursors that track partially-consumed buffers. Byte boundaries do
