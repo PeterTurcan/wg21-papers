@@ -205,6 +205,20 @@ Ville Voutilainen writes in [P3608R0](https://wg21.link/p3608r0)<sup>[21]</sup>:
 
 The three-year cadence was designed to eliminate "now or never" pressure. The pressure changed form.
 
+### 5.5 Direction Without Mechanism
+
+[SD-4](https://isocpp.org/std/standing-documents/sd-4-wg21-practices-and-procedures)<sup>[9]</sup> defines the Direction Group in purely advisory terms:
+
+> "The direction group is a small by-invitation group of experienced participants who are asked to recommend priorities for WG21."
+
+> "The design group chairs use that list to prioritize work at meetings."
+
+"Recommend" is advisory. "Use" is descriptive, not prescriptive. No clause in SD-4 makes Direction Group recommendations binding, prescribes a consequence for ignoring them, or requires any reporting on whether priorities were followed. The Direction Group's only lever is to publish papers.
+
+The nearest ISO analogue - advisory groups under Directive 1.13.2<sup>[7]</sup> - requires committee approval of the convenor, the type of membership, and the terms of reference, all prior to establishment. Advisory groups must be disbanded when their tasks are complete (1.13.6) and produce recommendations only (1.13.3). The Direction Group has no terms of reference, no committee-approved membership, no sunset clause, and no reporting obligation. Its priority-setting function maps to a power the Directives reserve to the Technical Management Board (1.1f).
+
+The Direction Group nominally sets direction. Section 5.1 records its own assessment of the result: "We have no shared aims, no shared taste."
+
 ---
 
 ## 6. Opportunities for Visible Fairness
