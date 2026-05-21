@@ -49,9 +49,21 @@ This paper asks for nothing.
 
 ---
 
-## 2. The Poll
+## 2. The Polls
 
-[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>, "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022), documents the following poll:
+[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup>, "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022), documents five polls taken October 4-8, 2021 by electronic ballot. Fifty-six committee members participated. This section presents all five polls, the chair's per-poll interpretations, and the guidance to the Networking Study Group that followed.
+
+### 2.1 Poll 1
+
+> "The Networking TS/Asio async model (P2444) is a good basis for most asynchronous use cases, including networking, parallelism, and GPUs."
+>
+> SF:5 / WF:10 / N:6 / WA:14 / SA:18 - Weak consensus against.
+
+The chair's published interpretation:
+
+> "If the authors continue to pursue a design similar to the current NetTS, they would have an easier time getting consensus by focusing on the networking side of things, rather than proposing the design for general asynchrony."
+
+### 2.2 Poll 2
 
 > "The sender/receiver model (P2300) is a good basis for most asynchronous use cases, including networking, parallelism, and GPUs."
 >
@@ -63,11 +75,11 @@ The chair's published interpretation:
 >
 > "What this means: Work will continue in Library Evolution on refining P2300R2, and Library Evolution will keep the various asynchronous use cases in mind while working on P2300R2."
 
-### 2.1 Context
+### 2.3 Context
 
 In WG21, the people who write proposals are often the same people who present them, champion them, and participate in the polls that advance them. This is normal and expected - domain experts are the people best positioned to do the work. The following co-authorships are documented for completeness. Bryce Adelstein Lelbach served as LEWG Chair and is a co-author of [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup>. Eric Niebler authored the [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> presentation slides ([P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup>) and is a co-author of [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[4]</sup> and [P1525R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1525r0.pdf)<sup>[7]</sup>. Both contributed substantially to the design that the poll evaluated. The poll was open to all LEWG members and the results reflect the committee's collective judgment.
 
-### 2.2 Selected Voter Comments
+### 2.4 Selected Voter Comments
 
 [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> Section 4.2 publishes selected comments from voters on Poll 2. The following comments address the networking component of the poll. All quotes are verbatim from the published paper.
 
@@ -91,9 +103,25 @@ Voters who stated they could not evaluate the networking claim:
 
 These votes counted toward the "consensus in favor" that included networking.
 
-### 2.3 Poll 4
+### 2.5 Poll 3
 
-[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> documents a second poll that directly addresses networking:
+> "Stop pursuing the Networking TS/Asio design as the C++ Standard Library's answer for networking."
+>
+> SF:13 / WF:13 / N:8 / WA:6 / SA:10 - No consensus.
+
+The chair's published interpretation:
+
+> "What this doesn't mean: The NetTS is not 'dead'."
+>
+> "What this means: WG21 will still work on networking in this general form, but the authors need to do a lot in order to build up consensus to get something like the TS merged into the standard. The bulk of this work should be done in SG4."
+
+The chair noted: "Many of the people in favor of stopping work on the TS would like networking to be built on top of Senders and Receivers. Others were opposed to the lack of security through Transport Layer Security (TLS). It is highly unlikely that design changes to the Networking TS can be made fast enough, and consensus gained fast enough, for networking to make C++23."
+
+The committee voted directly on whether to stop the Networking TS. The answer was no consensus. The Networking TS was not terminated by vote.
+
+### 2.6 Poll 4
+
+[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> documents a poll that directly addresses networking:
 
 > "Networking in the C++ Standard Library should be based on the sender/receiver model (P2300)."
 >
@@ -112,6 +140,26 @@ Selected voter comments on Poll 4:
 > "at least a proof-of-principle implementation (maybe even in the form of a paper rather than code) is needed before changing the status quo"
 
 The most directly networking-specific poll produced a weaker result than Poll 2 and voter comments that explicitly called for evidence that did not yet exist.
+
+### 2.7 Poll 5
+
+> "It is acceptable to ship socket-based networking in the C++ Standard Library that does not support secure sockets (TLS/DTLS)."
+>
+> SF:9 / WF:13 / N:5 / WA:6 / SA:13 - No consensus.
+
+The chair's published interpretation:
+
+> "A networking library that does not support secure sockets will face significant headwinds getting through the standardization process."
+
+### 2.8 Guidance to the Networking Study Group
+
+[P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> Section 3 states:
+
+> "Before bringing networking papers back to Library Evolution, two major areas need to be thoroughly addressed: Security, and the Senders and Receivers async model."
+
+The guidance further states that a non-sender/receiver paper would need "compelling new information in order to convince the 'grand unified model' contingent that S&R can't get the job done suitably." [P2400R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2400r3.html)<sup>[26]</sup>, the Library Evolution status report for the period ending January 2022, confirmed that networking was listed as "Under Networking Study Group review" with these two prerequisites attached.
+
+The committee did not vote to stop the Networking TS (Poll 3: no consensus). It gave conditional guidance: adopt sender/receiver, address TLS. The conditions required a major redesign. The architect of the Networking TS did not bring the proposal back under those conditions. The Networking TS effectively stopped advancing.
 
 ---
 
@@ -156,6 +204,8 @@ The `NN::` namespace prefix is a placeholder. The example is a hypothetical illu
 | Sender-based networking code example        | One hypothetical example in [P2300R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2300r2.html)<sup>[8]</sup> Section 1.4 using placeholder `NN::` namespace                                                                                           |
 | Published analysis of sender model for I/O  | [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021): compound I/O results cannot use `set_error` without information loss. Published before the poll.                                             |
 | Sender deployments (non-networking)         | [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf)<sup>[6]</sup>: Facebook (mobile apps), NVIDIA (GPU dispatch), Bloomberg (experimentation)                                                                                           |
+| Poll on stopping the Networking TS          | Poll 3: SF:13 / WF:13 / N:8 / WA:6 / SA:10 - No consensus. Chair: "The NetTS is not 'dead'."                                                                                                                           |
+| Poll on shipping without TLS               | Poll 5: SF:9 / WF:13 / N:5 / WA:6 / SA:13 - No consensus. Chair: "significant headwinds."                                                                                                                              |
 
 ---
 
@@ -203,11 +253,27 @@ The following papers are authored or co-authored by the author of this paper. Th
 
 The author's position on coroutine-native I/O is a consequence of the findings documented in this series, not a premise.
 
-### 4.3 The Timeline
+### 4.3 The Incompatibility Chain
+
+The committee's conditional guidance (Section 2.8) required the Networking TS to adopt the sender/receiver async model. [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (Kohlhoff, August 2021) - published two months before the October 2021 poll - showed that the sender three-channel model cannot handle compound I/O results without information loss. The committee asked the architect of the Networking TS to adopt a model he had already published evidence was structurally incompatible with networking I/O.
+
+Five years later, the incompatibility remains in the literature:
+
+| Year | Paper | Status |
+| ---- | ----- | ------ |
+| 2021 | [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> | `set_error` takes a single argument; compound I/O results lose the byte count. |
+| 2023 | [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> | First sender-based networking proposal. Error channel "somewhat limiting" for partial success. |
+| 2026 | [P4091R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4091r0.pdf)<sup>[17]</sup> | Six trade-off positions for compound-result routing. None fully resolves the problem. |
+| 2026 | [P4007R3](https://isocpp.org/files/papers/P4007R3.pdf)<sup>[15]</sup> | `AS-EXCEPT-PTR` in `std::execution::task` converts routine `error_code` to `exception_ptr`. |
+
+The incompatibility that Kohlhoff identified before the poll is now in the C++26 DIS. The "adopt sender/receiver" condition required resolving a structural problem that the committee has not resolved in five years.
+
+### 4.4 The Timeline
 
 - [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[22]</sup> (2005): first networking proposal.
 - Networking TS published as ISO TS (2018).
-- [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> (October 2021): "including networking." Consensus in favor.
+- [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup> (August 2021): compound I/O results cannot use `set_error` without information loss.
+- [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[5]</sup> (October 2021): five polls. Poll 3 (stop pursuing): no consensus. Conditional guidance: adopt S/R, address TLS.
 - [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf)<sup>[10]</sup> (2023): first sender-based networking API proposal.
 - 2026: no sender-based networking has shipped. Networking is not in the C++ standard. Twenty-one years from [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[22]</sup>.
 
@@ -231,6 +297,10 @@ A: This paper examines the word "networking." The parallelism and GPU evidence i
 
 A: Section 1 discloses this. Section 4.2 labels the author's own papers separately. The evidence in Sections 2 through 4 stands or falls on the published record, not on who assembled it.
 
+**Q: The committee did not kill the Networking TS - the authors walked away.**
+
+A: Poll 3 (stop pursuing) reached no consensus. The chair said "The NetTS is not 'dead'." But the conditional guidance required adopting a model whose three-channel error design the architect had already shown was incompatible with networking I/O ([P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf)<sup>[9]</sup>, published before the poll). Five years later, the incompatibility remains unresolved and surfaces in `std::execution::task` (Section 4.3). The nominal outcome (no consensus to stop) and the effective outcome (conditions not met, proposal not advanced) are both part of the record.
+
 **Q: The committee voted with full information.**
 
 A: Jonathan M&uuml;ller [reported](https://www.think-cell.com/en/career/devblog/trip-report-summer-iso-cpp-meeting-in-st-louis-usa)<sup>[23]</sup> from St. Louis: *"P2300 was adopted in the plenary vote and is now a part of the working draft which will become the C++26 standard, it was a very narrow vote with 1/3 voting against adoption."* One anonymous commenter during the 2021 electronic ballot [wrote](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/)<sup>[24]</sup>: *"I don't think it's fair to consider standardizing S&R until there are at least a thousand codebases that use S&R. The probability of missing an important use-case, or an important gotcha is very very high if the actual quantity of 'Junior engineer + intern' experience in the field is low."*
@@ -239,7 +309,7 @@ A: Jonathan M&uuml;ller [reported](https://www.think-cell.com/en/career/devblog/
 
 ## Acknowledgments
 
-The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the published poll outcomes in [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html); Christopher Kohlhoff for [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf), which documented the partial success problem before the poll was taken; Dietmar K&uuml;hl for [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf), the first sender-based networking API proposal; Eric Niebler for [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf) and the deployment documentation; and Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) implementation work.
+The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the published poll outcomes in [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html); Christopher Kohlhoff for [P2430R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2430r0.pdf), which documented the partial success problem before the poll was taken; Kirk Shoop for institutional context about the committee's intent behind the October 2021 polls and the two-year collaborative effort on sender/receiver integration with the Networking TS; Dietmar K&uuml;hl for [P2762R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2762r2.pdf), the first sender-based networking API proposal; Eric Niebler for [P2470R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2470r0.pdf) and the deployment documentation; and Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) implementation work.
 
 ---
 
@@ -294,3 +364,5 @@ The author thanks Bryce Adelstein Lelbach, Fabio Fracassi, and Ben Craig for the
 [24] [r/cpp: C++ committee polling results for asynchronous programming](https://old.reddit.com/r/cpp/comments/q6tgod/c_committee_polling_results_for_asynchronous/) - Oct 2021.
 
 [25] [P4125R1](https://isocpp.org/files/papers/P4125R1.pdf) - "Coroutine-Native I/O at a Derivatives Exchange" (Mungo Gill, 2026).
+
+[26] [P2400R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2400r3.html) - "Library Evolution Report: 2021-09-28 to 2022-01-25" (Bryce Adelstein Lelbach, 2022).

@@ -11,9 +11,9 @@ reply-to:
 
 ## Abstract
 
-The committee set aside the Networking TS in 2021. The process had no mechanism to verify that the analysis examined every applicable framing, and no mechanism to revisit the outcome against evidence.
+The committee gave the Networking TS conditional guidance in 2021 that required a major redesign the architect did not pursue. The process had no mechanism to verify that the analysis examined every applicable framing, and no mechanism to revisit the outcome against evidence.
 
-[P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup>, "Ruminations on networking and executors," identified three deficiencies in [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[2]</sup>'s `execute(F&&)` - no error channel, no lifecycle for submitted work, and no generic composition - and concluded the Networking TS should be set aside. The committee acted on the analysis. The Networking TS was removed from the committee's work program.
+[P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup>, "Ruminations on networking and executors," identified three deficiencies in [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[2]</sup>'s `execute(F&&)` - no error channel, no lifecycle for submitted work, and no generic composition - and concluded the Networking TS should be set aside. The committee voted on whether to stop pursuing the Networking TS ([P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup>, Poll 3: no consensus). The chair gave conditional guidance: adopt sender/receiver, address TLS. The Networking TS was not brought back under those conditions.
 
 This retrospective examines the analysis under both framings of `execute(F&&)` defined in [P4094R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4094r0.pdf)<sup>[3]</sup> - the work framing and the continuation framing. Under the work framing, the three deficiencies hold. Under the continuation framing, they do not arise. [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup> analyzed under the work framing only. The coroutine executor described in [P4003R3](https://isocpp.org/files/papers/P4003R3.pdf)<sup>[4]</sup> constrains the argument type to `coroutine_handle<>`, enforcing the continuation framing through the type system. The coroutine executor concept did not exist in 2021. [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup> could not have evaluated it.
 
@@ -70,9 +70,9 @@ In October 2021, Ville Voutilainen published [P2464R0](https://www.open-std.org/
 2. No lifecycle for submitted work.
 3. No generic composition.
 
-The paper concluded that the Networking TS should be set aside. The committee acted on the analysis. The Networking TS - published as an ISO TS in 2018, built on Boost.Asio's fifteen years of deployment - was removed from the committee's work program. The committee's async effort redirected toward [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[8]</sup>, the sender/receiver model.
+The paper concluded that the Networking TS should be set aside. The committee voted on whether to stop pursuing the Networking TS ([P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup>, Poll 3: SF:13 / WF:13 / N:8 / WA:6 / SA:10 - no consensus). The chair wrote: "The NetTS is not 'dead'." The chair gave conditional guidance: adopt sender/receiver, address TLS. The Networking TS - published as an ISO TS in 2018, built on Boost.Asio's fifteen years of deployment - was not brought back under those conditions. The committee's async effort redirected toward [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[8]</sup>, the sender/receiver model.
 
-[P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup> analyzed the specification as written. The analysis was procedurally correct. The three deficiencies it identified in `execute(F&&)` are real properties of that API surface under the framing the paper adopted. The committee evaluated the analysis, voted, and acted. The process functioned as designed.
+[P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup> analyzed the specification as written. The analysis was procedurally correct. The three deficiencies it identified in `execute(F&&)` are real properties of that API surface under the framing the paper adopted. The committee evaluated the analysis, voted, and gave conditional guidance. The process functioned as designed.
 
 ---
 
@@ -281,9 +281,9 @@ A constraint applied to one model applies to both.
 
 ### 5.3 The Outcome
 
-The analysis was procedurally correct. [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup> analyzed the specification as written. The three deficiencies it identified are real properties of `execute(F&&)` under the work framing. The committee evaluated the analysis, voted, and acted. The process functioned as designed.
+The analysis was procedurally correct. [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[1]</sup> analyzed the specification as written. The three deficiencies it identified are real properties of `execute(F&&)` under the work framing. The committee evaluated the analysis, voted, and gave conditional guidance. The process functioned as designed.
 
-The outcome: the Networking TS was published as an ISO TS in 2018. It was removed from the committee's work program in 2021. In 2026, no replacement has shipped.
+The outcome: the Networking TS was published as an ISO TS in 2018. The committee voted on whether to stop pursuing it (Poll 3: no consensus). The chair gave conditional guidance: adopt sender/receiver, address TLS. The architect did not bring the proposal back under those conditions. In 2026, no replacement has shipped.
 
 It is natural to prioritize process. Process is visible. Process is checkable. A procedural review can verify that an analysis is correct on its own terms - that the specification says what the paper claims it says, that the deficiencies identified are real properties of the API surface. That verification happened. It was done correctly.
 
@@ -308,7 +308,7 @@ The question that [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/
 
 ## Acknowledgments
 
-The authors thank Peter Dimov for identifying that [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)'s callable destruction is detectable, correcting an earlier version of Section 4; Dietmar K&uuml;hl for `beman::execution` and ongoing work on [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html); Ville Voutilainen for [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html), which provided the evaluation framework for this paper; Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) implementation work; and Klemens Morgenstern for Boost.Cobalt and the cross-library bridge examples.
+The authors thank Peter Dimov for identifying that [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)'s callable destruction is detectable, correcting an earlier version of Section 4; Kirk Shoop for institutional context about the committee's intent behind the October 2021 polls and the two-year collaborative effort on sender/receiver integration with the Networking TS; Dietmar K&uuml;hl for `beman::execution` and ongoing work on [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html); Ville Voutilainen for [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html), which provided the evaluation framework for this paper; Steve Gerbino and Mungo Gill for [Capy](https://github.com/cppalliance/capy) and [Corosio](https://github.com/cppalliance/corosio) implementation work; and Klemens Morgenstern for Boost.Cobalt and the cross-library bridge examples.
 
 ---
 
@@ -347,3 +347,5 @@ The authors thank Peter Dimov for identifying that [P0443R14](https://www.open-s
 [16] [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf) - "Networking proposal for TR2 (rev. 1)" (Gerhard Wesp, 2005).
 
 [17] [P0113R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0113r0.html) - "Executors and Asynchronous Operations, Revision 2" (Christopher Kohlhoff, 2015).
+
+[18] [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html) - "2021 October Library Evolution Poll Outcomes" (Bryce Adelstein Lelbach, Fabio Fracassi, Ben Craig, 2022).

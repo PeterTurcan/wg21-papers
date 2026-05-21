@@ -157,6 +157,20 @@ The same paper documents Poll 2:
 
 [P2400R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2400r2.html)<sup>[16]</sup> stated: "we had consensus that we want to proceed with P2300 instead of P0443." The committee leaned toward unification even when consensus on the "grand unified model" premise was not achieved.
 
+The same ballot included three additional polls. Poll 3 asked whether to stop pursuing the Networking TS:
+
+> "Stop pursuing the Networking TS/Asio design as the C++ Standard Library's answer for networking."
+>
+> SF:13 / WF:13 / N:8 / WA:6 / SA:10 - No consensus.
+
+The chair wrote: "The NetTS is not 'dead'." Poll 5 asked whether networking could ship without TLS:
+
+> "It is acceptable to ship socket-based networking in the C++ Standard Library that does not support secure sockets (TLS/DTLS)."
+>
+> SF:9 / WF:13 / N:5 / WA:6 / SA:13 - No consensus.
+
+The chair gave conditional guidance to the Networking Study Group: "Before bringing networking papers back to Library Evolution, two major areas need to be thoroughly addressed: Security, and the Senders and Receivers async model." The committee did not vote to stop the Networking TS. It gave conditions that required a major redesign the architect did not pursue.
+
 ### 3.6 The P2300 Achievement
 
 [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup> addressed the deficiencies that [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup> identified in [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup>: no error channel, no lifecycle for submitted work, and no generic composition. The sender/receiver model provides structured concurrency, sender composition, completion signatures as type-level contracts, and a customization point model that enables heterogeneous dispatch.
@@ -207,9 +221,10 @@ This section presents what is now measurable and asks whether each measurement c
 - [P1256R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1256r0.html)<sup>[23]</sup> (Vollmann, 2018): "SG1 has decided that the Networking TS should not be merged into the C++ working paper before executors go in."
 - [P2130R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2130r0.pdf)<sup>[24]</sup> (Prague 2020 minutes): Pablo Halpern asks "How blocked is networking on the executors wording process?"
 - [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup> (Voutilainen, 2021): "Stop spending energy on standardizing the Networking TS for C++23."
+- [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup> (October 2021): Poll 3 (stop pursuing the Networking TS) reached no consensus. The chair gave conditional guidance: adopt sender/receiver, address TLS.
 - 2026: networking is not in the C++ standard. Twenty-one years from [N1925](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1925.pdf)<sup>[21]</sup>.
 
-The coupling between networking and executors is documented in published papers. The timeline is observable. Is this a cost of unification, or would networking have been delayed regardless? This paper cannot prove causation.
+The coupling between networking and executors is documented in published papers. The timeline is observable. The committee did not vote to stop the Networking TS; it gave conditional guidance that required a redesign the architect did not pursue. Is this a cost of unification, or would networking have been delayed regardless? This paper cannot prove causation.
 
 ### 5.2 Did Unification Consume Committee Bandwidth?
 
@@ -254,7 +269,7 @@ Does "no consensus, leaning in favor" constitute sufficient basis for a decade-l
 | Shared thread pool needed?       | "single thread pool for all use cases" (P0285R0)                  | No survey; reactor and work queue are architecturally different (7.3)      |
 | N x M explosion?                 | Hypothetical `parallel_for` snippet (P0761R2)                     | No measurement from a real codebase                                       |
 | Domain semantics preserved?      | "serves the use cases of those independent proposals" (P0443R0)   | dispatch/post/defer renamed to execute (Section 6); properties removed    |
-| Networking blocked?              | (not discussed in 2014)                                           | 21 years from N1925; still not in the standard                            |
+| Networking blocked?              | (not discussed in 2014)                                           | 21 years from N1925; Poll 3 (stop pursuing): no consensus; conditional guidance not met |
 | Unified model deployed?          | (not discussed in 2014)                                           | P0443 never deployed as unified; P2300 deployed for sender/receiver       |
 | One model consensus?             | (not polled until 2021)                                           | SF:4 / WF:9 / N:5 / WA:5 / SA:1 - no consensus (P2453R0)                |
 | Iteration cost?                  | (not estimated)                                                   | 14 revisions, 100+ papers, property system built and discarded            |
@@ -434,7 +449,7 @@ Good stewardship of the standard means revisiting consequential decisions when n
 
 ## Acknowledgments
 
-The author thanks Chris Kohlhoff for the executor model that started the journey and for the candid retrospective in [P1791R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup>; Jared Hoberock, Michael Garland, and Chris Mysen for [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup> and [P0761R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0761r2.pdf)<sup>[13]</sup>; Eric Niebler, Kirk Shoop, Lewis Baker, and their collaborators for [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>; Ville Voutilainen for [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup>; Bryce Adelstein Lelbach for the published poll outcomes in [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup> and [P2400R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2400r2.html)<sup>[16]</sup>; Detlef Vollmann for [P1256R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1256r0.html)<sup>[23]</sup>; Jamie Allsop, Richard Hodges, and Klemens Morgenstern for co-authoring [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[6]</sup>; and Steve Gerbino for feedback on this paper.
+The author thanks Chris Kohlhoff for the executor model that started the journey and for the candid retrospective in [P1791R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1791r0.html)<sup>[12]</sup>; Jared Hoberock, Michael Garland, and Chris Mysen for [P0443R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0443r14.html)<sup>[3]</sup> and [P0761R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0761r2.pdf)<sup>[13]</sup>; Eric Niebler, Kirk Shoop, Lewis Baker, and their collaborators for [P2300R10](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2300r10.html)<sup>[2]</sup>; Kirk Shoop additionally for institutional context about the committee's intent behind the October 2021 polls and the collaborative process that preceded them; Ville Voutilainen for [P2464R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2464r0.html)<sup>[19]</sup>; Bryce Adelstein Lelbach for the published poll outcomes in [P2453R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2453r0.html)<sup>[18]</sup> and [P2400R2](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2400r2.html)<sup>[16]</sup>; Detlef Vollmann for [P1256R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1256r0.html)<sup>[23]</sup>; Jamie Allsop, Richard Hodges, and Klemens Morgenstern for co-authoring [P2469R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2469r0.pdf)<sup>[6]</sup>; and Steve Gerbino for feedback on this paper.
 
 ---
 
