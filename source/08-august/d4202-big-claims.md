@@ -20,7 +20,7 @@ This is the first paper in a trilogy. "Big Reputation Requires Big Responsibilit
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: August 2026
 
 - Initial version.
 

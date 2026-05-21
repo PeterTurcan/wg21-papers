@@ -8,6 +8,22 @@ reply-to:
   - "Vinnie Falco <vinnie.falco@gmail.com>"
 ---
 
+## Abstract
+
+An organisation that cannot correct its mistakes will become overwhelmed by them.
+
+The process that governs WG21 is structurally asymmetric: adding a feature requires one paper and one set of favourable polls; removing or replacing a feature requires deprecation, a migration path, ABI coordination across every major implementation, and the political will to say the committee was wrong. The language's designer recorded this asymmetry in 1994. The committee's record since then confirms it. This paper examines what the record shows.
+
+---
+
+## Revision History
+
+### R0: August 2026
+
+* Initial version.
+
+---
+
 ## 1. Disclosure
 
 The author provides information and serves at the pleasure of the committee.
@@ -16,11 +32,7 @@ The author is the founder of the C++ Alliance and maintains competing proposals 
 
 The author asks for nothing.
 
-## Abstract
-
-An organisation that cannot correct its mistakes will become overwhelmed by them.
-
-The process that governs WG21 is structurally asymmetric: adding a feature requires one paper and one set of favourable polls; removing or replacing a feature requires deprecation, a migration path, ABI coordination across every major implementation, and the political will to say the committee was wrong. The language's designer recorded this asymmetry in 1994. The committee's record since then confirms it. This paper examines what the record shows.
+---
 
 ## 2. The Premise
 

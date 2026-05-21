@@ -20,7 +20,7 @@ This is the second paper in a trilogy. "Big Claims Require Big Evidence" ([P4059
 
 ## Revision History
 
-### R0: March 2026 (post-Croydon mailing)
+### R0: August 2026
 
 - Initial version.
 

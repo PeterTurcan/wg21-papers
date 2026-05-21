@@ -18,7 +18,7 @@ SD-4<sup>[1]</sup> governs the day-to-day operation of WG21 - subgroup chair app
 
 ## Revision History
 
-### R0: April 2026 (post-Croydon mailing)
+### R0: August 2026
 
 - Initial version.
 

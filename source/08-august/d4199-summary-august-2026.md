@@ -20,6 +20,14 @@ paper. It asks for nothing.
 
 ---
 
+## Revision History
+
+### R0: August 2026
+
+- Initial version.
+
+---
+
 ## 1. Disclosure
 
 The author provides information and serves at the pleasure of the

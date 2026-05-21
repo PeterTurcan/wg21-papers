@@ -14,6 +14,14 @@ audience: WG21
 
 ---
 
+## Revision History
+
+### R0: August 2026
+
+- Initial version.
+
+---
+
 ## 1. Disclosure
 
 This paper was generated entirely by AI. The conclusions were drawn by AI. The operator did not alter the AI output in any way.
