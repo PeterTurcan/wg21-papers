@@ -116,7 +116,53 @@ The concern was raised in 2022 (P2698R0). It is unresolved in 2026. Four years.
 
 ---
 
-## 6. Implementation Experience
+## 6. The "Strict Contracts" Arc
+
+A second non-reconciliation arc runs parallel to the "ignore" trajectory. [P2899R1](https://wg21.link/p2899r1)<sup>[5]</sup> Section 3.6.1 documents it in detail.
+
+[P2680R0](https://wg21.link/p2680r0)<sup>[25]</sup> proposed "strict contracts" - contract predicates constrained to expressions provably free of undefined behavior. The concern: without such constraints, an optimizer can exploit UB in a contract predicate to elide the check entirely, even under the enforce semantic. The concern is real. P2899R1 reproduces a concrete example where signed integer overflow in a precondition allows the compiler to remove the check.
+
+SG21 polled at Kona (November 2022):
+
+> "Given our limited resources, we encourage the author of P2680 to come back with a revision addressing the currently open questions."
+>
+> SF:9 / F:5 / N:1 / A:3 / SA:7 - No consensus.
+
+SG21 polled again (December 2022 telecon), twice:
+
+> "SG21 should attempt to design a model for safe programming in C++ as part of the contracts MVP."
+>
+> SF:5 / F:2 / N:0 / A:7 / SA:4 - No consensus.
+
+> "The contracts MVP should contain contract-checking predicates that are free of certain types of UB and free of side effects outside of their cone of evaluation, as proposed in D2680R1."
+>
+> SF:5 / F:2 / N:0 / A:7 / SA:4 - No consensus.
+
+P2899R1 records what happened next: "At this point, the topic of 'strict contracts' was closed as far as SG21 was concerned."
+
+Under SD-4, "no consensus" means the topic does not advance. The SG21 co-chairs closed it. No reconciliation with the seven members (SF:5 / F:2) who supported the direction is documented.
+
+The author of P2680 then published [P3173R0](https://wg21.link/p3173r0)<sup>[26]</sup>, targeting EWG directly. EWG showed significant interest at Tokyo (March 2024):
+
+> "P2900R6: contracts should expose less undefined behavior than regular C++ code does."
+>
+> SF:17 / F:12 / N:12 / A:12 / SA:5 - No consensus.
+
+P2899R1 then records: "Following procedural complaints that the author of 'strict contracts' had not been given a fair chance to present his ideas during that joint SG21/SG23 session, it was agreed that 'strict contracts' should be reviewed again in SG23."
+
+SG23 polled (May 2024):
+
+> "We should promise more SG23 committee time to pursuing the approach of handling certain kinds of undefined behaviour differently inside and outside of contract predicates."
+>
+> F:7 / N:3 / A:13 - No consensus.
+
+The concern surfaced in 2022. It was voted down in SG21, escalated to EWG, redirected to SG23 after procedural complaints, and voted down there. At no stage does the published record document reconciliation - engagement with the substance of the minority's objection between polls, compromise proposals attempted, or reasons why the concern was found unpersuasive rather than merely outvoted.
+
+Under the ISO Directives (2.5.6), "no consensus" does not close a topic. It triggers the obligation to reconcile. The minority retains standing and is directed to the appeal chain (5.1). The SG21 co-chairs' discretionary re-hearing in SG23 is not an appeal process. It is an accommodation that the chair could have declined. The Directives provide structural remedy. SD-4 provides none.
+
+---
+
+## 7. Implementation Experience
 
 At Tokyo (March 2024), EWG polled:
 
@@ -134,13 +180,15 @@ Eight months later at Wroclaw (November 2024), LEWG forwarded P2900R11 to LWG. T
 
 [P3506R0](https://wg21.link/p3506r0)<sup>[15]</sup> (Dos Reis/Microsoft, November 2024) documented: "the libc++ experience report only replaced existing asserts with `contract_assert`, never using pre/post-conditions."
 
+P2899R1<sup>[5]</sup> Section 2.9 describes the same deployment experience from the proponents' perspective: "Deployment experience was collected from replacing C assert in LLVM and dependencies and from replacing the existing hardening, validation, and debugging macros in the libc++ Standard Library implementation." The proponents' own rationale document confirms the scope that P3506R0 characterized as insufficient.
+
 Three months later at Hagenberg (February 2025), P2900R14 was adopted. LWG: F:13 / A:0 / N:0.
 
 Under SD-4, the near-unanimous Tokyo poll created no binding obligation. Ship pressure overrode it. Under the ISO Directives, a near-unanimous consensus requirement would be treated as a prerequisite condition. Directive 2.5.6's reconciliation framework would flag the forwarding as inconsistent with the prior consensus unless the implementation experience had been provided.
 
 ---
 
-## 7. P4005: The Minority That Could Not Escalate
+## 8. P4005: The Minority That Could Not Escalate
 
 [P4005R0](https://wg21.link/p4005r0)<sup>[16]</sup> (Voutilainen, 2026) proposed guaranteed enforcement: `entry_cond`, `return_cond`, and `mandatory_assert` that can never be set to "ignore." The proposal responded directly to NB comment RO 2-056.
 
@@ -160,25 +208,25 @@ Under the ISO Directives, Directive 2.5.6 directs objectors to the three-level a
 
 ---
 
-## 8. The Wroclaw Forwarding
+## 9. The Wroclaw Forwarding
 
 EWG (November 2024):
 
 > "P2900R11: send to CWG and LEWG for inclusion in C++26."
 >
-> SF:21 / F:15 / N:3 / A:8 / SA:14 - Consensus in favor.
+> SF:25 / F:17 / N:0 / A:3 / SA:12 - Consensus in favor.
 
-Twenty-two votes against out of sixty-one voters. Thirty-six percent opposition.
+Fifteen votes against out of fifty-seven voters. Twenty-six percent opposition.
 
 [P3573R0](https://wg21.link/p3573r0)<sup>[17]</sup> (January 2025) was filed by nine authors - Stroustrup, Dos Reis, Spicer, Voutilainen, Vandevoorde, van Winkel, Regev, Hava, Garcia - expressing "grave concerns" about P2900's design and direction. The paper functions as a de facto minority report from a group that includes an EDG representative, a Microsoft representative, and a former convenor.
 
-Under SD-4, the 2:1 threshold was met (39 in favor vs 22 against). Consensus was declared. The paper was forwarded.
+Under SD-4, the 2:1 threshold was met (42 in favor vs 15 against). Consensus was declared. The paper was forwarded.
 
 Under the ISO Directives, consensus requires "seeking to take into account the views of all parties concerned and to reconcile any conflicting arguments" (2.5.6). Nine senior committee members filing "grave concerns" is not reconciled consensus. It is a supermajority override of a substantial minority.
 
 ---
 
-## 9. The Accumulation
+## 10. The Accumulation
 
 The escalation trajectory of the opposition papers:
 
@@ -201,7 +249,7 @@ No formal ISO-process appeal was filed. The opposition took the form of papers, 
 
 ---
 
-## 10. Anticipated Objections
+## 11. Anticipated Objections
 
 **Q: SG21 did reconcile. They spent five years.**
 
@@ -217,7 +265,7 @@ A: Under SD-4's 2:1 threshold, this is procedurally correct. Under the ISO Direc
 
 **Q: The Directives would have just slowed things down.**
 
-A: Possibly. The paper concedes this (Section 9). The Directives guarantee documented engagement, not superior outcomes. Whether iterative reconciliation would have produced a better design is unknowable. What is observable is that it would have produced a documented path from objection to resolution at each stage rather than an accumulation that detonated at the ballot.
+A: Possibly. The paper concedes this (Section 10). The Directives guarantee documented engagement, not superior outcomes. Whether iterative reconciliation would have produced a better design is unknowable. What is observable is that it would have produced a documented path from objection to resolution at each stage rather than an accumulation that detonated at the ballot.
 
 ---
 
@@ -276,3 +324,9 @@ The author thanks Joshua Berne, Timur Doumler, and Andrzej Krzemienski for [P290
 [23] ISO/IEC. "ISO/IEC Directives, Part 1 - Consolidated JTC 1 Supplement." 2023.
 
 [24] Davidson, G. "SD-4: WG21 Practices and Procedures." ISO/IEC JTC1/SC22/WG21/SD-4, 2026-05-11.
+
+[25] [P2680R0](https://wg21.link/p2680r0) - "Contracts for C++: Prioritizing Safety" (Gabriel Dos Reis, 2022).
+
+[26] [P3173R0](https://wg21.link/p3173r0) - "P2900R6 may not be sufficiently implementable" (Gabriel Dos Reis, 2024).
+
+[27] [P3285R0](https://wg21.link/p3285r0) - "Contracts and Safety" (Gabriel Dos Reis, 2024).
