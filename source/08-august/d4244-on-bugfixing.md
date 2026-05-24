@@ -1,6 +1,6 @@
 ---
 title: "Two Removals, Thirty Years"
-document: D9999R0
+document: P4244R0
 date: 2026-08-01
 intent: info
 audience: WG21
