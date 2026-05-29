@@ -121,6 +121,8 @@ The `io_env` flows forward through `co_await` chains via `task`'s<sup>[17]</sup>
 
 These three properties - executor affinity, cancellation, and frame allocation control - are the same concerns that `std::execution` addresses through a different mechanism. The IoAwaitable protocol provides them in a form designed for byte-oriented I/O, where type-erased streams and compound results are the natural vocabulary.
 
+The full execution model built on this protocol is specified in [P4003R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r3.html).<sup>[46]</sup> That paper defines the launch functions that connect coroutine chains to the rest of the program: `run_async` starts a coroutine from regular code (the topmost caller that cannot `co_await`), and `run` switches executor, stop token, or allocator for a subtask from within a coroutine. IoAwaitables are lazy - submission happens in `await_suspend`, not at construction. The two-phase invocation of launch functions ensures the frame allocator is cached before the child coroutine's frame is allocated. P4003R3 also demonstrates a `counting_scope` built from launch function handlers, providing spawn, cancel, and join-before-destruction - the same structured concurrency guarantees that `std::execution`'s `counting_scope` provides, expressed through the IoAwaitable protocol's own primitives.
+
 **Question for the reader:** Does this forward-propagation model - where the execution environment flows into each awaitable via `await_suspend` - address the concerns that GPU schedulers have about coroutine integration? Are there additional properties a GPU-aware awaitable would need?
 
 ## 5. The Bridge: `cudaLaunchHostFunc`
@@ -617,7 +619,7 @@ The quantitative picture:
 
 CUDA Graphs and sender compile-time fusion optimize different layers. CUDA Graphs eliminate per-kernel CPU-GPU dispatch round trips at the driver level - language transitions, runtime processing, driver operations totaling 20-200 us per kernel in DL applications.<sup>[25]</sup> Sender fusion eliminates host-side C++ abstraction overhead - allocations, virtual dispatch, type erasure - at the language level. nvexec intercepts sender algorithms and replaces them with CUDA kernel launches on streams, but does not automatically batch them into CUDA Graphs; per-kernel host launch overhead remains unless CUDA Graphs are used separately.<sup>[12]</sup> These are complementary optimizations, not substitutes.
 
-CUDA Graph replay composes naturally with coroutine-based data movement: the coroutine provides the outer loop with data-dependent control flow (memcpy in, graph launch, memcpy out, check result), and the pre-captured graph is the inner optimized hotpath. Schr&ouml;dinger's Desmond engine (GTC 2024)<sup>[38]</sup> demonstrates this composition in production, using coroutines to overlap multiple GPU simulations around CUDA Graph replay with up to 2.02x speedup in drug discovery workloads.
+CUDA Graph replay composes naturally with coroutine-based data movement: the coroutine provides the outer loop with data-dependent control flow (memcpy in, graph launch, memcpy out, check result), and the pre-captured graph is the inner optimized hot path. Schr&ouml;dinger's Desmond engine (GTC 2024)<sup>[38]</sup> demonstrates this composition in production, using coroutines to overlap multiple GPU simulations around CUDA Graph replay with up to 2.02x speedup in drug discovery workloads.
 
 **Question for the reader:** Sender fusion and CUDA Graphs optimize at different layers. Does sender fusion provide value in combination with CUDA Graphs, or does graph capture at the driver level subsume the host-side optimization? Are there GPU workloads where coroutine orchestration around pre-captured graphs would be useful, or does this pattern miss something fundamental about how GPU pipelines are structured?
 
@@ -655,9 +657,9 @@ One caveat: the latency table assumes GPU operations in the microsecond-to-secon
 
 The preceding sections argue that senders and IoAwaitables each serve a domain well: senders for GPU kernel dispatch and heterogeneous scheduling, IoAwaitables for byte-oriented I/O and type-erased streams. The bridge is where the domains meet.
 
-Capy ships two demonstration bridges in its examples: `await_sender`<sup>[52]</sup>, which consumes a sender from within a coroutine via `co_await`, and `as_sender`<sup>[53]</sup>, which wraps an IoAwaitable as a P2300 sender for use in a sender pipeline.
+Capy provides two bridge functions with working implementations in its bench and example code: `await_sender`<sup>[52]</sup> consumes a sender from within a coroutine via `co_await`, and `as_sender`<sup>[53]</sup> wraps an IoAwaitable as a P2300 sender for use in a sender pipeline. Both compile and run today. One bridge direction currently relies on behavior the standard would need to bless; [P4092R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4092r1.pdf)<sup>[52]</sup> and [P4093R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4093r1.pdf)<sup>[53]</sup> are the dedicated design papers for each direction.
 
-An inference pipeline that uses each model in its natural domain:
+`await_sender` is the natural bridge for the common case: a coroutine that performs I/O and dispatches to a GPU scheduler. An inference pipeline that uses each model in its natural domain:
 
 ```cpp
 task<> handle_request(
@@ -689,6 +691,23 @@ task<> handle_request(
 Network I/O uses `any_read_source` and `any_write_sink` - type-erased, zero per-operation allocation, compound results via structured bindings. GPU dispatch uses `stdexec::schedule` and `stdexec::then` - compile-time composition, scheduler-agnostic portability. The `await_sender` bridge connects the two without requiring either model to subsume the other.
 
 The network transport behind `client` and `response` can be TCP, TLS, RDMA, or any transport that satisfies the stream concepts. The GPU scheduler can be `nvexec::stream_scheduler`, a CPU thread pool, or any scheduler that provides `schedule()`. Neither side needs to know about the other's implementation.
+
+`as_sender` provides the reverse direction: a sender pipeline that consumes an IoAwaitable. This is useful when an existing sender pipeline needs to incorporate a byte-oriented operation:
+
+```cpp
+auto pipeline =
+    stdexec::schedule(sched)
+    | stdexec::then([&] {
+        return prepare_buffer();
+    })
+    | as_sender(gpu_sink.write_some(buf))
+    | stdexec::then(
+        [](io_result<std::size_t> r) {
+            return r.value();
+        });
+```
+
+The `as_sender` bridge wraps the awaitable's completion as a sender value channel, preserving the compound result for downstream sender algorithms. Neither bridge requires rewriting the wrapped operation - the IoAwaitable and the sender each retain their native interface.
 
 ## 17. Considerations
 
@@ -743,6 +762,8 @@ A protocol handler compiled once links against TCP, RDMA, or GPU device memory w
 Independent projects (Taro, TTG/PaRSEC, Desmond) have demonstrated the extension of the coroutine pattern to kernel dispatch and GPU pipeline orchestration in production, placing that evidence in the record alongside this paper's byte-movement analysis.
 
 Bridges (`await_sender`<sup>[52]</sup>, `as_sender`<sup>[53]</sup>) connect the two models where the domains meet. A networking coroutine consumes a GPU sender for compute dispatch. A sender pipeline wraps an IoAwaitable for composition. Neither model needs to subsume the other. Each serves the domain where its design choices pay off: senders for compute dispatch where compile-time work graphs and scheduler-agnostic portability deliver their full value, awaitables for data transport where type-erased streams and zero-allocation link-time polymorphism are the natural interface. The abstraction level rises; the application code stays the same.
+
+This convergent evidence supports the standardization of the IoAwaitable protocol proposed in [P4003R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r3.html).<sup>[46]</sup> The committee should not assume senders are the only viable model for GPU async when GPU practitioners are independently choosing coroutines for data movement. The IoAwaitable protocol provides the minimal execution model - executor affinity, cancellation, frame allocation - that these convergent projects need from the standard. Standardizing it gives the ecosystem a stable foundation without requiring either model to subsume the other.
 
 ## Acknowledgements
 
