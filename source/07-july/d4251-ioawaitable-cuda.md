@@ -10,7 +10,7 @@ reply-to:
 
 ## Abstract
 
-A protocol handler compiled once links against TCP, RDMA, or GPU device memory without recompilation. This is possible because byte-oriented data movement - host-device memcpy, inter-GPU collectives over NVLink, RDMA transfers between nodes, and TCP sockets - shares a common async completion model that maps naturally to the IoAwaitable protocol. Independent projects at NVIDIA Research, CERN, the University of Wisconsin-Madison, and Schr&ouml;dinger have converged on the same coroutine-based async completion pattern for GPU data movement. Bidirectional bridges connect IoAwaitables and senders where byte-oriented I/O meets GPU dispatch, allowing each model to serve its natural domain.
+A protocol handler compiled once links against TCP, RDMA, or GPU device memory without recompilation. This is possible because byte-oriented data movement - host-device memcpy, inter-GPU collectives over NVLink, RDMA transfers between nodes, and TCP sockets - shares a common async completion model that the IoAwaitable protocol captures with an ABI-stable, type-erased interface. Independent projects at NVIDIA Research, CERN, the University of Wisconsin-Madison, and Schr&ouml;dinger have converged on the same coroutine-based async completion pattern for GPU data movement. Bidirectional bridges connect IoAwaitables and senders where byte-oriented I/O meets GPU dispatch, allowing each model to serve its natural domain.
 
 ---
 
@@ -64,7 +64,7 @@ Four APIs that move bytes across different boundaries share a common async compl
 
 All four share the same structural pattern: submit a buffer of bytes, receive async completion via callback or file descriptor, receive a compound result (status plus byte count), and dispatch the result to the application thread via a reactor. IoAwaitable handles all of them with the same mechanism.
 
-These four APIs span different hardware boundaries - PCIe, NVLink, InfiniBand, Ethernet - but present the same abstract interface to the application. A protocol handler written against the abstract stream interface compiles once and links against any of them without recompilation (Section 8 demonstrates this). This is abstraction-level raising for data transport: the application sees a stream of bytes and does not need to know whether those bytes cross a PCIe bus, an NVLink fabric, an InfiniBand network, or a TCP socket.
+These four APIs span different hardware boundaries - PCIe, NVLink, InfiniBand, Ethernet - but present the same abstract interface to the application: submit a buffer, await completion, receive a compound result. Section 8 demonstrates a protocol handler written against this interface, and Section 10 traces the ABI consequence.
 
 The type vocabulary builds from this pattern:
 
@@ -78,7 +78,7 @@ auto [ec, n] = co_await stream.write_some(buf);
 
 The `WriteStream` concept requires `write_some(buffers)` returning an `IoAwaitable` whose `await_resume` returns `io_result<std::size_t>`. The `WriteSink` concept refines `WriteStream`, adding `write(buffers)` for complete-buffer writes and `write_eof()` for graceful shutdown.
 
-The type-erased wrappers `any_write_stream` and `any_write_sink` wrap any `WriteStream` or `WriteSink` (respectively) behind a vtable with fixed-size entries: `await_ready`, `await_suspend`, `await_resume`, and `destroy`. Because `await_suspend` takes `coroutine_handle<>` - already type-erased by the language - the vtable has a fixed, compile-time-known size. No per-operation allocation.
+The type-erased wrappers `any_write_stream` and `any_write_sink` wrap any `WriteStream` or `WriteSink` (respectively) behind a vtable with fixed-size entries: `await_ready`, `await_suspend`, `await_resume`, and `destroy`. Because `await_suspend` takes `coroutine_handle<>` - already type-erased by the language - the vtable has a fixed, compile-time-known size. Section 9 analyzes the structural consequences; Section 10 draws the ABI conclusion.
 
 P2300R10<sup>[3]</sup> agrees with the user-facing pattern: "we expect that coroutines and awaitables will be how a great many will choose to express their asynchronous code."
 
@@ -447,9 +447,7 @@ any_write_stream dest(&sock);  // non-owning
 co_await ingest(dest, payload);  // -> network
 ```
 
-The algorithm in `protocol.cpp` is compiled once. At link time, swap the transport. No recompilation. Zero per-operation allocation in all cases because `await_suspend` takes `coroutine_handle<>` - the caller is already type-erased by the language.
-
-This is the same design principle that produced Thrust (STL-compatible interface over GPU algorithms) and C++17 parallel algorithms (standard interface over parallel hardware): write the application against an abstract interface, let the implementation handle the hardware. Here, the abstraction is a stream of bytes rather than a parallel algorithm, and the hardware spans PCIe, NVLink, InfiniBand, and Ethernet rather than CPU and GPU cores. The abstraction level rises; the application code stays the same.
+The algorithm in `protocol.cpp` is compiled once. At link time, swap the transport. No recompilation. Zero per-operation allocation in all cases because `await_suspend` takes `coroutine_handle<>` - the caller is already type-erased by the language. Section 10 traces the design lineage and the ABI consequence.
 
 ## 9. The Type Erasure Asymmetry
 
@@ -470,9 +468,39 @@ Native performance is comparable - 31 ns vs 34 ns. Under type erasure, the gap w
 
 The same asymmetry applies to any byte-oriented operation that goes through a type-erased interface - GPU memory transfers, network sockets, RDMA queue pairs. For domains where type erasure is the natural interface (protocols compiled once, linked against many transports), the coroutine model has a structural advantage.
 
-This is the mechanism that makes link-time transport polymorphism work at zero runtime cost. The same protocol handler links against PCIe memcpy, NVLink transfers, RDMA queue pairs, and TCP sockets without recompilation or per-operation allocation (Section 8). The asymmetry is not a theoretical observation. It is the reason the `ingest` function in Section 8 can be compiled once as an object file and linked against any transport that satisfies `WriteStream`.
+The same asymmetry determines which model can provide a stable binary interface for I/O. Section 10 draws this consequence.
 
-## 10. Complicated Success
+## 10. ABI Stability
+
+The type erasure asymmetry in Section 9 has a consequence the committee has wanted for decades: an ABI-stable interface for async I/O.
+
+The vtable for `any_write_stream` has four fixed-size entries: `await_ready`, `await_suspend`, `await_resume`, and `destroy`. The signature `await_suspend(coroutine_handle<>, io_env const*)` is fixed because `coroutine_handle<>` is type-erased by the language itself. The vtable size is known at compile time. The interface can be compiled into a shared library (`.so`/`.dll`) and the implementation swapped without recompiling the consumer.
+
+Sender pipelines cannot provide this property. `connect(sender, receiver)` produces an operation state whose type and size depend on both the sender and the receiver. Every new sender/receiver combination produces a new type - a new ABI surface. There is no fixed vtable. Changing the I/O implementation changes the type, which forces recompilation of every consumer.
+
+This is ABI stability achieved not through heroic engineering or policy constraints but as a structural consequence of the coroutine model's type erasure. The language provides the fixed-type boundary. The committee has struggled with ABI stability for `std::string`, `std::regex`, and across the ABI breakage debates. IoAwaitable delivers it for async I/O as a structural property of the model.
+
+### The abstraction arc
+
+This is the same design trajectory that produced Thrust and C++17 parallel algorithms - a standard interface over hardware-specific implementation.
+
+**Thrust (2009).** GPU parallel algorithms behind an STL-compatible interface. Customers wrote to the STL vocabulary, ran on NVIDIA's GPU. The interface was vendor-neutral: customers could retarget to TBB or OpenMP. N3408 (2012) carried this into C++17 parallel algorithms.<sup>[3]</sup>
+
+**C++17 parallel algorithms.** Standard interface, hardware-specific implementation. Write `std::sort(std::execution::par, ...)`, link against NVIDIA's implementation or Intel's. The standard owns the interface; the vendor owns the implementation.
+
+**IoAwaitable streams.** Write `ingest(any_write_stream&, payload)`, link against NVIDIA's `cuda_device_stream`, AMD's ROCm transport, an RDMA transport, or TCP. Same pattern, applied to data transport instead of parallel algorithms. The abstraction level rises again; the application code stays the same. A compileable demonstration accompanies this paper, showing the same protocol handler linking against `cuda_device_stream` and `tcp_socket` without recompilation.
+
+### Security patching without recompilation
+
+The ABI-stable boundary means a TLS (Transport Layer Security) stream implementation can be upgraded for a security patch - or swapped out for a different implementation entirely - without recompiling the application. The protocol handler was compiled against `any_write_stream`. The TLS implementation sits behind that interface. Replace the shared library, restart the process.
+
+This is how security-critical infrastructure is maintained in practice: the application binary does not change, only the transport layer underneath it. Senders cannot provide this property because `connect(sender, receiver)` stamps both types into the operation state; changing the TLS implementation changes the type, which forces recompilation of every consumer.
+
+### The complete inference stack
+
+An inference server receives HTTP requests (TCP transport), dispatches to GPU compute (`stdexec` scheduler), moves results through NVLink or InfiniBand (NCCL/RDMA transport), and responds over HTTP. Today, no C++ standard interface covers the data-transport layer. IoAwaitable's ABI-stable streams complete the stack. The protocol handler compiles once and deploys across the full topology - PCIe, NVLink, InfiniBand, Ethernet - without recompilation. Each model serves its natural domain: senders for GPU kernel dispatch where compile-time work graphs deliver their full value, IoAwaitables for data transport where type-erased streams and ABI stability are the natural interface.
+
+## 11. Complicated Success
 
 Byte-oriented operations deliver results as a compound pair: status plus byte count. The pattern spans hardware boundaries. A POSIX `read` returns `(errno, bytes_read)`. A `cudaMemcpyAsync` completion delivers `cudaError_t` alongside the transfer count. An RDMA work completion returns `(wr_id, status, byte_len)`. Both values are always present. A `read` that returns 0 bytes with no error means EOF. A `read` that returns `ECONNRESET` with 47 bytes means 47 bytes arrived before the peer reset the connection. The byte count is not redundant with the error code.
 
@@ -502,7 +530,7 @@ Structured bindings deliver both values. No data loss, no channel to choose, no 
 
 This is a domain mismatch, not a sender defect. The three-channel model was designed for operations that succeed, fail, or are cancelled - a natural fit for GPU kernel dispatch, where `cudaErrorLaunchFailure` is fatal and carries no partial result. Byte-oriented data movement operates in a domain where partial success is routine and both the status and the byte count must reach the application.
 
-## 11. HPC Networking and Compile-Time Visibility
+## 12. HPC Networking and Compile-Time Visibility
 
 The sender model's compile-time pipeline visibility eliminates virtual dispatch (approximately 10 ns) and heap allocation (approximately 100 ns). These are real costs in nanosecond-scale GPU kernel dispatch. The question is whether they are measurable at the latency scale of network data transfers.
 
@@ -545,7 +573,7 @@ The closest project to sender-based HPC networking in active development is LCI 
 
 **Question for the reader:** Is there a per-operation planning decision in HPC networking that benefits from compile-time type visibility of the send/receive calls themselves? For communication patterns known at compile time, the answer may be yes. For data-dependent communication patterns determined at runtime, the question is open.
 
-## 12. Sender-Based Networking: Deployed Evidence
+## 13. Sender-Based Networking: Deployed Evidence
 
 The sender/receiver model has been deployed at scale for compute scheduling and infrastructure (Section 2). The question is whether it has been deployed for byte-oriented data movement - the domain this paper examines.
 
@@ -570,9 +598,9 @@ None are production-grade. The most complete (uring_exec) is a single developer'
 
 SG14, the study group for low-latency systems practitioners, has formally recommended ([P4029R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4029r0.pdf))<sup>[22]</sup>: "Networking (SG4) should not be built on top of P2300."
 
-The gap between networking ambition and deployed evidence suggests that data movement and compute dispatch have different enough completion models that a single abstraction does not serve both optimally. The independent validation in Section 13 shows where each model fits naturally. The bridge between models (Section 16) connects the two domains without requiring either to subsume the other.
+The gap between networking ambition and deployed evidence suggests that data movement and compute dispatch have different enough completion models that a single abstraction does not serve both optimally. The independent validation in Section 14 shows where each model fits naturally. The bridge between models (Section 17) connects the two domains without requiring either to subsume the other.
 
-## 13. Independent Validation
+## 14. Independent Validation
 
 Several independent projects have arrived at the same design: coroutine-based async completion for GPU and HPC data movement, using `cudaLaunchHostFunc` (or its driver-level equivalent `cuLaunchHostFunc`) as the bridge between GPU completion and coroutine resumption.
 
@@ -594,7 +622,7 @@ These projects span GPU compute, molecular dynamics, high-energy physics, RDMA n
 
 **Question for the reader:** Are we reading this landscape correctly? Are there significant projects using the `cudaLaunchHostFunc`-to-coroutine pattern that we have missed?
 
-## 14. CUDA Graphs
+## 15. CUDA Graphs
 
 Sender pipelines provide compile-time `operation_state` fusion. [P3425R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3425r1.html)<sup>[23]</sup> documents 8 bytes saved per nesting level via constant pointer offsets. This is real.
 
@@ -623,7 +651,7 @@ CUDA Graph replay composes naturally with coroutine-based data movement: the cor
 
 **Question for the reader:** Sender fusion and CUDA Graphs optimize at different layers. Does sender fusion provide value in combination with CUDA Graphs, or does graph capture at the driver level subsume the host-side optimization? Are there GPU workloads where coroutine orchestration around pre-captured graphs would be useful, or does this pattern miss something fundamental about how GPU pipelines are structured?
 
-## 15. The Frame Allocation Question
+## 16. The Frame Allocation Question
 
 Each coroutine suspension potentially allocates a frame. Sender `operation_state` is a single compile-time allocation. This is a real structural difference.
 
@@ -653,7 +681,7 @@ One caveat: the latency table assumes GPU operations in the microsecond-to-secon
 
 **Question for the reader:** Is our assumption about the relative cost of frame allocation accurate at GPU workload scale? Are there scenarios in high-frequency kernel dispatch where coroutine frame allocation becomes a measurable bottleneck?
 
-## 16. The Bridge Between Domains
+## 17. The Bridge Between Domains
 
 The preceding sections argue that senders and IoAwaitables each serve a domain well: senders for GPU kernel dispatch and heterogeneous scheduling, IoAwaitables for byte-oriented I/O and type-erased streams. The bridge is where the domains meet.
 
@@ -709,59 +737,59 @@ auto pipeline =
 
 The `as_sender` bridge wraps the awaitable's completion as a sender value channel, preserving the compound result for downstream sender algorithms. Neither bridge requires rewriting the wrapped operation - the IoAwaitable and the sender each retain their native interface.
 
-## 17. Considerations
+## 18. Considerations
 
 The preceding sections present convergent findings. This section addresses foreseeable concerns about the conclusions drawn from them.
 
-### 17.1 Laziness and Composition
+### 18.1 Laziness and Composition
 
 **Awaitables commit to eager execution.** Awaitables are lazy. `write_some` returns an inert object. No `cudaMemcpyAsync` is issued, no syscall is made, until `co_await` triggers `await_suspend`. The trigger is explicit in both models: senders do no work until `start()` is called; awaitables do no work until `co_await` is evaluated. A coroutine can capture the awaitable, defer the `co_await`, and decide at runtime whether to submit the operation. This concern does not distinguish the two models.
 
-**The scheduler cannot see the full task graph.** Sender pipelines compose as a graph the scheduler can inspect before `start()`. This is valuable for GPU kernel dispatch where the work graph is known ahead of time - CUDA Graphs (Section 14) exploit this property at the driver level, achieving 160x launch-overhead reduction for 100 sequential kernels.<sup>[25]</sup> Data movement is different. The next transfer depends on the result of the previous one: how many bytes arrived, whether the peer reset the connection, whether the RDMA completion carried an error. There is no static graph to inspect because control flow branches on runtime data. NCCL topology discovery, RDMA memory registration, and NVLink channel selection are all runtime decisions driven by hardware probing (Section 11). Coroutine control flow - `if`, `for`, `while` - is the natural expression of data-dependent sequential decisions.
+**The scheduler cannot see the full task graph.** Sender pipelines compose as a graph the scheduler can inspect before `start()`. This is valuable for GPU kernel dispatch where the work graph is known ahead of time - CUDA Graphs (Section 15) exploit this property at the driver level, achieving 160x launch-overhead reduction for 100 sequential kernels.<sup>[25]</sup> Data movement is different. The next transfer depends on the result of the previous one: how many bytes arrived, whether the peer reset the connection, whether the RDMA completion carried an error. There is no static graph to inspect because control flow branches on runtime data. NCCL topology discovery, RDMA memory registration, and NVLink channel selection are all runtime decisions driven by hardware probing (Section 12). Coroutine control flow - `if`, `for`, `while` - is the natural expression of data-dependent sequential decisions.
 
 **Senders separate description from execution; coroutines conflate them.** The separation is valuable when the same algorithm can run on CPU or GPU by swapping the scheduler. The Maxwell FDTD benchmark demonstrates this: identical sender code achieves parity with raw CUDA on GPU and runs correctly on a CPU thread pool (Section 2). Data movement operations are bound to specific hardware resources at submission time. A `cudaMemcpyAsync` targets a specific CUDA stream on a specific device. An `ibv_post_send` targets a specific queue pair on a specific HCA. A `read` targets a specific file descriptor. The description cannot be retargeted by swapping a scheduler because the operation is bound to the resource. For compute dispatch, description-execution separation enables scheduler-agnostic portability. For data transport, the binding to hardware resources makes the separation vacuous.
 
-### 17.2 Consumer Choice and Return Types
+### 18.2 Consumer Choice and Return Types
 
 **Data movement operations should return senders so the caller can choose how to consume them.** The choice is symmetric. `as_sender`<sup>[53]</sup> wraps an awaitable for sender pipeline consumption. `await_sender`<sup>[52]</sup> wraps a sender for coroutine consumption. Neither return type gives every consumer zero-cost access. Returning a sender forces a per-operation allocation under type erasure (Section 9: 57 ns/op, 1 alloc/op). Returning an awaitable preserves zero-allocation type erasure (Section 9: 36 ns/op, 0 alloc/op) and gives sender pipeline consumers access through `as_sender`. The question is which consumer bears the cost. For data movement where the protocol handler is compiled once against a type-erased stream (Section 8), the type-erased consumer is the common case. P4088R1<sup>[44]</sup> Section 10 documents the full design fork analysis.
 
 **The bridge proves senders are more fundamental.** The bridge is symmetric. `as_sender`<sup>[53]</sup> wraps an awaitable for sender consumption. `await_sender`<sup>[52]</sup> wraps a sender for coroutine consumption. CPU and GPU interact through memory copies; that does not make one side more fundamental. The bridge is evidence of complementarity between models that serve different domains - compute dispatch and data transport - not evidence of hierarchy. P4088R1<sup>[44]</sup> Section 9 addresses this directly.
 
-### 17.3 Type Erasure and Allocation
+### 18.3 Type Erasure and Allocation
 
-**Type erasure should be opt-in, not baked into the abstraction.** Byte-oriented data movement is a domain where the transport is inherently runtime-determined. An inference server does not know at compile time whether input arrives over TCP, RDMA, or NVLink - the transport depends on the deployment topology, which is discovered at communicator creation time via `ncclCommInitRank` or equivalent (Section 11). Type erasure is the natural interface for this domain, not an optional convenience. Senders' compile-time visibility optimizes for static dispatch, which is not the bottleneck when every operation crosses a kernel boundary (1,000-5,000 ns) or a PCIe bus (10,000+ ns). The same principle produced Thrust: write the application against an abstract interface, let the implementation handle the hardware. P4088R1<sup>[44]</sup> Section 7.1 documents the structural mechanism.
+**Type erasure should be opt-in, not baked into the abstraction.** Byte-oriented data movement is a domain where the transport is inherently runtime-determined. An inference server does not know at compile time whether input arrives over TCP, RDMA, or NVLink - the transport depends on the deployment topology, which is discovered at communicator creation time via `ncclCommInitRank` or equivalent (Section 12). Type erasure is the natural interface for this domain, not an optional convenience. Senders' compile-time visibility optimizes for static dispatch, which is not the bottleneck when every operation crosses a kernel boundary (1,000-5,000 ns) or a PCIe bus (10,000+ ns). This is the same design trajectory traced in Section 10. P4088R1<sup>[44]</sup> Section 7.1 documents the structural mechanism.
 
-**Coroutine frames allocate; sender operation states do not.** Acknowledged. Sender `operation_state` is a compile-time construct with no heap allocation. Coroutine frames allocate. PMR pools amortize this to 2-5 ns (Section 15) - 200x cheaper than a CUDA kernel launch, 2,000x cheaper than a `cudaMemcpyAsync`, nine orders of magnitude cheaper than an NCCL AllReduce on a 600B-parameter model. The relevant comparison for data movement is total allocation across the stream's lifetime. Under type erasure, the sender model allocates once per `any_sender::connect` (Section 9: 1 alloc/op). The coroutine model allocates once per frame (Section 9: 0 alloc/op). For N operations through a type-erased stream, the coroutine model allocates once; the sender model allocates N times. P4088R1<sup>[44]</sup> Sections 4 and 7.9 cover the general case.
+**Coroutine frames allocate; sender operation states do not.** Acknowledged. Sender `operation_state` is a compile-time construct with no heap allocation. Coroutine frames allocate. PMR pools amortize this to near zero (Section 16). The relevant comparison for data movement is total allocation across the stream's lifetime. Under type erasure, the sender model allocates once per `any_sender::connect` (Section 9). The coroutine model allocates once per frame (Section 9). For N operations through a type-erased stream, the coroutine model allocates once; the sender model allocates N times. P4088R1<sup>[44]</sup> Sections 4 and 7.9 cover the general case.
 
-**Compile-time optimization is lost.** Coroutine handles are opaque; the compiler cannot see through `resume()`. Sender pipelines are fully visible, statically dispatched, inlinable. This visibility matters for GPU kernel dispatch where individual operations cost nanoseconds and the compiler can fuse host-side abstraction overhead (Section 2). Data movement operates at a different latency scale: `cudaMemcpyAsync` 10,000+ ns, TCP syscall 1,000-10,000 ns, NCCL AllReduce seconds. An indirect call through a coroutine handle costs approximately 5-10 ns - below the noise floor. The optimization target for data movement is allocation elimination under type erasure (Section 9), not call devirtualization. P4088R1<sup>[44]</sup> Section 4 documents the optimization barrier.
+**Compile-time optimization is lost.** Coroutine handles are opaque; the compiler cannot see through `resume()`. Sender pipelines are fully visible, statically dispatched, inlinable. This visibility matters for GPU kernel dispatch where individual operations cost nanoseconds and the compiler can fuse host-side abstraction overhead (Section 2). The latency scale of data movement dwarfs indirect-call overhead (Section 16). The optimization target for data movement is allocation elimination under type erasure (Section 9), not call devirtualization. P4088R1<sup>[44]</sup> Section 4 documents the optimization barrier.
 
-### 17.4 Composition and Algorithms
+### 18.4 Composition and Algorithms
 
-**Senders provide 30 generic algorithms; awaitables provide none.** The awaitable composition mechanism is the language's own control flow: `if`, `for`, `while`, `try/catch`, structured bindings. These compose naturally with data-dependent decisions - the `if(ec == errc::connection_reset)` in Section 10 is a branch on runtime data that determines the next operation. For GPU dispatch where the full work graph must be visible to the scheduler before launch, the sender composition algebra is justified (Section 2). For data movement where each operation depends on the result of the previous one, ordinary control flow is the natural mechanism and is debuggable with standard tools. P4088R1<sup>[44]</sup> Section 2.2 compares the two vocabularies.
+**Senders provide 30 generic algorithms; awaitables provide none.** The awaitable composition mechanism is the language's own control flow: `if`, `for`, `while`, `try/catch`, structured bindings. These compose naturally with data-dependent decisions - the `if(ec == errc::connection_reset)` in Section 11 is a branch on runtime data that determines the next operation. For GPU dispatch where the full work graph must be visible to the scheduler before launch, the sender composition algebra is justified (Section 2). For data movement where each operation depends on the result of the previous one, ordinary control flow is the natural mechanism and is debuggable with standard tools. P4088R1<sup>[44]</sup> Section 2.2 compares the two vocabularies.
 
-**Compound results can be routed through set_value.** Route `(error_code, bytes_transferred)` through `set_value` as a compound type. This is physically possible. It is also what Section 10 documents: if all data-movement results route through `set_value`, then `set_error` and `set_stopped` are vestigial for these operations. The three-channel model's value - that different channels enable different downstream algorithms (`retry`, `upon_error`) - is nullified. P2300R10<sup>[3]</sup> Section 5.8 acknowledges: "This begs the question of how they can be used to represent async operations that partially succeed." The three channels match GPU kernel dispatch, where `cudaErrorLaunchFailure` is fatal and carries no partial result. Byte-oriented operations produce compound results where both status and byte count are always present. P4091R1<sup>[43]</sup> analyzes all six positions.
+**Compound results can be routed through set_value.** Route `(error_code, bytes_transferred)` through `set_value` as a compound type. This is physically possible. It is also what Section 11 documents: if all data-movement results route through `set_value`, then `set_error` and `set_stopped` are vestigial for these operations. The three-channel model's value - that different channels enable different downstream algorithms (`retry`, `upon_error`) - is nullified. P2300R10<sup>[3]</sup> Section 5.8 acknowledges: "This begs the question of how they can be used to represent async operations that partially succeed." The three channels match GPU kernel dispatch, where `cudaErrorLaunchFailure` is fatal and carries no partial result. Byte-oriented operations produce compound results where both status and byte count are always present. P4091R1<sup>[43]</sup> analyzes all six positions.
 
-### 17.5 Scope and Evidence
+### 18.5 Scope and Evidence
 
 **Structured concurrency is weaker in the coroutine model.** Acknowledged (Section 2). Senders provide `counting_scope` for dynamic fan-out with guaranteed completion before scope destruction. Coroutines provide lexical-scope safety via `when_all` but dynamic fan-out needs explicit library support. Data movement is inherently sequential - one buffer at a time, one completion at a time, the one-at-a-time invariant on the CUDA stream (Section 7). Dynamic fan-out belongs to the compute dispatch domain, where senders provide it.
 
-**The sender-based networking survey may be incomplete.** The survey (Section 12) is as comprehensive as the authors could make it. If production-grade sender-based networking or data-movement implementations exist that the survey has missed, their evidence would strengthen the case for sender-based I/O. The paper will be updated with any additions.
+**The sender-based networking survey may be incomplete.** The survey (Section 13) is as comprehensive as the authors could make it. If production-grade sender-based networking or data-movement implementations exist that the survey has missed, their evidence would strengthen the case for sender-based I/O. The paper will be updated with any additions.
 
-**The CUDA examples were generated with AI assistance.** Disclosed in Section 1. The examples are presented as a research exercise for evaluation by domain experts. Corrections are invited. Errors in the CUDA code would indicate where the examples need refinement; they would not invalidate the structural observation that five independent projects (Section 13) converged on the same `cudaLaunchHostFunc`-to-coroutine pattern without coordination.
+**The CUDA examples were generated with AI assistance.** Disclosed in Section 1. The examples are presented as a research exercise for evaluation by domain experts. Corrections are invited. Errors in the CUDA code would indicate where the examples need refinement; they would not invalidate the structural observation that five independent projects (Section 14) converged on the same `cudaLaunchHostFunc`-to-coroutine pattern without coordination.
 
 **The paper's P2300R10 quotations may be taken out of context.** All quotations include section numbers. Readers can verify context at the cited locations in P2300R10.<sup>[3]</sup> Corrections are welcome if any quotation misrepresents the original intent.
 
-## 18. Conclusion
+## 19. Conclusion
 
 A protocol handler compiled once links against TCP, RDMA, or GPU device memory without recompilation. This is possible because byte-oriented data movement - host-device memcpy, inter-GPU collectives over NVLink, RDMA transfers between nodes, and TCP sockets - shares a common async completion model that the IoAwaitable protocol captures with zero per-operation allocation. The CUDA Programming Guide confirms that single-stream callbacks are strictly serialized,<sup>[6]</sup> enabling the same pre-allocated op-state pattern that networking sockets use. Independent projects at NVIDIA Research (cuda-oxide),<sup>[35]</sup> CERN,<sup>[34]</sup> the University of Wisconsin-Madison (Taro),<sup>[36]</sup> and Schr&ouml;dinger (Desmond)<sup>[38]</sup> have converged on the same `cudaLaunchHostFunc`-to-coroutine pattern without coordination.
 
-`cudaLaunchHostFunc` has documented limitations: latency spikes up to 12ms on loaded systems,<sup>[48]</sup> deadlock risk with user locks in callbacks,<sup>[49]</sup> unidirectional notification only,<sup>[50]</sup> and a prohibition on calling CUDA APIs from the callback.<sup>[9]</sup> These constraints apply to any pattern that uses this mechanism for completion notification. They bound the applicability of the pattern in high-throughput GPU pipelines.
+`cudaLaunchHostFunc` has documented limitations (Section 7) that bound the applicability of the pattern in high-throughput GPU pipelines.
 
 `std::execution` provides real properties for GPU dispatch: zero-allocation compile-time composition, scheduler-agnostic portability, domain customization via `transform_sender`, and structured concurrency for dynamic fan-out. These properties stand without qualification. CUDA Graphs and sender fusion optimize at different layers - graphs reduce driver-level dispatch overhead, sender fusion reduces host-side C++ abstraction overhead - and they are complementary.
 
 Independent projects (Taro, TTG/PaRSEC, Desmond) have demonstrated the extension of the coroutine pattern to kernel dispatch and GPU pipeline orchestration in production, placing that evidence in the record alongside this paper's byte-movement analysis.
 
-Bridges (`await_sender`<sup>[52]</sup>, `as_sender`<sup>[53]</sup>) connect the two models where the domains meet. A networking coroutine consumes a GPU sender for compute dispatch. A sender pipeline wraps an IoAwaitable for composition. Neither model needs to subsume the other. Each serves the domain where its design choices pay off: senders for compute dispatch where compile-time work graphs and scheduler-agnostic portability deliver their full value, awaitables for data transport where type-erased streams and zero-allocation link-time polymorphism are the natural interface. The abstraction level rises; the application code stays the same.
+Bridges (`await_sender`<sup>[52]</sup>, `as_sender`<sup>[53]</sup>) connect the two models where the domains meet. A networking coroutine consumes a GPU sender for compute dispatch. A sender pipeline wraps an IoAwaitable for composition. Neither model needs to subsume the other. Each serves the domain where its design choices pay off: senders for compute dispatch where compile-time work graphs and scheduler-agnostic portability deliver their full value, awaitables for data transport where type-erased streams, zero-allocation link-time polymorphism, and ABI stability (Section 10) are the natural interface. The abstraction level rises; the application code stays the same.
 
 This convergent evidence supports the standardization of the IoAwaitable protocol proposed in [P4003R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4003r3.html).<sup>[46]</sup> The committee should not assume senders are the only viable model for GPU async when GPU practitioners are independently choosing coroutines for data movement. The IoAwaitable protocol provides the minimal execution model - executor affinity, cancellation, frame allocation - that these convergent projects need from the standard. Standardizing it gives the ecosystem a stable foundation without requiring either model to subsume the other.
 
