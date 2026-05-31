@@ -134,7 +134,7 @@ A prediction qualifies if it is (a) dated, (b) public, and (c) falsifiable - a c
 
 ## References
 
-[1] Michael Garland, Andrew McKenney, Roger Orr, Bjarne Stroustrup, Daveed Vandevoorde, Michael Wong. [P4023R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4023r0.pdf). "Strategic Direction for AI in C++: Governance, and Ecosystem" (Directions Group, 2026).
+[1] Jeff Garland, Andrew McKenney, Roger Orr, Bjarne Stroustrup, Daveed Vandevoorde, Michael Wong. [P4023R0](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4023r0.pdf). "Strategic Direction for AI in C++: Governance, and Ecosystem" (Directions Group, 2026).
 
 [2] [Bryce Adelstein Lelbach. "C++ Standard Parallelism." CppCon 2021](https://www.youtube.com/watch?v=LW_T2RGXego)
 
