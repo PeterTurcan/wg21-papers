@@ -1,6 +1,6 @@
 ---
 title: "Did ISO or SD-4 Govern the P2900 Ballot?"
-document: P4238R0
+document: P4240R0
 date: 2026-05-19
 intent: info
 audience: WG21

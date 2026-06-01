@@ -1,6 +1,6 @@
 ---
 title: "Reconciliation Capacity: The Contracts Arc Under Two Rule Sets"
-document: P4240R0
+document: P4238R0
 date: 2026-07-01
 intent: info
 audience: WG21
@@ -32,7 +32,7 @@ The author is the author of [P4201R0](https://wg21.link/p4201r0)<sup>[1]</sup>, 
 
 The author has no competing contracts proposal. The author did not participate in SG21. The author's analysis is limited to the published record. Committee discussions occur in rooms, hallways, and private channels that leave no public trace. If a reader is aware of reconciliation processes that this paper's research did not reach, the author welcomes the correction.
 
-This paper is a companion to [P4238R0](https://wg21.link/p4238r0)<sup>[3]</sup>, which examines the NB ballot phase of P2900. This paper covers the developmental trajectory from 2021 to the ballot. P4238 is the endpoint. This paper is the path that produced it.
+This paper is a companion to [P4240R0](https://wg21.link/p4240r0)<sup>[3]</sup>, which examines the NB ballot phase of P2900. This paper covers the developmental trajectory from 2021 to the ballot. P4240 is the endpoint. This paper is the path that produced it.
 
 This paper asks for nothing.
 
@@ -281,7 +281,7 @@ The author thanks Joshua Berne, Timur Doumler, and Andrzej Krzemienski for [P290
 
 [2] [P4239R0](https://wg21.link/p4239r0) - "Correction Capacity: The Networking Arc Under Two Rule Sets" (Vinnie Falco, 2026).
 
-[3] [P4238R0](https://wg21.link/p4238r0) - "Did ISO or SD-4 Govern the P2900 Ballot?" (Vinnie Falco, 2026).
+[3] [P4240R0](https://wg21.link/p4240r0) - "Did ISO or SD-4 Govern the P2900 Ballot?" (Vinnie Falco, 2026).
 
 [4] [P2900R14](https://wg21.link/p2900r14) - "Contracts for C++" (Joshua Berne, Timur Doumler, Andrzej Krzemienski, 2025).
 
