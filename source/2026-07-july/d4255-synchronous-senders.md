@@ -315,15 +315,15 @@ The question is not which model is more powerful. It is which implementation sha
 | Consumer / I/O shape | Awaitable | Sender |
 | -------------------- | --------- | ------ |
 | **Coroutine** | | |
-| Synchronous | Zero (no suspend) | 8-step ceremony (Section 6) |
-| Asynchronous | Zero protocol overhead (inherent suspend only) | Inherent suspend + ceremony |
+| Synchronous | Zero (no suspend) | 8-step cost (Section 6) |
+| Asynchronous | Zero protocol overhead (inherent suspend only) | Inherent suspend + cost |
 | **Sender pipeline** | | |
-| Synchronous | Zero (P4126R1)<sup>[10]</sup> | Zero |
-| Asynchronous | Zero (P4126R1)<sup>[10]</sup> | Zero |
+| Synchronous | Zero ([P4126R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4126r1.pdf))<sup>[10]</sup> | Zero |
+| Asynchronous | Zero ([P4126R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4126r1.pdf))<sup>[10]</sup> | Zero |
 
-The awaitable column is four zeros. For synchronous I/O, the sender column carries the full eight-step ceremony of Section 6. For asynchronous I/O, the sender protocol adds ceremony - `connect`, receiver wiring, `variant` emplacement, affinity wrapping - atop the inherent suspend. The ceremony is not inherent to the async operation. It is inherent to the sender protocol.
+The awaitable column is four zeros. For synchronous I/O, the sender column carries the full eight-step cost of Section 6. For asynchronous I/O, the sender protocol adds cost - `connect`, receiver wiring, `variant` emplacement, affinity wrapping - atop the inherent suspend. The cost is not inherent to the async operation. It is inherent to the sender protocol.
 
-The sender pipeline cells in the awaitable column depend on P4126R1<sup>[10]</sup> callback handles. Without callback handles, senders consuming an awaitable allocate one coroutine frame per operation. Two of the awaitable column's four zeros require P4126R1.
+The sender pipeline cells in the awaitable column depend on P4126R1<sup>[10]</sup> callback handles. Without callback handles, senders consuming an awaitable allocate one coroutine frame per operation. Two of the awaitable column's four zeros require [P4126R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4126r1.pdf).
 
 The awaitable is the implementation shape where neither consumer pays a protocol tax.
 
@@ -335,7 +335,7 @@ The sender model, as specified, does not match the awaitable model for synchrono
 
 `sender-awaitable::await_ready()` returns `false` unconditionally.<sup>[3]</sup><sup>[8]</sup> To skip suspension for senders that complete synchronously, a readiness query is required. The sender must advertise, at compile time or at run time, that its `start` will call `set_value` before returning.
 
-P3552R3's `await_transform` could detect synchronous senders before they enter `as_awaitable` and bypass the `sender-awaitable` path entirely. It does not.
+[P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html)<sup>[5]</sup>'s `await_transform` could detect synchronous senders before they enter `as_awaitable` and bypass the `sender-awaitable` path entirely. It does not.
 
 This requires a new concept requirement on senders. A trait, a tag, or a constexpr query. The sender model now has a readiness query.
 
@@ -343,11 +343,11 @@ This requires a new concept requirement on senders. A trait, a tag, or a constex
 
 With the readiness query in place, `sender-awaitable::await_ready()` returns `true` when the sender advertises synchronous completion. The coroutine no longer suspends.
 
-But `connect` was already called in the `sender-awaitable` constructor.<sup>[3]</sup> The operation state was already materialized. The receiver was already wired. The `variant` was already allocated. The suspension was saved. The ceremony was not.
+But `connect` was already called in the `sender-awaitable` constructor.<sup>[3]</sup> The operation state was already materialized. The receiver was already wired. The `variant` was already allocated. The suspension was saved. The cost was not.
 
 ### 11.3. Deferred Connection
 
-To skip the ceremony, `connect` must be moved from the `sender-awaitable` constructor into `await_suspend`, where it can be bypassed when `await_ready()` returns `true`.
+To skip the cost, `connect` must be moved from the `sender-awaitable` constructor into `await_suspend`, where it can be bypassed when `await_ready()` returns `true`.
 
 But the value needs to come from somewhere. `await_resume` must return the result. If `connect` and `start` did not execute, no receiver received the value. The sender needs a second value-delivery mechanism - a `get_value()` member, a direct extraction path, a way to produce the result without constructing an operation state, wiring a receiver, calling `start`, routing through `set_value`, and emplacing into a `variant`.
 
@@ -363,7 +363,7 @@ The sender model now carries a readiness query, a direct extraction path, two va
 
 ### 11.5. Zero-Allocation Type Erasure
 
-`any_sender::connect` produces a type-erased operation state whose size is unknown at compile time. The current implementations use small-buffer optimization (64 bytes in stdexec) or heap allocation.<sup>[3]</sup> The per-operation cost is 0-1 allocations.
+`any_sender::connect` produces a type-erased operation state whose size is unknown at compile time. The current implementations use small-buffer optimization (64 bytes in stdexec) or heap allocation.<sup>[3]</sup> The per-operation cost is zero or one allocation.
 
 The awaitable model's type erasure is one virtual function call and zero allocations. To match this, the sender needs a base class with a virtual function that returns the value directly - without constructing an operation state, without wiring a receiver, without calling `start`.
 
@@ -424,7 +424,7 @@ struct immediate
 
 **"The comparison measures the wrong case."** Synchronous completion is not a corner case in I/O. Buffered writes, cached reads, DNS cache hits, and in-memory operations complete synchronously. A protocol that penalizes the common fast path compounds the cost across thousands of operations per connection.
 
-**"The optimizer eliminates the ceremony."** The suspension/resumption pair is observable behavior. `sender-awaitable::await_ready()` returns `false` unconditionally per `[exec.as.awaitable]`.<sup>[3]</sup> The optimizer cannot elide a coroutine suspend/resume across a type-erased boundary.
+**"The optimizer eliminates the cost."** The suspension/resumption pair is observable behavior. `sender-awaitable::await_ready()` returns `false` unconditionally per `[exec.as.awaitable]`.<sup>[3]</sup> The optimizer cannot elide a coroutine suspend/resume across a type-erased boundary.
 
 **"Awaitables don't compose into work graphs."** They do, through the bridge. Section 9 shows IoAwaitables consumed by sender pipelines via `as_sender`.<sup>[9]</sup> The sender algebra - `when_all`, `let_value`, `upon_error` - works. The bridge cost is eliminable.<sup>[10]</sup>
 
@@ -440,11 +440,11 @@ struct immediate
 
 **"The type erasure comparison is asymmetric."** Both paths use type erasure at the same boundary. The awaitable path produces one indirect call and zero allocations. `any_sender::connect` materializes an operation state the compiler cannot see through.
 
-**"The bridge concedes the dependency."** The bridge goes both directions. [P4093R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4093r1.pdf)<sup>[9]</sup> bridges IoAwaitables into sender pipelines. [P4092R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4092r1.pdf)<sup>[11]</sup> bridges senders into coroutine-native code without `execution::task`. Section 10 shows the cost is asymmetric: if I/O is an awaitable, both consumers pay zero; if I/O is a sender, coroutines pay the ceremony.
+**"The bridge concedes the dependency."** The bridge goes both directions. [P4093R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4093r1.pdf)<sup>[9]</sup> bridges IoAwaitables into sender pipelines. [P4092R1](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p4092r1.pdf)<sup>[11]</sup> bridges senders into coroutine-native code without `execution::task`. Section 10 shows the cost is asymmetric: if I/O is an awaitable, both consumers pay zero; if I/O is a sender, coroutines pay the cost.
 
 **"The falsification criteria measure senders on the awaitable's home turf."** The paper says so in Section 1: "Coroutine-native I/O cannot express compile-time work graphs. This is a genuine limitation." Section 5 credits senders with three achievements awaitables do not match. Section 10 covers both synchronous and asynchronous I/O. The falsification criteria are scoped to the paper's claim, not to a universal comparison.
 
-## 13. Falsification
+## 13. Conclusion
 
 The observations documented in this paper would be discharged if any of the following were demonstrated:
 
@@ -456,7 +456,7 @@ The observations documented in this paper would be discharged if any of the foll
 
 ## Acknowledgements
 
-Eric Niebler, Kirk Shoop, Lewis Baker, and their collaborators for `std::execution` and the sender algebra. Dietmar K&uuml;hl and Maikel Nadolski for P3552R3 (`std::execution::task`). Robert Leahy for the AIO-to-sender bridge and P2583R4 (symmetric transfer).
+Eric Niebler, Kirk Shoop, Lewis Baker, and their collaborators for `std::execution` and the sender algebra. Dietmar K&uuml;hl and Maikel Nadolski for [P3552R3](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3552r3.html) (`std::execution::task`). Robert Leahy for the AIO-to-sender bridge and [P2583R4](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2026/p2583r4.pdf) (symmetric transfer).
 
 ## References
 
